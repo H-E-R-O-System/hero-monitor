@@ -1,0 +1,8 @@
+Useful Git Commands (terminal)
+# Remove file
+git rm --cached filename.txt
+# Remove directory
+git rm --cached -r directory_to_remove
+# list git files
+git ls-files -c
+

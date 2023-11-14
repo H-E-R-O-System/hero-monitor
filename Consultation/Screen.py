@@ -15,6 +15,17 @@ class BlitLocation(Enum):
     midRight = 7
     centre = 8
 
+class BlitPosition(Enum):
+    topLeft = 0
+    midTop = 1
+    topRight = 2
+    bottomLeft = 3
+    midBottom = 4
+    bottomRight = 5
+    midLeft = 6
+    midRight = 7
+    centre = 8
+
 
 class Screen:
     def __init__(self, size, font, colour=None):
@@ -25,6 +36,19 @@ class Screen:
         self.colour = colour
         if colour:
             self.baseSurface.fill(colour)
+
+    def add_surf(self, surf: pg.Surface, pos=(0, 0), base=False, location=BlitLocation.topLeft):
+        surf_rect = pg.Rect(pos, surf.get_size())
+
+        if location == BlitLocation.centre:
+            surf_rect.topleft = pg.Vector2(surf_rect.topleft) - pg.Vector2(surf_rect.size) / 2
+        elif location == BlitLocation.topRight:
+            surf_rect.x -= surf_rect.width
+
+        if base:
+            self.baseSurface.blit(surf, surf_rect.topleft)
+        else:
+            self.surface.blit(surf, surf_rect.topleft)
 
     def loadImage(self, path, pos=(0, 0), fill=False, base=False, size=None, scale=None, location=BlitLocation.topLeft):
         image = pg.image.load(path)
@@ -70,7 +94,8 @@ class Screen:
         else:
             surf.blit(image, pos)
 
-    def addText(self, text, pos, lines=1, location=BlitLocation.topLeft, base=False):
+    def add_text(self, text, pos, lines=1, location=BlitLocation.topLeft, base=False):
+        # pos will be either a tuple (x, y), or BlitPosition
 
         textSurf = self.font.render(text, True, pg.Color(0, 0, 0), )
 

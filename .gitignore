@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+.idea
+/TrainedInceptionResnetV2/
+/Legacy/
+/Training_Data.mat
+/Training_Data_2.mat
