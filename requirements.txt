@@ -16,3 +16,4 @@ overrides~=7.4.0
 gradio~=4.1.1
 torchaudio~=2.1.0
 setuptools~=65.5.1
+sentencepiece~=0.0
