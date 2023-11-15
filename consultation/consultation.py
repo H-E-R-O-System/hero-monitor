@@ -5,11 +5,10 @@ import pygame as pg
 from Colours import Colours
 import math
 import pyaudio
-from Screen import Screen, BlitLocation
+from screen import Screen, BlitLocation
 from avatar import Avatar
 
 language_codes = {"English": "eng", "German": "deu"}
-from enum import Enum
 from scipy.io.wavfile import write, read
 import wave
 

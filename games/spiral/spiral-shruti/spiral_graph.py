@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from screen import Screen
 
 def plot_spiral(A, B, t_max=4, num_points=1000):
 

@@ -63,13 +63,16 @@ smile = np.array([
     [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 16
 ])
 
+skin_tones = ["#8D5524", "#C68642", "#E0AC69", "#F1C27D", "#FFDBAC"]
+
 class Avatar:
     def __init__(self, face_colour=None, size=(128, 128)):
 
         if face_colour:
             self.face_colour = face_colour
         else:
-            self.face_colour = pg.Color(244, 195, 67, 255)
+            face_idx = np.random.randint(len(skin_tones))
+            self.face_colour = pg.Color(skin_tones[face_idx])
 
         self.size = size
 
