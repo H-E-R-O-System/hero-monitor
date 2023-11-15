@@ -5,7 +5,7 @@ import pygame as pg
 from colours import Colours
 import math
 import pyaudio
-from screen import Screen, BlitLocation
+from screen import Screen, BlitLocation, Fonts
 from avatar import Avatar
 
 language_codes = {"English": "eng", "German": "deu"}
@@ -19,17 +19,6 @@ class User:
         self.age = age
 
 
-class Fonts:
-    def __init__(self):
-        self.large = pg.font.Font("fonts/calibri-regular.ttf", size=50)
-        self.normal = pg.font.Font("fonts/calibri-regular.ttf", size=30)
-        self.small = pg.font.Font("fonts/calibri-regular.ttf", size=15)
-        self.custom = self.normal
-
-    def update_custom(self, size):
-        self.custom = pg.font.Font("fonts/calibri-regular.ttf", size=size)
-
-
 class ConsultConfig():
     def __init__(self):
         self.speech = True
@@ -40,11 +29,18 @@ class ConsultConfig():
 
 class Consultation:
     def __init__(self, p, user=None, load_models=True):
+        """
+        Object for running the consultation
+
+        :param p: initialised PyAudio object
+        :param user: user data with name, age, etc.
+        :param load_models: load language models on start-up or not. Will be loaded when needed if set to False.
+        """
 
         if user:
-            # create demo user
             self.user = user
         else:
+            # create demo user
             self.user = User("Demo", 65)
 
         self.config = ConsultConfig()
@@ -241,13 +237,11 @@ class Consultation:
         return response_text
 
     def loop(self):
-
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     # start the consultation
                     if event.key == pg.K_q:
-
                         audio_file = f"response-data/answer_{self.question_idx}.wav"
                         text_file = f"response-data/answer_{self.question_idx}.txt"
 
@@ -273,5 +267,5 @@ pg.init()
 pg.event.pump()
 audio = pyaudio.PyAudio()
 
-consultation = Consultation(audio, load_models=False)
+consultation = Consultation(audio, load_models=True)
 consultation.loop()

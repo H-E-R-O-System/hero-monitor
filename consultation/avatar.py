@@ -113,6 +113,3 @@ class Avatar:
             return self.smile
         else:
             return self.speak_surfs[self.speak_state]
-
-
-avatar = Avatar()

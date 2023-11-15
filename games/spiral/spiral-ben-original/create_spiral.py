@@ -11,7 +11,7 @@ base_surf = pg.display.set_mode((500, 500))
 base_surf.fill(pg.Color(255, 255, 255))
 
 spiral_surface = Screen((500, 500))
-spiral_surface.loadImage("spiral_image.png", pos=(250, 250), scale=pg.Vector2(0.5, 0.5),location=BlitLocation.centre)
+spiral_surface.load_image("spiral_image.png", pos=(250, 250), scale=pg.Vector2(0.5, 0.5), location=BlitLocation.centre)
 
 base_surf.blit(spiral_surface.surface, (0, 0))
 pg.display.flip()
@@ -30,7 +30,7 @@ while running:
 
         if event.type == pg.MOUSEMOTION and spiral_started:
             spiral_coords = np.append(spiral_coords, np.reshape([*pg.mouse.get_pos(), time.monotonic() - start_time], (3, 1)), axis=1)
-            spiral_surface.updatePixels(pg.mouse.get_pos())
+            spiral_surface.update_pixels(pg.mouse.get_pos())
             base_surf.blit(spiral_surface.surface, (0, 0))
             pg.display.flip()
 
