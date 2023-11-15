@@ -8,6 +8,10 @@
 ### list git files
     git ls-files -c
 
+### List conflicted files
+    git diff --name-only --diff-filter=U --relative
+
+
 ### Merge repo into currnet repo
     git remote add REPO_NAME https://username:<ACCESS_TOKEN>@github.com/path-to-repo.git
     git fetch REPO_NAME --tags
