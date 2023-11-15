@@ -6,6 +6,7 @@ from Colours import Colours
 import math
 import pyaudio
 from Screen import Screen, BlitLocation
+from avatar import Avatar
 
 language_codes = {"English": "eng", "German": "deu"}
 from enum import Enum
@@ -21,13 +22,13 @@ class User:
 
 class Fonts:
     def __init__(self):
-        self.large = pg.font.Font("Fonts/calibri-regular.ttf", size=50)
-        self.normal = pg.font.Font("Fonts/calibri-regular.ttf", size=30)
-        self.small = pg.font.Font("Fonts/calibri-regular.ttf", size=15)
+        self.large = pg.font.Font("fonts/calibri-regular.ttf", size=50)
+        self.normal = pg.font.Font("fonts/calibri-regular.ttf", size=30)
+        self.small = pg.font.Font("fonts/calibri-regular.ttf", size=15)
         self.custom = self.normal
 
     def update_custom(self, size):
-        self.custom = pg.font.Font("Fonts/calibri-regular.ttf", size=size)
+        self.custom = pg.font.Font("fonts/calibri-regular.ttf", size=size)
 
 
 class ConsultConfig():
@@ -67,8 +68,7 @@ class Consultation:
         self.info_screen.add_text(f"Name: {self.user.name}", (10, 30), base=True)
         self.info_screen.add_text(f"Age: {self.user.age}", (10, 80), base=True)
 
-        self.main_screen.loadImage("Smiley.png", pos=(self.main_screen.size.x / 2, self.main_screen.size.x / 3),
-                                   location=BlitLocation.centre, size=(400, 400), base=True)
+        self.avatar = Avatar(size=(256, 256))
 
         self.action = "Initialising"
 
@@ -123,6 +123,10 @@ class Consultation:
 
     def update_main_screen(self, text=None):
         self.main_screen.refresh()
+        self.main_screen.add_surf(self.avatar.get_surface(),
+                                  pos=(self.main_screen.size.x / 2, self.main_screen.size.x / 3),
+                                  location=BlitLocation.centre)
+
         if text:
             self.main_screen.add_text(text, (self.main_screen.size.x / 2, 500), location=BlitLocation.centre)
 
@@ -154,8 +158,15 @@ class Consultation:
             pg.mixer.music.play()
 
             # Keep in idle loop while speaking
+            self.avatar.state = 1
             while pg.mixer.get_busy():
-                pass
+                self.update_main_screen()
+                self.update_display()
+                self.avatar.speak_state = (self.avatar.speak_state + 1) % 2
+
+            self.avatar.state = 0
+            self.update_main_screen()
+            self.update_display()
 
             os.remove("tempsave_question.wav")
 
