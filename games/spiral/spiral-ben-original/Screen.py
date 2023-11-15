@@ -115,11 +115,6 @@ class Screen:
             for y_pos in range(int(pos[1] - 1), int(pos[1] + 2)):
                 self.surface.set_at((x_pos, y_pos), pg.Color(255, 0, 0))
 
-        # new_array[np.int16(positions[0, :]), np.int16(positions[1, :]), :] = [0, 0, 0]
-        # new_surf = pg.surfarray.make_surface(new_array)
-        # new_surf.set_alpha()
-        # self.surface = new_surf
-
     def refresh(self):
         self.size = pg.Vector2(self.baseSurface.get_size())
         self.surface = self.baseSurface.copy()

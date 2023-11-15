@@ -1,0 +1,3 @@
+class SpiralTest:
+    def __init__(self):
+        ...

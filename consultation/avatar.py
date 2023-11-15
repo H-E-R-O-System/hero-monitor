@@ -69,7 +69,7 @@ class Avatar:
         if face_colour:
             self.face_colour = face_colour
         else:
-            self.face_colour = [244, 195, 67, 255]
+            self.face_colour = pg.Color(244, 195, 67, 255)
 
         self.size = size
 
@@ -82,15 +82,15 @@ class Avatar:
 
     def convert_array_to_surf(self, array, size=None):
         # 4th axis is alpha channel
-        white_array = np.ones((16, 16, 4)) * 255
+        white_array = np.ones((16, 16, 4), dtype=np.uint8) * 255
 
         # update pixel values to colours
         # 0 -> transparant
         # 1 -> black
         # 2 -> face colour
-        white_array[array.transpose() == 0, :] = [255, 255, 255, 0] # zero opacity on alpha channel
-        white_array[array.transpose() == 1, :] = [0, 0, 0, 255]
 
+        white_array[array.transpose() == 0, :] = [255, 255, 255, 0]  # zero opacity on alpha channel
+        white_array[array.transpose() == 1, :] = [0, 0, 0, 255]
         white_array[array.transpose() == 2, :] = self.face_colour
 
         face_surf = pg.surfarray.make_surface(white_array[:, :, :3])
@@ -104,3 +104,6 @@ class Avatar:
             return self.smile
         else:
             return self.speak_surfs[self.speak_state]
+
+
+avatar = Avatar()

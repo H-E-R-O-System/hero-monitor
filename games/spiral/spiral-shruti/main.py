@@ -2,7 +2,7 @@ import time
 import pygame as pg
 import numpy as np
 from scipy.io import savemat
-from Screen import Screen, BlitLocation
+from screen import Screen, BlitLocation
 import spiral_graph
 import pandas as pd
 
@@ -11,7 +11,7 @@ pg.init()
 scaling_factor = 1
 turns_factor = 2.2
 
-spiral_graph.plot_spiral(scaling_factor, turns_factor, num_points=1000)
+spiral_graph.plot_spiral(scaling_factor, turns_factor, t_max=1, num_points=1000)
 
 base_surf = pg.display.set_mode((500, 500))
 base_surf.fill(pg.Color(255, 255, 255))

@@ -2,9 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_spiral(A, B, num_points=1000):
+def plot_spiral(A, B, t_max=4, num_points=1000):
 
-    t = np.linspace(0, 4 * np.pi, num_points)
+    t = np.linspace(0, t_max * np.pi, num_points)
     x = A * t * np.cos(B * t)
     y = A * t * np.sin(B * t)
 
@@ -21,6 +21,4 @@ def plot_spiral(A, B, num_points=1000):
 
     plt.gca().set_aspect('equal', adjustable='box')
     plt.savefig('spiral_plot.png')
-
-
 

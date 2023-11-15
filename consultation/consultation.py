@@ -54,7 +54,7 @@ class Consultation:
 
         # load all attributes which utilise any pygame surfaces!
 
-        self.window = pg.display.set_mode(self.display_size)
+        self.window = pg.display.set_mode(self.display_size, pg.SRCALPHA)
         self.main_panel = self.window.subsurface(((0, 0), (math.floor(self.display_size.x * 0.6), self.display_size.y)))
         self.info_panel = self.window.subsurface(((self.main_panel.get_size()[0], 0),
                                                   (self.display_size.x - self.main_panel.get_size()[0],
@@ -272,5 +272,5 @@ pg.init()
 pg.event.pump()
 audio = pyaudio.PyAudio()
 
-consultation = Consultation(audio, load_models=True)
+consultation = Consultation(audio, load_models=False)
 consultation.loop()
