@@ -5,6 +5,7 @@ import time
 import pandas as pd
 import os
 
+
 class SpiralTest:
     def __init__(self, size=(600, 600)):
         self.display_size = pg.Vector2(size)
@@ -101,7 +102,7 @@ class SpiralTest:
 
 
 
-os.chdir('/Users/benhoskings/Documents/Pycharm/Hero_Monitor')
+os.chdir('/')
 pg.init()
 spiral_test = SpiralTest()
 spiral_test.loop()  # optionally extract data from here as array

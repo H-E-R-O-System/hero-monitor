@@ -1,7 +1,6 @@
 import time
 import pygame as pg
 import numpy as np
-from scipy.io import savemat
 from screen import Screen, BlitLocation
 import spiral_graph
 import pandas as pd
