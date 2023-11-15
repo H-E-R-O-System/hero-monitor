@@ -54,26 +54,14 @@ smile = np.array([
     [1, 2, 2, 2, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 2, 1],  # 7
     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],  # 8
     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],  # 9
-    [1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1],  # 10
-    [1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1],  # 11
-    [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],  # 12
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],  # 10
+    [1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1],  # 11
+    [0, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2, 1, 0],  # 12
     [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],  # 13
     [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0],  # 14
     [0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0],  # 15
     [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],  # 16
 ])
-
-# 1 corresponds to black
-# 2 corresponds to face colour
-
-# idx = False
-# while True:
-#     base_surf.blit(smiles[idx], (0, 0))
-#     pg.display.flip()
-#     pg.event.pump()
-#     idx = not idx
-#     time.sleep(0.2)
-
 
 class Avatar:
     def __init__(self, face_colour=None, size=(128, 128)):
@@ -88,7 +76,6 @@ class Avatar:
         self.speak_surfs = [self.convert_array_to_surf(arr, size) for arr in [speak_1, speak_2]]
         self.smile = self.convert_array_to_surf(smile, size)
 
-        self.surfaces = [*self.speak_surfs, self.smile]
         # State 0: Smile, 1: Speak_1, 2: Speak_2
         self.state = 0
         self.speak_state = 0
@@ -98,8 +85,13 @@ class Avatar:
         white_array = np.ones((16, 16, 4)) * 255
 
         # update pixel values to colours
+        # 0 -> transparant
+        # 1 -> black
+        # 2 -> face colour
+        white_array[array.transpose() == 0, :] = [255, 255, 255, 0] # zero opacity on alpha channel
         white_array[array.transpose() == 1, :] = [0, 0, 0, 255]
-        white_array[speak_1.transpose() == 2, :] = self.face_colour
+
+        white_array[array.transpose() == 2, :] = self.face_colour
 
         face_surf = pg.surfarray.make_surface(white_array[:, :, :3])
         if size:

@@ -153,19 +153,21 @@ class Consultation:
             tokens = self.processor(text=question, src_lang="eng", return_tensors="pt")
             audio = self.t2s.generate(**tokens, tgt_lang=self.config.output_lang)[0].cpu().numpy().squeeze()
 
+            # maybe use pygame sound
             write("tempsave_question.wav", 16000, audio)
             pg.mixer.music.load("tempsave_question.wav")
             pg.mixer.music.play()
 
             # Keep in idle loop while speaking
             self.avatar.state = 1
-            while pg.mixer.get_busy():
-                self.update_main_screen()
+            while pg.mixer.music.get_busy():
+                self.update_main_screen(question)
                 self.update_display()
                 self.avatar.speak_state = (self.avatar.speak_state + 1) % 2
+                time.sleep(0.15)
 
             self.avatar.state = 0
-            self.update_main_screen()
+            self.update_main_screen(question)
             self.update_display()
 
             os.remove("tempsave_question.wav")
