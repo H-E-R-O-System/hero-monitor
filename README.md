@@ -1,7 +1,8 @@
-# H.E.R.O-System
+# The H.E.R.O. System – A framework for neurodegenerative disease monitoring
+
+## Project Description
 
 ## Setting up the environment - Mac
-For Mac users make sure to run
 
 ### Step 1: Ensure that portaudio is installed
 
