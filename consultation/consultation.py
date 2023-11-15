@@ -2,7 +2,7 @@ import os
 import time
 from transformers import AutoProcessor, SeamlessM4TModel, SeamlessM4TForTextToSpeech
 import pygame as pg
-from Colours import Colours
+from colours import Colours
 import math
 import pyaudio
 from screen import Screen, BlitLocation
@@ -67,7 +67,7 @@ class Consultation:
         self.info_screen.add_text(f"Name: {self.user.name}", (10, 30), base=True)
         self.info_screen.add_text(f"Age: {self.user.age}", (10, 80), base=True)
 
-        self.avatar = Avatar(size=(256, 256))
+        self.avatar = Avatar(size=(256, 256 * 1.125))
 
         self.action = "Initialising"
 
@@ -87,7 +87,7 @@ class Consultation:
             self.update_display()
 
             self.load_models()
-            self.models_loaded = True
+
 
         self.questions = ["how are you feeling today?",
                           "How were your tremors over the past few days?",
@@ -106,6 +106,7 @@ class Consultation:
         self.processor = AutoProcessor.from_pretrained("facebook/hf-seamless-m4t-medium")
         self.model = SeamlessM4TModel.from_pretrained("facebook/hf-seamless-m4t-medium")
         self.t2s = SeamlessM4TForTextToSpeech.from_pretrained("facebook/hf-seamless-m4t-medium")
+        self.models_loaded = True
 
     def update_display(self):
         self.main_panel.blit(self.main_screen.surface, (0, 0))
@@ -157,6 +158,7 @@ class Consultation:
             pg.mixer.music.load("tempsave_question.wav")
             pg.mixer.music.play()
 
+            time.sleep(0.5)
             # Keep in idle loop while speaking
             self.avatar.state = 1
             while pg.mixer.music.get_busy():
