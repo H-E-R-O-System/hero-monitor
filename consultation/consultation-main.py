@@ -2,10 +2,9 @@ import os
 import time
 from transformers import AutoProcessor, SeamlessM4TModel, SeamlessM4TForTextToSpeech
 import pygame as pg
-from colours import Colours
 import math
 import pyaudio
-from screen import Screen, BlitLocation, Fonts
+from consultation.screen import Screen, BlitLocation, Fonts, Colours
 from avatar import Avatar
 
 language_codes = {"English": "eng", "German": "deu"}
@@ -19,7 +18,7 @@ class User:
         self.age = age
 
 
-class ConsultConfig():
+class ConsultConfig:
     def __init__(self):
         self.speech = True
         self.text = True

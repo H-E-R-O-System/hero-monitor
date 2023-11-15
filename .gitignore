@@ -6,8 +6,8 @@ legacy
 consultation/response-data/
 
 # local files for dataset manipulation
-create-training-data.ipynb
-create-affective-dataset.ipynb
+affective-computing/create-training-data.ipynb
+affective-computing/create-affective-dataset.ipynb
 
 
 data

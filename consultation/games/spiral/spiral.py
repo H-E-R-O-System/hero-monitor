@@ -1,4 +1,4 @@
-from screen import Screen, Colours, BlitLocation
+from consultation.screen import Screen, Colours, BlitLocation
 import numpy as np
 import pygame as pg
 import time

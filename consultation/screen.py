@@ -1,8 +1,7 @@
 from enum import Enum
 
-import numpy as np
 import pygame as pg
-from colours import Colours
+from consultation.colours import Colours
 
 class BlitLocation(Enum):
     topLeft = 0
