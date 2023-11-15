@@ -12,7 +12,7 @@ options = vision.FaceLandmarkerOptions(base_options=base_options, output_face_bl
 detector = vision.FaceLandmarker.create_from_options(options)
 
 
-img_file = "Sample_Images/Ben Glasses.png"
+img_file = "sample_images/Ben Glasses.png"
 img_array = cv2.cvtColor(cv2.imread(img_file), cv2.COLOR_BGR2RGB)
 img = mp.Image(image_format=mp.ImageFormat.SRGB, data=img_array)
 

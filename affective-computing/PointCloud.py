@@ -483,7 +483,7 @@ options = vision.FaceLandmarkerOptions(base_options=base_options, output_face_bl
                                        output_facial_transformation_matrixes=True, num_faces=1, )
 detector = vision.FaceLandmarker.create_from_options(options)
 
-im_path = "Sample_Images/Ben_Face.png"
+im_path = "sample_images/Ben_Face.png"
 # get image as RGB array
 img_array = cv2.cvtColor(cv2.imread(im_path), cv2.COLOR_BGR2RGB)
 # get image as mediapipe image
