@@ -4,7 +4,7 @@
 /Training_Data.mat
 /Training_Data_2.mat
 /AffectInceptionResNetV2.keras
-/seamless_communication_main/
+/seamless_communication_main
 /consultation/response-data/
 
 # local files for dataset manipulation
