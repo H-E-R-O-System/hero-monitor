@@ -2,6 +2,7 @@ from screen import Screen, Colours, BlitLocation
 import numpy as np
 import pygame as pg
 import time
+import pandas as pd
 import os
 
 class SpiralTest:
@@ -58,6 +59,9 @@ class SpiralTest:
         # cv2.imwrite("games/spiral/spiral-test.png", spiral_array)
         return spiral_screen.base_surface, coords
 
+    def create_dataframe(self):
+        return pd.DataFrame(data=self.spiral_data.transpose(), columns=["rel_pos_x", "rel_pos_y", "theta", "time"])
+
     def loop(self):
         start_time = time.monotonic()
 
@@ -100,6 +104,6 @@ class SpiralTest:
 os.chdir('/Users/benhoskings/Documents/Pycharm/Hero_Monitor')
 pg.init()
 spiral_test = SpiralTest()
-spiral_data = spiral_test.loop()
-
-# print(spiral_data)
+spiral_test.loop()  # optionally extract data from here as array
+spiral_data = spiral_test.create_dataframe()
+print(spiral_data.head(20))
