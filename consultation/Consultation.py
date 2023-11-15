@@ -234,8 +234,8 @@ class Consultation:
                     # start the consultation
                     if event.key == pg.K_q:
 
-                        audio_file = f"Response Data/answer_{self.question_idx}.wav"
-                        text_file = f"Response Data/answer_{self.question_idx}.txt"
+                        audio_file = f"response-data/answer_{self.question_idx}.wav"
+                        text_file = f"response-data/answer_{self.question_idx}.txt"
 
                         self.ask_question()
                         audio_data = self.record_answer(audio_file)
