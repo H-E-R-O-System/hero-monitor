@@ -1,14 +1,14 @@
-/.idea
-/TrainedInceptionResnetV2/
+.idea
+TrainedInceptionResnetV2/
 
-/legacy
+legacy
 
-/seamless_communication_main/*
-/consultation/response-data/
+consultation/response-data/
 
 # local files for dataset manipulation
 create-training-data.ipynb
 create-affective-dataset.ipynb
 
 
-/data
+data
+!data/contents.txt
