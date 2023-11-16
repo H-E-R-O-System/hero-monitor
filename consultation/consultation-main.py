@@ -295,6 +295,8 @@ class Consultation:
 
 
 if __name__ == "__main__":
+    os.chdir('/Users/benhoskings/Documents/Pycharm/Hero_Monitor')
+
     pg.init()
     pg.event.pump()
     audio = pyaudio.PyAudio()

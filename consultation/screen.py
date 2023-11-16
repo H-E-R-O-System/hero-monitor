@@ -29,9 +29,9 @@ class BlitPosition(Enum):
 
 class Fonts:
     def __init__(self):
-        self.large = pg.font.Font("fonts/calibri-regular.ttf", size=50)
-        self.normal = pg.font.Font("fonts/calibri-regular.ttf", size=30)
-        self.small = pg.font.Font("fonts/calibri-regular.ttf", size=15)
+        self.large = pg.font.Font("consultation/fonts/calibri-regular.ttf", size=50)
+        self.normal = pg.font.Font("consultation/fonts/calibri-regular.ttf", size=30)
+        self.small = pg.font.Font("consultation/fonts/calibri-regular.ttf", size=15)
         self.custom = self.normal
 
     def update_custom(self, size):
