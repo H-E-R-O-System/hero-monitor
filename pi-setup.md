@@ -135,4 +135,10 @@ copy and paste the output given by that file to install all the pre-requisits
 
 ## 😱 Fuck up? Reset the Pi (tada :tada:)
 
-This still needs to be done
+First of all, congrats! You have fucked up... Happens to the best of us :/
+
+Turn Pi off (unplug it)
+
+Remove SD card
+
+Go to the top of this file again and start again :)
