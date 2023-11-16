@@ -1,4 +1,4 @@
-# The H.E.R.O. System – A framework for neurodegenerative disease monitoring
+# The H.E.R.O. System – A framework for neurodegenerative disease monitoring 🤖
 
 ## Project Description
 

@@ -69,10 +69,32 @@ smile = np.array([
     [0, 0, 1, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 1, 0, 0],
 ])
 
+whistle = np.array([
+    #1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+    [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0],  # 1
+    [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0],  # 2
+    [0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],  # 3
+    [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],  # 4
+    [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 1, 0],  # 5
+    [1, 2, 2, 2, 4, 4, 2, 2, 2, 2, 4, 4, 2, 6, 6, 1],  # 6
+    [1, 2, 2, 2, 4, 4, 2, 2, 2, 2, 4, 4, 2, 6, 2, 6],  # 7
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 6, 2, 1],  # 8
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 6, 6, 2, 1],  # 9
+    [1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1],  # 10
+    [1, 2, 2, 2, 2, 2, 2, 2, 1, 5, 1, 2, 2, 2, 2, 1],  # 11
+    [0, 1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 1, 0],  # 12
+    [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0],  # 13
+    [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0],  # 14
+    [0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0],  # 15
+    [0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0],  # 16
+    [0, 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0],
+    [0, 0, 1, 3, 3, 2, 2, 2, 2, 2, 2, 3, 3, 1, 0, 0],
+])
+
 skin_tones = ["#8D5524", "#C68642", "#E0AC69", "#F1C27D", "#FFDBAC"]
 
 class Avatar:
-    def __init__(self, face_colour=None, size=(128, 128 * 1.125)):
+    def __init__(self, state=0, face_colour=None, size=(128, 128 * 1.125)):
 
         if face_colour:
             self.preset = False
@@ -84,21 +106,25 @@ class Avatar:
             self.face_colour = pg.Color(skin_tones[self.face_idx])
 
         self.size = size
+        self.colours = [pg.Color(0, 0, 0, 0), pg.Color(55, 55, 55, 255), self.face_colour,
+                   pg.Color("#ADCAE6"), pg.Color(0, 0, 0), pg.Color("#D37070")]
+
 
         self.speak_surfs = [self.convert_array_to_surf(arr, size) for arr in [speak_1, speak_2]]
         self.smile = self.convert_array_to_surf(smile, size)
+        self.whistle_surfs = [self.convert_array_to_surf(whistle, size, edit_colour=note_colour) for note_colour in
+                              [pg.Color("#1a6bff"), pg.Color("#ffae1a")]]
 
-        # State 0: Smile, 1: Speak_1, 2: Speak_2
-        self.state = 0
+        # State 0: Smile, 1: Speak, 2: Whistle
+        self.state = state
         self.speak_state = 0
+        self.whistle_state = 0
 
-    def convert_array_to_surf(self, array, size=None):
+    def convert_array_to_surf(self, array, size=None, edit_colour=pg.Color("#ffae1a")):
+
         array = array.transpose()
         surf = pg.Surface(array.shape[:2], pg.SRCALPHA)
-
-        colours = [pg.Color(255, 255, 255), pg.Color(55, 55, 55, 255), self.face_colour,
-                   pg.Color("#ADCAE6"), pg.Color(0, 0, 0), pg.Color("#D37070")]
-        for key, colour in zip(range(6), colours):
+        for key, colour in zip(range(7), self.colours + [edit_colour]):
             coords = np.transpose(np.nonzero(array == key))
             for coord in coords:
                 surf.set_at(coord, colour)
@@ -111,5 +137,7 @@ class Avatar:
     def get_surface(self):
         if self.state == 0:
             return self.smile
-        else:
+        elif self.state == 1:
             return self.speak_surfs[self.speak_state]
+        else:
+            return self.whistle_surfs[self.whistle_state]

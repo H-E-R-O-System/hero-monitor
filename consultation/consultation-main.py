@@ -6,6 +6,8 @@ import math
 import pyaudio
 from consultation.screen import Screen, BlitLocation, Fonts, Colours
 from avatar import Avatar
+import multiprocessing
+from multiprocessing.connection import Connection
 
 language_codes = {"English": "eng", "German": "deu"}
 from scipy.io.wavfile import write, read
@@ -26,8 +28,17 @@ class ConsultConfig:
         self.input_lang = language_codes["English"]
 
 
+def load_models(sender_connection: Connection):
+    processor = AutoProcessor.from_pretrained("facebook/hf-seamless-m4t-medium")
+    model = SeamlessM4TModel.from_pretrained("facebook/hf-seamless-m4t-medium")
+    t2s = SeamlessM4TForTextToSpeech.from_pretrained("facebook/hf-seamless-m4t-medium")
+
+    sender_connection.send([processor, model, t2s])
+    return None
+
+
 class Consultation:
-    def __init__(self, p, user=None, load_models=True):
+    def __init__(self, p, user=None, load_on_startup=True):
         """
         Object for running the consultation
 
@@ -66,42 +77,55 @@ class Consultation:
 
         self.action = "Initialising"
 
-        self.update_main_screen("System Initialising")
-        self.update_info_screen()
-        self.update_display()
-
         self.p = p
+        self.questions = ["how are you feeling today?",
+                          "How were your tremors over the past few days?",
+                          "how is your mood?"]
+        self.question_idx = 0
+        self.running = True
 
         self.processor = None
         self.model = None
         self.t2s = None
         self.models_loaded = False
-        if load_models:
-            self.action = "loading models"
-            self.update_info_screen()
-            self.update_display()
 
-            self.load_models()
-
-
-        self.questions = ["how are you feeling today?",
-                          "How were your tremors over the past few days?",
-                          "how is your mood?"]
-        self.question_idx = 0
-
-        self.update_display()
-        self.running = True
+        if load_on_startup:
+            process = multiprocessing.Process(target=load_models, args=(sender,))
+            process.daemon = True
+            process.start()
+            self.processor, self.model, self.t2s = self.loading_screen(receiver, "Loading language models")
+            self.models_loaded = True
 
         self.action = "None"
+        self.avatar.state = 0
         self.update_info_screen()
         self.update_main_screen("Press Q to start")
         self.update_display()
 
-    def load_models(self):
-        self.processor = AutoProcessor.from_pretrained("facebook/hf-seamless-m4t-medium")
-        self.model = SeamlessM4TModel.from_pretrained("facebook/hf-seamless-m4t-medium")
-        self.t2s = SeamlessM4TForTextToSpeech.from_pretrained("facebook/hf-seamless-m4t-medium")
-        self.models_loaded = True
+    def loading_screen(self, receiver_connection, text=None):
+        start_time = time.monotonic()
+        self.action = "Loading models"
+        self.avatar.state = 2
+        self.update_info_screen()
+        self.update_main_screen(text)
+        self.update_display()
+
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    quit()
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        quit()
+
+            if receiver_connection.poll():
+                return receiver_connection.recv()
+
+            if (time.monotonic() - start_time) > 2:
+                self.update_main_screen("Loading language models")
+                self.update_display()
+                self.avatar.whistle_state = (self.avatar.whistle_state + 1) % 2
+                start_time = time.monotonic()
 
     def update_display(self):
         self.main_panel.blit(self.main_screen.surface, (0, 0))
@@ -127,12 +151,11 @@ class Consultation:
 
     def ask_question(self):
         if not self.models_loaded:
-            self.action = "loading models"
-            self.update_info_screen()
-            self.update_main_screen("Loading language models")
-            self.update_display()
-
-            self.load_models()
+            process = multiprocessing.Process(target=load_models, args=(sender,))
+            process.daemon = True
+            process.start()
+            self.processor, self.model, self.t2s = self.loading_screen(receiver, "Loading language models")
+            self.models_loaded = True
 
         # Question will always be given as an english text string
         question = self.questions[self.question_idx]
@@ -176,6 +199,7 @@ class Consultation:
                         return True
 
             return False
+
         # try:
         stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=rate,
                              input=True, frames_per_buffer=chunk)
@@ -262,9 +286,11 @@ class Consultation:
                     self.running = False
 
 
-pg.init()
-pg.event.pump()
-audio = pyaudio.PyAudio()
+if __name__ == "__main__":
+    pg.init()
+    pg.event.pump()
+    audio = pyaudio.PyAudio()
+    receiver, sender = multiprocessing.Pipe(duplex=False)
 
-consultation = Consultation(audio, load_models=True)
-consultation.loop()
+    consultation = Consultation(audio, load_on_startup=True)
+    consultation.loop()
