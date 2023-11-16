@@ -5,23 +5,26 @@
 
 ## Python
 ### Installing the correct version of python for the project
-`Python3.8` is the python version for this project, so make sure ot install it
+`Python3.8` is the python version for this project, so make sure to install it
 ### Creating a virtual environment
 Make sure to create the virtual environment using `Python3.8` and give a suitable name (such as `heroEnv`)
 
     python3.8 -m venv heroEnv
 
 ### Instalilng libraries
-Change the directiory of your terminal to where the newly created enviroment is located by
+> [!important]
+> Make sure that you have changed your current terminal directory to the folder created by the newly created virtual environment by "cd `heroEng`"
 
     cd <location>
 
-Run the environmentn so that the libraries are all installed on the correct place
+Run the environment so that the libraries are all installed in the correct place
 
     source bin/activate
 
+> To exit the virtual environment run "deactivate" on the command line
+
 ## 😱 Fuck up? Reset the Pi
-> this is a qutoe
+> This is a quote
 
 ```
 just to see how these all look
