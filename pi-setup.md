@@ -1,7 +1,7 @@
 # Set up for the Raspberry Pi 5
 >[!important]
 > Make sure that you have read the [README.md](README.md) file before reading this file
-## Initial setup
+## Initial setup jamie
 ### Installing software?
 ### Display setting to connect to it from other computers
 
@@ -31,7 +31,7 @@ Run the environment so that the libraries are all installed in it
 > To exit the virtual environment run "deactivate" on the command line
 
 We can the install the libraries needed by using pip
-
+    
     pip3 install <package_name_1> <package_name_2> ...
 
 The [packages needed](requirements.txt) for this project can be found [here](requirements.txt). For simplicity the following command can be run while on the workspace:
