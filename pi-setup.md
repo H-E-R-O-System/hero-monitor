@@ -81,7 +81,7 @@ Change the directiory to the downloads folder to download the python version
 
 Download python 3.10.13
 
-    wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz`
+    wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
 
 Extract the downloaded file
 
