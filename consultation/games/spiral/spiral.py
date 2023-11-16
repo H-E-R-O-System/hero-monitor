@@ -101,10 +101,9 @@ class SpiralTest:
                     self.running = False
 
 
-
-os.chdir('/')
-pg.init()
-spiral_test = SpiralTest()
-spiral_test.loop()  # optionally extract data from here as array
-spiral_data = spiral_test.create_dataframe()
-print(spiral_data.head(20))
+if __name__ == "__main__":
+    pg.init()
+    spiral_test = SpiralTest()
+    spiral_test.loop()  # optionally extract data from here as array
+    spiral_data = spiral_test.create_dataframe()
+    print(spiral_data.head(20))

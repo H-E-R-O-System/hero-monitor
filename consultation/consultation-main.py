@@ -102,6 +102,15 @@ class Consultation:
         self.update_display()
 
     def loading_screen(self, receiver_connection, text=None):
+        """
+        Loading screen while background functions are being carried out
+
+        ADD SLEEPING DOCTOR and maybe time changing
+
+        :param receiver_connection:
+        :param text:
+        :return:
+        """
         start_time = time.monotonic()
         self.action = "Loading models"
         self.avatar.state = 2

@@ -4,7 +4,7 @@ import numpy as np
 import pygame as pg
 
 speak_1 = np.array([
-    #1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+    # 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
     [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0],  # 1
     [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0],  # 2
     [0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],  # 3
@@ -26,7 +26,7 @@ speak_1 = np.array([
 ])
 
 speak_2 = np.array([
-    #1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+    # 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
     [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0],  # 1
     [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0],  # 2
     [0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],  # 3
@@ -48,7 +48,7 @@ speak_2 = np.array([
 ])
 
 smile = np.array([
-    #1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+    # 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
     [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0],  # 1
     [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0],  # 2
     [0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],  # 3
@@ -70,7 +70,7 @@ smile = np.array([
 ])
 
 whistle = np.array([
-    #1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
+    # 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16
     [0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0],  # 1
     [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0],  # 2
     [0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0],  # 3
@@ -93,6 +93,7 @@ whistle = np.array([
 
 skin_tones = ["#8D5524", "#C68642", "#E0AC69", "#F1C27D", "#FFDBAC"]
 
+
 class Avatar:
     def __init__(self, state=0, face_colour=None, size=(128, 128 * 1.125)):
 
@@ -107,8 +108,7 @@ class Avatar:
 
         self.size = size
         self.colours = [pg.Color(0, 0, 0, 0), pg.Color(55, 55, 55, 255), self.face_colour,
-                   pg.Color("#ADCAE6"), pg.Color(0, 0, 0), pg.Color("#D37070")]
-
+                        pg.Color("#ADCAE6"), pg.Color(0, 0, 0), pg.Color("#D37070")]
 
         self.speak_surfs = [self.convert_array_to_surf(arr, size) for arr in [speak_1, speak_2]]
         self.smile = self.convert_array_to_surf(smile, size)
