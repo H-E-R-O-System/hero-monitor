@@ -62,10 +62,6 @@ Vncserver should open on boot and appear on the taskbar. Double click icon to op
 
 To remotely access, download [VNCviewer](https://www.realvnc.com/en/connect/download/viewer/) on your PC/Mac and login. Our RPi should appear under cloud connections.
 
-
-### Installing software?
-### Display setting to connect to it from other computers
-
 ## Python
 ### Installing the correct version of python for the project
 
