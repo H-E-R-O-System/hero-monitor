@@ -68,41 +68,71 @@ To remotely access, download [VNCviewer](https://www.realvnc.com/en/connect/down
 
 ## Python
 ### Installing the correct version of python for the project
-`Python3.8` is the python version for this project, to install it the following steps need to be followed:
 
-Steps can go here
+Python3.10 is the python version for this project, to install it the following steps need to be followed:
 
-### Creating a virtual environment
-Make sure to create the virtual environment using desired python version and give a suitable name (such as `heroEnv`)
+A few other programs and packages are needed to make sure the installation goes smoothly. Run the following on the terminal:
 
-    python3.8 -m venv heroEnv
+    sudo apt-get install -y build-essential tk-dev libncurses5-dev libncursesw5-dev libreadline6-dev libdb5.3-dev libgdbm-dev libsqlite3-dev libssl-dev libbz2-dev libexpat1-dev liblzma-dev zlib1g-dev libffi-dev
 
-### Instalilng libraries
-#### Global libraries
-#### Virtual environment libraries
-> [!important]
-> Make sure that you have changed your current terminal directory to the folder created by the newly created virtual environment by "cd `heroEng`"
+Change the directiory to the downloads folder to download the python version
 
-    cd<location>
+    cd ~/Downloads
+
+Download python 3.10.13
+
+    wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz`
+
+Extract the downloaded file
+
+    sudo tar zxf Python-3.10.13.tgz
+
+Go into the new extracted folder
+
+    cd Python-VERSION
+
+and configure the new the source files for building
+
+    sudo ./configure --enable-optimizations
+
+Run (4 being the number of core to be used)
+
+    sudo make -j 4
+
+Finally, install python by running this command
+
+    sudo make altinstall
+
+>[!note]
+> You can check if the version has been installed properly by typing `python3.10 --version`
+
+### Installing packages
+#### Virtual environment libs
+Change the directory back to the home directiory to create a virutal environment
+
+    cd ~
+
+Create a virtual environment using python 3.10.13 and name it (for example HEROenv)
+
+    python3.10 -m venv HEROenv
 
 Run the environment so that the libraries are all installed in it
 
-    source bin/activate
+    source HEROenv/bin/activate
 
-> To exit the virtual environment run "deactivate" on the command line
+> [!important]
+> For future times, when activating the envionment make sure to be within the folder `cd HEROenv` and then running `source bin/activate` to run the environment
 
-We can the install the libraries needed by using pip
-    
-    pip3 install <package_name_1> <package_name_2> ...
+To exit the virtual environment run `deactivate` on the terminal
 
-The [packages needed](requirements.txt) for this project can be found [here](requirements.txt). For simplicity the following command can be run while on the workspace:
+Next the [required packages](requirements.txt) can be installed using the following commmand `pip3 install numpy scipy...`
+
+For simplicity the following command can be run while on the workspace:
 
     python3 requirements.py
 
-> The command above gives you a string that you can copy and paste to install all of the required packages for this project
+copy and paste the output given by that file to install all the pre-requisits
 
 ## 😱 Fuck up? Reset the Pi (tada :tada:)
 
 This still needs to be done
-
-albert
