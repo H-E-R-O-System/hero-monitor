@@ -49,19 +49,15 @@ Finally, install python by running this command
 #### Virtual environment libs
 Change the directory back to the home directiory to create a virutal environment
 
-    cd
+    cd ~
 
 Create a virtual environment using python 3.10.13 and name it (for example HEROenv)
 
     python3.10 -m venv HEROenv
 
-Open the folder within the terminal
-
-    cd HEROenv
-
 Run the environment so that the libraries are all installed in it
 
-    source bin/activate
+    source HEROenv/bin/activate
 
 > [!important]
 > For future times, when activating the envionment make sure to be within the folder `cd HEROenv` and then running `source bin/activate` to run the environment
