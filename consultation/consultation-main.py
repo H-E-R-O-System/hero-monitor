@@ -8,11 +8,10 @@ from consultation.screen import Screen, BlitLocation, Fonts, Colours
 from avatar import Avatar
 import multiprocessing
 from multiprocessing.connection import Connection
-
-language_codes = {"English": "eng", "German": "deu"}
 from scipy.io.wavfile import write, read
 import wave
 
+language_codes = {"English": "eng", "German": "deu"}
 
 class User:
     def __init__(self, name, age):
