@@ -1,7 +1,7 @@
 # Set up for the Raspberry Pi 5
 >[!important]
 > Make sure that you have read the [README.md](README.md) file before reading this file
-## Initial setup jamie
+## Initial setup jamie 
 ### Installing software?
 ### Display setting to connect to it from other computers
 
