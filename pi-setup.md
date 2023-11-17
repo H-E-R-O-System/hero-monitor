@@ -46,11 +46,11 @@ A6 Wayland > W1 X11
 This will only work if Wayland has been changed to X11 desktop environment.
 First, start vncserver in service mode:
 
-    run systemctl start vncserver-x11-serviced.service
+    systemctl start vncserver-x11-serviced.service
 
 This will open the vncserver daemon. To enable vncserver on startup:
 
-    run systemctl enable vncserver-x11-serviced.service
+    systemctl enable vncserver-x11-serviced.service
 
 For more info on vncserver in service mode see [documentation](https://help.realvnc.com/hc/en-us/articles/360002310857#vncserver-x11-serviced-0-0).
 
