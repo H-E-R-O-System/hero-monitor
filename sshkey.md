@@ -1,4 +1,4 @@
-# Setting up git hub on the terminal (through SSH key)
+# Setting up github on the terminal (through SSH key)
 ## Generating a new SSH key
 More detail on this can be found [here](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 

@@ -129,6 +129,8 @@ For simplicity the following command can be run while on the workspace:
 
 copy and paste the output given by that file to install all the pre-requisits
 
+To dowload the project from github, make sure to [complete the setup](sshkey.md).
+
 ## 😱 Fuck up? Reset the Pi (tada :tada:)
 
 First of all, congrats! You have fucked up... Happens to the best of us :/
