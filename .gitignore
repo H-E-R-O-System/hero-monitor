@@ -4,6 +4,7 @@ TrainedInceptionResnetV2/
 legacy
 
 consultation/response-data/*.wav
+consultation/response-data/*.txt
 
 # local files for dataset manipulation
 affective-computing/create-training-data.ipynb
