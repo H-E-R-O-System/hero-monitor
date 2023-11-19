@@ -198,6 +198,7 @@ class Consultation:
 
         # Question will always be given as an english text string
         question = self.questions[self.question_idx]
+        self.update_consult_screen(instruction="Press N to finish recording")
         if self.config.text:
             self.update_consult_screen(question=question)
             self.update_display()
@@ -207,7 +208,7 @@ class Consultation:
             self.update_info_screen()
             self.update_display()
 
-            tokens = self.processor(text=question, src_lang="eng", return_tensors="pt")
+            tokens = self.processor(text=question.text, src_lang="eng", return_tensors="pt")
             audio = self.t2s.generate(**tokens, tgt_lang=self.config.output_lang)[0].cpu().numpy().squeeze()
 
             # maybe use pygame sound
@@ -218,13 +219,17 @@ class Consultation:
             time.sleep(0.5)
             # Keep in idle loop while speaking
             self.avatar.state = 1
-            while pg.mixer.music.get_busy():
-                self.update_consult_screen(question=question)
-                self.update_display()
-                self.avatar.speak_state = (self.avatar.speak_state + 1) % 2
-                time.sleep(0.15)
 
-            self.avatar.state = 0
+            self.consult_screen.avatar.state = 1
+            start = time.monotonic()
+            while pg.mixer.music.get_busy():
+                if time.monotonic() - start > 0.15:
+                    self.update_consult_screen(question=question)
+                    self.update_display()
+                    self.consult_screen.avatar.speak_state = (self.consult_screen.avatar.speak_state + 1) % 2
+                    start = time.monotonic()
+
+            self.consult_screen.avatar.state = 0
             self.update_consult_screen(question=question)
             self.update_display()
 
@@ -316,7 +321,7 @@ class Consultation:
                         self.update_consult_screen(instruction="Press Q to ask next question")
                         self.update_display()
 
-                        print(self.questions[self.question_idx])
+                        print(self.questions[self.question_idx].text)
                         print(response)
 
                         self.question_idx = (self.question_idx + 1) % len(self.questions)
@@ -326,12 +331,12 @@ class Consultation:
 
 
 if __name__ == "__main__":
-    os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
-
+    # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     pg.init()
     pg.event.pump()
     audio = pyaudio.PyAudio()
     receiver, sender = multiprocessing.Pipe(duplex=False)
 
-    consultation = Consultation(audio, load_on_startup=True, info_width=0, enable_speech=False)
+    consultation = Consultation(audio, load_on_startup=True, info_width=0, enable_speech=True)
     consultation.loop()
