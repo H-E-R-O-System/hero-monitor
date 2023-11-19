@@ -58,9 +58,14 @@ class Screen:
         surf_rect = pg.Rect(pos, surf.get_size())
 
         if location == BlitLocation.centre:
-            surf_rect.topleft = pg.Vector2(surf_rect.topleft) - pg.Vector2(surf_rect.size) / 2
+            surf_rect.topleft -= pg.Vector2(surf_rect.size) / 2
         elif location == BlitLocation.topRight:
             surf_rect.x -= surf_rect.width
+        elif location == BlitLocation.bottomLeft:
+            surf_rect.y -= surf_rect.height
+        elif location == BlitLocation.midBottom:
+            surf_rect.y -= surf_rect.height
+            surf_rect.x -= surf_rect.width / 2
 
         if base:
             self.base_surface.blit(surf, surf_rect.topleft)

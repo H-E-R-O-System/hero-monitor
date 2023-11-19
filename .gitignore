@@ -3,7 +3,7 @@ TrainedInceptionResnetV2/
 
 legacy
 
-consultation/response-data/
+consultation/response-data/*.wav
 
 # local files for dataset manipulation
 affective-computing/create-training-data.ipynb

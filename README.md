@@ -19,3 +19,6 @@ and then run to install the latest set of command line tools
     % sudo rm -rf /Library/Developer/CommandLineTools
     % sudo xcode-select --install
 
+
+sentencepiece
+protobuf

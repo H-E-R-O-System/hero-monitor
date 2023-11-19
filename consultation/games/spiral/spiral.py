@@ -102,7 +102,7 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    os.chdir('/Users/benhoskings/Documents/Pycharm/Hero_Monitor')
+    os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
 
     pg.init()
     spiral_test = SpiralTest()
