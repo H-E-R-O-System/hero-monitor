@@ -30,7 +30,6 @@ def consult_backend(sender_connection, processor, speech_model, text_model, text
         text_tokens = processor(text=text, src_lang="eng", return_tensors="pt")
         audio = speech_model.generate(**text_tokens, tgt_lang="eng")[0].cpu().numpy().squeeze()
         sender_connection.send(audio)
-        print("a")
 
     if response is not None:
         response_tokens = processor(audios=[response], return_tensors="pt", sampling_rate=16000)
@@ -363,7 +362,6 @@ class Consultation:
                     response_transcribed = True
                     self.prev_answer_text = response_text
                     print("Response Transcribed!!", type(response_text))
-                    print(response_text)
 
         _, data = read(path)
         self.prev_answer_audio = data
