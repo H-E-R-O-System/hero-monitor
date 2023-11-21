@@ -11,6 +11,7 @@ from multiprocessing.connection import Connection
 from scipy.io.wavfile import write, read
 import wave
 from consultation.ConsultDisplay import ConsultDisplay
+import warnings
 
 language_codes = {"English": "eng", "German": "deu"}
 
@@ -26,16 +27,18 @@ def load_models(sender_connection: Connection):
 
 
 def consult_backend(sender_connection, processor, speech_model, text_model, text=None, response=None):
+    audio, response_text = None, None
+
     if text is not None:
         text_tokens = processor(text=text, src_lang="eng", return_tensors="pt")
         audio = speech_model.generate(**text_tokens, tgt_lang="eng")[0].cpu().numpy().squeeze()
-        sender_connection.send(audio)
 
     if response is not None:
         response_tokens = processor(audios=[response], return_tensors="pt", sampling_rate=16000)
         output_tokens = text_model.generate(**response_tokens, tgt_lang="eng", generate_speech=False)
         response_text = processor.decode(output_tokens[0].tolist()[0], skip_special_tokens=True)
-        sender_connection.send(response_text)
+
+    sender_connection.send([audio, response_text])
 
     return None
 
@@ -255,8 +258,10 @@ class Consultation:
 
             # audio = generate_question_speech(question.text, self.processor, self.t2s)
             if self.next_question_audio is None:
+                t1 = time.monotonic()
                 tokens = self.processor(text=question.text, src_lang="eng", return_tensors="pt")
                 self.next_question_audio = self.t2s.generate(**tokens, tgt_lang=self.config.output_lang)[0].cpu().numpy().squeeze()
+                print(f"Generated in {time.monotonic() - t1} seconds")
 
             # maybe use pygame sound
             write("tempsave_question.wav", 16000, self.next_question_audio)
@@ -281,7 +286,7 @@ class Consultation:
 
             os.remove("tempsave_question.wav")
 
-    def record_answer(self, path, max_time=10, rate=16000, chunk=1024, run_backend=False):
+    def record_answer(self, path, max_time=20, rate=16000, chunk=1024, run_backend=False):
         def check_next_question():
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
@@ -290,10 +295,7 @@ class Consultation:
 
             return False
 
-        question_generated = False
-        question_audio = None
-        response_transcribed = False
-        response_text = None
+        backend_complete = False
 
         if run_backend:
             next_question = self.questions[(self.question_idx + 1) % len(self.questions)]
@@ -331,10 +333,6 @@ class Consultation:
         stream.stop_stream()
         stream.close()
 
-        self.update_info_screen(f"{0}")
-        self.update_display()
-        time.sleep(0.5)
-
         self.action = "Writing file"
         self.update_info_screen()
         self.update_consult_screen(instruction="Writing audio file")
@@ -347,21 +345,19 @@ class Consultation:
         wf.writeframes(b''.join(frames))
         wf.close()
 
+        t1 = time.monotonic()
         if run_backend:
-            while not question_generated:
+            while not backend_complete:
                 if receiver.poll():
-                    question_audio = receiver.recv()
-                    question_generated = True
+                    question_audio, response_text = receiver.recv()
+                    backend_complete = True
                     self.next_question_audio = question_audio
-                    print("Question generated!!", type(question_audio))
+                    print("Question generated!!")
+                    if response_text:
+                        self.prev_answer_text = response_text
+                        print("Response Transcribed!!")
 
-        if run_backend and self.prev_answer_audio is not None:
-            while not response_transcribed:
-                if receiver.poll():
-                    response_text = receiver.recv()
-                    response_transcribed = True
-                    self.prev_answer_text = response_text
-                    print("Response Transcribed!!", type(response_text))
+        print(f"Backend run time {time.monotonic() - t1} seconds")
 
         _, data = read(path)
         self.prev_answer_audio = data
@@ -392,7 +388,9 @@ class Consultation:
 
                         self.ask_question()
                         audio_data = self.record_answer(audio_file, run_backend=True)
+                        # t1 = time.monotonic()
                         # response = self.transcribe_answer(audio_data, text_file)
+                        # print(f"Transcribed in {time.monotonic() - t1} seconds")
 
                         self.action = "None"
                         self.update_info_screen()
@@ -407,6 +405,8 @@ class Consultation:
 
 if __name__ == '__main__':
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+    warnings.simplefilter(action='ignore', category=FutureWarning)
 
     # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
