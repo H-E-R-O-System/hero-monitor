@@ -11,8 +11,60 @@ from multiprocessing.connection import Connection
 from scipy.io.wavfile import write, read
 import wave
 from consultation.ConsultDisplay import ConsultDisplay
+import warnings
 
 language_codes = {"English": "eng", "German": "deu"}
+
+
+# Multiprocessing Functions
+def load_models(sender_connection: Connection):
+    processor = AutoProcessor.from_pretrained("facebook/hf-seamless-m4t-medium")
+    model = SeamlessM4TModel.from_pretrained("facebook/hf-seamless-m4t-medium")
+    t2s = SeamlessM4TForTextToSpeech.from_pretrained("facebook/hf-seamless-m4t-medium")
+
+    sender_connection.send([processor, model, t2s])
+    return None
+
+
+def consult_backend(sender_connection, processor, speech_model, text_model, text=None, response=None):
+    audio, response_text = None, None
+
+    if text is not None:
+        text_tokens = processor(text=text, src_lang="eng", return_tensors="pt")
+        audio = speech_model.generate(**text_tokens, tgt_lang="eng")[0].cpu().numpy().squeeze()
+
+    if response is not None:
+        response_tokens = processor(audios=[response], return_tensors="pt", sampling_rate=16000)
+        output_tokens = text_model.generate(**response_tokens, tgt_lang="eng", generate_speech=False)
+        response_text = processor.decode(output_tokens[0].tolist()[0], skip_special_tokens=True)
+
+    sender_connection.send([audio, response_text])
+
+    return None
+
+
+def generate_question_speech(sender_connection, text, processor, model):
+    """
+    Function for turing text based question into speech
+
+    :param sender_connection: the multiprocessing sender connection
+    :param text: the text that will be turned into audio
+    :param processor: the tokeniser for text to token mapping
+    :param model: the language model for token to audio
+    :return: audio array, sampled at 16 kHz
+    """
+    tokens = processor(text=text, src_lang="eng", return_tensors="pt")
+    audio = model.generate(**tokens, tgt_lang="eng")[0].cpu().numpy().squeeze()
+    sender_connection.send(audio)
+    return None
+
+
+def transcribe_audio(sender_connection, audio, processor, model):
+    input_tokens = processor(audios=[audio], return_tensors="pt", sampling_rate=16000)
+    output_tokens = model.generate(**input_tokens, tgt_lang="eng", generate_speech=False)
+    response_text = processor.decode(output_tokens[0].tolist()[0], skip_special_tokens=True)
+    sender_connection.send(response_text)
+    return None
 
 
 class User:
@@ -32,17 +84,8 @@ class ConsultConfig:
 class Question:
     def __init__(self, text, hints):
         self.text = text
-        self.hints = hints[:5] # restrict to 5 hints per question
+        self.hints = hints[:5]  # restrict to 5 hints per question
         self.hint_count = len(self.hints)
-
-
-def load_models(sender_connection: Connection):
-    processor = AutoProcessor.from_pretrained("facebook/hf-seamless-m4t-medium")
-    model = SeamlessM4TModel.from_pretrained("facebook/hf-seamless-m4t-medium")
-    t2s = SeamlessM4TForTextToSpeech.from_pretrained("facebook/hf-seamless-m4t-medium")
-
-    sender_connection.send([processor, model, t2s])
-    return None
 
 
 class Consultation:
@@ -99,9 +142,7 @@ class Consultation:
         self.question_idx = 0
         self.running = True
 
-        self.processor = None
-        self.model = None
-        self.t2s = None
+        self.processor, self.model, self.t2s = None, None, None
         self.models_loaded = False
 
         # Visual helper attributes
@@ -115,6 +156,13 @@ class Consultation:
             process.start()
             self.processor, self.model, self.t2s = self.loading_screen(receiver, "Loading language models")
             self.models_loaded = True
+
+        # multiprocessing helpers
+        text_tokens = self.processor(text=self.questions[0].text, src_lang="eng", return_tensors="pt")
+        audio = self.t2s.generate(**text_tokens, tgt_lang="eng")[0].cpu().numpy().squeeze()
+        self.next_question_audio = audio
+        self.prev_answer_audio = None
+        self.prev_answer_text = None
 
         self.update_info_screen()
         self.update_consult_screen(instruction="Press Q to start")
@@ -151,8 +199,8 @@ class Consultation:
                 self.consult_screen.avatar_display.state = 0
                 return receiver_connection.recv()
 
-            if (time.monotonic() - start_time) > 0.2:
-                self.consult_screen.avatar_display.time = (self.consult_screen.avatar_display.time + 1) % 24
+            if (time.monotonic() - start_time) > 0.1:
+                self.consult_screen.avatar_display.time = (self.consult_screen.avatar_display.time + 0.5) % 24
                 self.update_consult_screen(instruction="Loading language models")
                 self.update_display()
                 start_time = time.monotonic()
@@ -163,8 +211,8 @@ class Consultation:
             self.backend_screen.refresh()
             if self.instruction:
                 self.backend_screen.add_text(self.instruction,
-                                               pos=self.backend_screen.size / 2,
-                                               location=BlitLocation.centre)
+                                             pos=self.backend_screen.size / 2,
+                                             location=BlitLocation.centre)
             # update doctor screen
 
             self.main_panel.blit(self.consult_screen.get_surface(), (0, 0))
@@ -208,15 +256,18 @@ class Consultation:
             self.update_info_screen()
             self.update_display()
 
-            tokens = self.processor(text=question.text, src_lang="eng", return_tensors="pt")
-            audio = self.t2s.generate(**tokens, tgt_lang=self.config.output_lang)[0].cpu().numpy().squeeze()
+            # audio = generate_question_speech(question.text, self.processor, self.t2s)
+            if self.next_question_audio is None:
+                t1 = time.monotonic()
+                tokens = self.processor(text=question.text, src_lang="eng", return_tensors="pt")
+                self.next_question_audio = self.t2s.generate(**tokens, tgt_lang=self.config.output_lang)[0].cpu().numpy().squeeze()
+                print(f"Generated in {time.monotonic() - t1} seconds")
 
             # maybe use pygame sound
-            write("tempsave_question.wav", 16000, audio)
+            write("tempsave_question.wav", 16000, self.next_question_audio)
             pg.mixer.music.load("tempsave_question.wav")
             pg.mixer.music.play()
 
-            time.sleep(0.5)
             # Keep in idle loop while speaking
             self.avatar.state = 1
 
@@ -235,7 +286,7 @@ class Consultation:
 
             os.remove("tempsave_question.wav")
 
-    def record_answer(self, path, max_time=10, rate=16000, chunk=1024):
+    def record_answer(self, path, max_time=20, rate=16000, chunk=1024, run_backend=False):
         def check_next_question():
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
@@ -244,12 +295,24 @@ class Consultation:
 
             return False
 
-        # try:
+        backend_complete = False
+
+        if run_backend:
+            next_question = self.questions[(self.question_idx + 1) % len(self.questions)]
+            if self.prev_answer_audio is None:
+                backend_args = (sender, self.processor, self.t2s, self.model, next_question.text)
+            else:
+                backend_args = (sender, self.processor, self.t2s, self.model, next_question.text, self.prev_answer_audio)
+
+            process = multiprocessing.Process(
+                target=consult_backend,
+                args=backend_args
+            )
+            process.daemon = True
+            process.start()
+
         stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=rate,
                              input=True, frames_per_buffer=chunk)
-        # except OSError:
-        #     pg.quit()
-        #     raise SystemError("No Microphone detected!")
 
         frames = []
         self.action = "recording"
@@ -270,10 +333,6 @@ class Consultation:
         stream.stop_stream()
         stream.close()
 
-        self.update_info_screen(f"{0}")
-        self.update_display()
-        time.sleep(0.5)
-
         self.action = "Writing file"
         self.update_info_screen()
         self.update_consult_screen(instruction="Writing audio file")
@@ -286,7 +345,22 @@ class Consultation:
         wf.writeframes(b''.join(frames))
         wf.close()
 
+        t1 = time.monotonic()
+        if run_backend:
+            while not backend_complete:
+                if receiver.poll():
+                    question_audio, response_text = receiver.recv()
+                    backend_complete = True
+                    self.next_question_audio = question_audio
+                    print("Question generated!!")
+                    if response_text:
+                        self.prev_answer_text = response_text
+                        print("Response Transcribed!!")
+
+        print(f"Backend run time {time.monotonic() - t1} seconds")
+
         _, data = read(path)
+        self.prev_answer_audio = data
         return data
 
     def transcribe_answer(self, response, path):
@@ -313,16 +387,15 @@ class Consultation:
                         text_file = f"consultation/response-data/answer_{self.question_idx}.txt"
 
                         self.ask_question()
-                        audio_data = self.record_answer(audio_file)
-                        response = self.transcribe_answer(audio_data, text_file)
+                        audio_data = self.record_answer(audio_file, run_backend=True)
+                        # t1 = time.monotonic()
+                        # response = self.transcribe_answer(audio_data, text_file)
+                        # print(f"Transcribed in {time.monotonic() - t1} seconds")
 
                         self.action = "None"
                         self.update_info_screen()
                         self.update_consult_screen(instruction="Press Q to ask next question")
                         self.update_display()
-
-                        print(self.questions[self.question_idx].text)
-                        print(response)
 
                         self.question_idx = (self.question_idx + 1) % len(self.questions)
 
@@ -330,13 +403,18 @@ class Consultation:
                     self.running = False
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+
     pg.init()
     pg.event.pump()
-    audio = pyaudio.PyAudio()
+    pyaud = pyaudio.PyAudio()
     receiver, sender = multiprocessing.Pipe(duplex=False)
 
-    consultation = Consultation(audio, load_on_startup=True, info_width=0, enable_speech=True)
+    consultation = Consultation(pyaud, load_on_startup=True, info_width=0, enable_speech=True)
     consultation.loop()
