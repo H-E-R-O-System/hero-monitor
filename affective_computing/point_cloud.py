@@ -5,15 +5,13 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
-from Affective_Computing.Landmark_IDs import *
+from landmark_ids import *
 from enum import Enum
-
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-from Affective_Computing.getPipeData import get_pipe_data
-import pickle
+from get_pipe_data import get_pipe_data
 
 
 def create_pc_from_point_array(x, y, z):
