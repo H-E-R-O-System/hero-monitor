@@ -7,7 +7,7 @@ Open terminal and run the following command
     ssh-keygen -t ed25519 -C "your_email@example.com"
 
 >[!note]
-> If you are using a legacy coputer, use:
+> If you are using a legacy computer, use:
 > ```ssh-keygen -t rsa -b 4096 -C "your_email@example.com"```
 
 You can press enter 3 times to skip the next few steps

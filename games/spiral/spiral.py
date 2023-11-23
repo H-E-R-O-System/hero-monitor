@@ -54,10 +54,6 @@ class SpiralTest:
         for pos in coords:
             spiral_screen.update_pixels(pos, base=True)
 
-        # spiral_array = pg.surfarray.pixels3d(spiral_surf.surface)
-        # alpha_channel = np.expand_dims(pg.surfarray.array_alpha(spiral_surf.surface), axis=2)
-        # spiral_array = np.concatenate([spiral_array, alpha_channel], axis=2)
-        # cv2.imwrite("games/spiral/spiral-test.png", spiral_array)
         return spiral_screen.base_surface, coords
 
     def create_dataframe(self):
@@ -102,7 +98,8 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    os.chdir('/Users/benhoskings/Documents/Pycharm/Hero_Monitor')
 
     pg.init()
     spiral_test = SpiralTest()
