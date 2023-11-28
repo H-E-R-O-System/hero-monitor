@@ -171,7 +171,7 @@ class Consultation:
             self.update_consult_screen(question=question)
             self.update_display()
 
-    def record_answer(self, path, max_time=20, rate=16000, chunk=1024):
+    def record_answer(self, path, max_time=20, chunk=1024):
         def check_next_question():
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
@@ -179,6 +179,9 @@ class Consultation:
                         return True
 
             return False
+
+        device_info = pyaud.get_default_input_device_info()
+        rate = int(device_info["defaultSampleRate"])
 
         stream = self.p.open(format=pyaudio.paInt16, channels=1, rate=rate,
                              input=True, frames_per_buffer=chunk)
@@ -220,6 +223,7 @@ class Consultation:
 
         _, data = read(path)
         self.prev_answer_audio = data
+        print(data)
         return data
 
     def transcribe_answer(self, audio_path):
@@ -232,10 +236,7 @@ class Consultation:
         r = sr.Recognizer()
         with sr.AudioFile(audio_path) as source:
             audio = r.record(source)
-            try:
-                response_text = r.recognize_google(audio)
-            except:
-                response_text = ''
+            response_text = r.recognize_google(audio)
         
         # write response text to file
         response_text_path = 'consultation/response_data/response_text.txt'
@@ -245,6 +246,7 @@ class Consultation:
             with open(response_text_path, "w"):
                 pass
         with open(response_text_path, 'a') as f:
+            print(response_text)
             f.write(response_text)
             f.write('\n')
 
@@ -277,7 +279,8 @@ if __name__ == '__main__':
     os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
-    os.chdir('/Users/might/Documents/rosemary/hero-lightweight')
+    # os.chdir('/Users/might/Documents/rosemary/hero-lightweight')
+    os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
 
     pg.init()
     pg.event.pump()

@@ -121,6 +121,10 @@ Run the environment so that the libraries are all installed in it
 
 To exit the virtual environment run `deactivate` on the terminal
 
+Install PortAudio
+
+sudo apt-get install libasound-dev
+
 Next the [required packages](requirements.txt) can be installed using the following commmand `pip3 install numpy scipy...`
 
 For simplicity the following command can be run while on the workspace:
