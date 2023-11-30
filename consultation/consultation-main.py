@@ -414,8 +414,8 @@ if __name__ == '__main__':
     os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
     warnings.simplefilter(action='ignore', category=FutureWarning)
 
-    # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
     pg.event.pump()

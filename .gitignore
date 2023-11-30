@@ -5,6 +5,8 @@ legacy
 
 consultation/response-data/*.wav
 consultation/response-data/*.txt
+consultation/response_data/*.wav
+consultation/response_data/*.txt
 
 # local files for dataset manipulation
 affective_computing/create_training_data.ipynb
