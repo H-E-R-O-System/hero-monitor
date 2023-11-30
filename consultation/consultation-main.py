@@ -119,8 +119,12 @@ class Consultation:
                                                       self.display_size.y)))
 
         self.fonts = Fonts()
+        self.startup_screen = Screen(self.display_size, colour=Colours.lightGrey.value)
         self.consult_screen = ConsultDisplay(self.main_panel.get_size())
         self.backend_screen = Screen(self.backend_panel.get_size(), self.fonts.normal, colour=Colours.lightGrey.value)
+
+        self.startup_screen.load_image("logo.png", self.startup_screen.size/2, location=BlitLocation.centre,
+                                       base=True)
 
         # add unchanging items to info screen
         self.backend_screen.add_text(f"Name: {self.user.name}", (10, 30), base=True)
@@ -163,6 +167,8 @@ class Consultation:
         self.next_question_audio = audio
         self.prev_answer_audio = None
         self.prev_answer_text = None
+
+        # Show initialisation screen
 
         self.update_info_screen()
         self.update_consult_screen(instruction="Press Q to start")
