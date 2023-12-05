@@ -23,7 +23,6 @@ while running:
 
         elif event.type == pg.MOUSEMOTION and draw_start:
             draw_pos = pg.mouse.get_pos() - pg.Vector2(0, 600)
-            print(draw_pos)
             top_surf.set_at((int(draw_pos.x), int(draw_pos.y)), Colours.red.value)
             pg.display.update()
 
