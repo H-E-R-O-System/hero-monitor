@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 
 import pygame as pg
@@ -43,6 +44,7 @@ class Screen:
         self.size = pg.Vector2(size)
         self.base_surface = pg.Surface(size, pg.SRCALPHA)
         self.surface = pg.Surface(size, pg.SRCALPHA)
+        self.sprite_surface = pg.Surface(size, pg.SRCALPHA)
         if font:
             self.fonts = Fonts()
             self.font: pg.font.Font = font
@@ -116,10 +118,10 @@ class Screen:
         else:
             surf.blit(image, pos)
 
-    def add_text(self, text, pos, lines=1, location=BlitLocation.topLeft, base=False):
+    def add_text(self, text, pos, lines=1, colour=Colours.black, location=BlitLocation.topLeft, sprite=False, base=False):
         # pos will be either a tuple (x, y), or BlitPosition
 
-        textSurf = self.font.render(text, True, pg.Color(0, 0, 0), )
+        textSurf = self.font.render(text, True, colour.value)
 
         blitPos = pos
         size = pg.Vector2(textSurf.get_size())
@@ -129,11 +131,52 @@ class Screen:
             blitPos -= pg.Vector2(size.x, 0)
         elif location == BlitLocation.midTop:
             blitPos -= pg.Vector2(size.x / 2, 0)
+        elif location == BlitLocation.midBottom:
+            blitPos -= pg.Vector2(size.x / 2, size.y)
 
-        if base:
+        if sprite:
+            self.sprite_surface.blit(textSurf, blitPos)
+        elif base:
             self.base_surface.blit(textSurf, blitPos)
         else:
             self.surface.blit(textSurf, blitPos)
+
+    def add_multiline_text(self, text, pos, lines=None, location=BlitLocation.topLeft, sprite=False, base=False):
+        if not lines:
+            lines = math.ceil(self.font.render(text, True, Colours.black.value).get_width() / self.size.x)
+
+        text_length = len(text)
+        text_per_line = math.floor(text_length / lines)
+        height, gap = 0, 10
+        text_surfs = []
+        for line in range(lines):
+            line_text = text[text_per_line*line:min(text_per_line*(line + 1), text_length)]
+            line_text_surf = self.font.render(line_text, True, Colours.black.value)
+
+            text_surfs.append(line_text_surf)
+
+            height += line_text_surf.get_height() + gap # cumulative height with 5px padding
+
+        max_width = max([surf.get_width() for surf in text_surfs])
+        text_surf = pg.Surface((max_width, height - gap), pg.SRCALPHA)
+        for idx, surf in enumerate(text_surfs):
+            text_surf.blit(surf, (0, idx*(surf.get_height() + gap)))
+
+        blitPos = pos
+        size = pg.Vector2(text_surf.get_size())
+        if location == BlitLocation.centre:
+            blitPos -= size / 2
+        elif location == BlitLocation.topRight:
+            blitPos -= pg.Vector2(size.x, 0)
+        elif location == BlitLocation.midTop:
+            blitPos -= pg.Vector2(size.x / 2, 0)
+
+        if sprite:
+            self.sprite_surface.blit(text_surf, pos)
+        elif base:
+            self.base_surface.blit(text_surf, blitPos)
+        else:
+            self.surface.blit(text_surf, blitPos)
 
     def create_layered_shape(self, pos, shape, size, number, colours, offsets,
                              radii, offsetWidth=False, offsetHeight=False, base=False):
@@ -199,27 +242,19 @@ class Screen:
     def refresh(self):
         self.size = pg.Vector2(self.base_surface.get_size())
         self.surface = self.base_surface.copy()
+        self.sprite_surface = self.base_surface.copy()
 
     def clear_surfaces(self):
         self.surface = None
         self.base_surface = None
         self.font = None
 
-    def get_surface(self, image, pos=(0, 0), location=BlitLocation.topLeft):
-        imageRect = pg.Rect(pos, image.get_size())
+    def get_surface(self, sprites=False):
 
-        if location == BlitLocation.centre:
-            imageRect.topleft = pg.Vector2(imageRect.topleft) - pg.Vector2(imageRect.size) / 2
-        elif location == BlitLocation.topRight:
-            imageRect.x -= imageRect.width
+        if sprites:
+            self.surface.blit(self.sprite_surface, (0, 0))
 
-        surf = pg.Surface(self.size, pg.SRCALPHA)
-        surf.blit(image, imageRect.topleft)
-
-        surfaceCopy = self.surface.copy()
-        surfaceCopy.blit(surf, (0, 0))
-
-        return surfaceCopy
+        return self.surface
 
     def scale_surface(self, scale, base=False):
         self.size = pg.Vector2(self.base_surface.get_size()) * scale

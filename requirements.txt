@@ -18,3 +18,5 @@ torchaudio~=2.1.0
 setuptools~=65.5.1
 sentencepiece~=0.1.99
 pandas~=2.1.2
+gTTS~=2.4.0
+SpeechRecognition

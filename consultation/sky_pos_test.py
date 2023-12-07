@@ -1,14 +1,52 @@
-import math
+from consultation.screen import Screen, Colours, BlitLocation
+import pygame as pg
+import os
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    SupportsFloat,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
-def get_position(time):
-
-    x = 1.5 - time / 12
-    if 6 <= time <= 18:
-        y = math.sqrt(math.pow(0.5, 2) - math.pow((x-0.5), 2)) + 0.5
-    else:
-        y = -100
-
-    return (x, y)
 
 
-print(get_position(3))
+
+
+
+if __name__ == "__main__":
+    # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    pg.init()
+    window = pg.display.set_mode(pg.Vector2(1024, 600))
+    touch_screen = TouchScreen(pg.Vector2(window.get_size()))
+
+    window.blit(touch_screen.screen.get_surface(sprites=True), (0, 0))
+    pg.display.update()
+
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_q:
+                    touch_screen.screen.refresh()
+                elif event.key == pg.K_f:
+                    window.blit(touch_screen.screen.get_surface(sprites=True), (0, 0))
+                    pg.display.update()
+                elif event.key == pg.K_1:
+                    ...
+
+                window.blit(touch_screen.screen.surface, (0, 0))
+                pg.display.update()
+
+            if event.type == pg.MOUSEBUTTONDOWN:
+                touch_screen.click_test(pg.mouse.get_pos())

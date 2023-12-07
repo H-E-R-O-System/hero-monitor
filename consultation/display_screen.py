@@ -51,7 +51,7 @@ class AvatarBackground:
         return self.screen.surface
 
 
-class ConsultDisplay:
+class DisplayScreen:
     def __init__(self, size):
         size = pg.Vector2(size)
         fonts = Fonts()
@@ -92,7 +92,8 @@ class ConsultDisplay:
         self.screen.add_surf(self.avatar_display.get_surface(), (0, 0))
 
         if question:
-            self.text_screen_main.add_text(question.text, (20, 20))
+            # self.text_screen_main.add_text(question.text, (20, 20))
+            self.text_screen_main.add_multiline_text(question.text, (20, 20))
             for idx, hint in enumerate(question.hints):
                 self.text_screen_main.add_text("• " + hint, (40, 70 + 50*idx))
 
@@ -102,44 +103,44 @@ class ConsultDisplay:
         return self.screen.surface
 
 
-# if __name__ == "__main__":
-#     os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
-#     pg.init()
-#     window = pg.display.set_mode(pg.Vector2(1024, 600))
-#     consult_display = ConsultDisplay(pg.Vector2(window.get_size()))
-#     consult_display.avatar_display.state = 1
-#     # consult_display.avatar.state = 2
-#     consult_display.update()
-#     # consult_display.avatar.state = 1
-#     # consult_display.avatar.speak_state = 1
-#
-#     window.blit(consult_display.get_surface(), (0, 0))
-#     pg.display.update()
-#
-#     q1 = "How are you feeling today?"
-#     h1 = ["has today been overall positive or negative",
-#           "has you felt any physical pain"]
-#
-#     question_1 = Question(q1, h1)
-#
-#     while True:
-#         for event in pg.event.get():
-#             if event.type == pg.QUIT:
-#                 quit()
-#             if event.type == pg.KEYDOWN:
-#                 if event.key == pg.K_q:
-#                     consult_display.avatar_display.state = 0
-#                     consult_display.instruction = "Press F to end answer"
-#                     consult_display.update(question_1)
-#                 elif event.key == pg.K_f:
-#                     consult_display.avatar_display.state = 1
-#                     consult_display.instruction = "Press Q to ask question"
-#                     consult_display.update()
-#
-#                 elif event.key == pg.K_1:
-#                     consult_display.avatar_display.time = (consult_display.avatar_display.time + 1) % 24
-#                     print(consult_display.avatar_display.time)
-#                     consult_display.update()
-#
-#                 window.blit(consult_display.get_surface(), (0, 0))
-#                 pg.display.update()
+if __name__ == "__main__":
+    os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    pg.init()
+    window = pg.display.set_mode(pg.Vector2(1024, 600))
+    consult_display = DisplayScreen(pg.Vector2(window.get_size()))
+    consult_display.avatar_display.state = 1
+    # consult_display.avatar.state = 2
+    consult_display.update()
+    # consult_display.avatar.state = 1
+    # consult_display.avatar.speak_state = 1
+
+    window.blit(consult_display.get_surface(), (0, 0))
+    pg.display.update()
+
+    q1 = "How are you feeling today?"
+    h1 = ["has today been overall positive or negative",
+          "has you felt any physical pain"]
+
+    question_1 = Question(q1, h1)
+
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                quit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_q:
+                    consult_display.avatar_display.state = 0
+                    consult_display.instruction = "Press F to end answer"
+                    consult_display.update(question_1)
+                elif event.key == pg.K_f:
+                    consult_display.avatar_display.state = 1
+                    consult_display.instruction = "Press Q to ask question"
+                    consult_display.update()
+
+                elif event.key == pg.K_1:
+                    consult_display.avatar_display.time = (consult_display.avatar_display.time + 1) % 24
+                    print(consult_display.avatar_display.time)
+                    consult_display.update()
+
+                window.blit(consult_display.get_surface(), (0, 0))
+                pg.display.update()
