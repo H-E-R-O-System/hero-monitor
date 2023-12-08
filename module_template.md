@@ -46,5 +46,12 @@ class ModuleName:
                     self.running = False
 
         self.exit_sequence()
+
+
+if __name__ == "__main__":
+    # Module Testing
+    module_name = ModuleName()
+    module_name.loop()
+    print("Module run successfully")
 ```
     
