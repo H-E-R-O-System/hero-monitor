@@ -35,6 +35,8 @@ class ModuleName:
                     if event.key == pg.K_s:
                         # do something with key press
                         ...
+                    elif event.key == pg.K_ESCAPE:
+                        self.running = False
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     # do something with mouse click
