@@ -14,14 +14,17 @@ class ModuleName:
     
     def entry_sequence(self):
         # pre-loop initialisation section
-        # Everything needed to introduce your module
-        # OPTIONAL and can leave blank
+        # add everything needed to introduce your module and explain
+        # what the users are expected to do (e.g. game rules, aim, etc.)
+        
+        # only OPTIONAL and can leave blank
         ...
     
     def exit_sequence(self):
         # post-loop completion section
-        # maybe add Short thank you for completing the section?
-        # OPTIONAL and can leave blank
+        # maybe add short thank you for completing the section?
+        
+        # only OPTIONAL and can leave blank
         ...
 
     def loop(self):
