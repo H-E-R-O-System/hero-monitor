@@ -13,11 +13,15 @@ class ModuleName:
         # Additional class properties
     
     def entry_sequence(self):
-        # Everything needed to introduce your module 
+        # pre-loop initialisation section
+        # Everything needed to introduce your module
+        # OPTIONAL and can leave blank
         ...
     
     def exit_sequence(self):
-        # Short thank you for completing the section
+        # post-loop completion section
+        # maybe add Short thank you for completing the section?
+        # OPTIONAL and can leave blank
         ...
 
     def loop(self):
