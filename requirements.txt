@@ -20,3 +20,4 @@ sentencepiece~=0.1.99
 pandas~=2.1.2
 gTTS~=2.4.0
 SpeechRecognition
+pandas~=2.1.3

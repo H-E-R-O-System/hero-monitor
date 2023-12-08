@@ -1,5 +1,9 @@
 import pygame as pg
 import cv2
+import numpy as np
+import pandas as pd
+from datetime import date
+import string
 
 from consultation.screen import Screen, BlitLocation, Colours, Fonts
 from consultation_lightweight import User, ConsultConfig
@@ -16,7 +20,7 @@ class Consultation:
             self.user = user
         else:
             # create demo user
-            self.user = User("Demo", 65)
+            self.user = User("Demo", 65, 0)
 
         self.config = ConsultConfig(speech=enable_speech)
 
@@ -30,16 +34,35 @@ class Consultation:
 
         self.fonts = Fonts()
         self.display_screen = DisplayScreen(self.top_screen.get_size())
+        self.display_screen.instruction = "Press S to Start"
         self.touch_screen = TouchScreen(self.bottom_screen.get_size())
 
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
-        self.modules = [PSS(self, question_count=1)]
+        self.pss_question_count = 1
+        self.modules = [PSS(self, question_count=self.pss_question_count)]
         self.module_idx = 0
-
+        
+        self.output = None
+        
         self.running = True
 
+        self.id = self.generate_unique_id()
+
         self.update_display()
+
+    def generate_unique_id(self):
+        letters = pd.Series(list(string.ascii_lowercase))[np.random.permutation(26)][:10].values
+        numbers = np.random.permutation(10)[:5]
+        num_pos = np.sort(np.random.permutation(15)[:5])
+        for idx, num in zip(num_pos, numbers):
+            letters = np.insert(letters, idx, num)
+
+        id = ""
+        for elem in letters:
+            id = f"{id}{elem}"
+
+        return id
 
     def update_display(self):
         self.touch_screen.screen.refresh()
@@ -53,12 +76,31 @@ class Consultation:
 
     def take_screenshot(self):
         print("Taking Screenshot")
-        img_array = pg.surfarray.array3d(self.parent.window)
+        img_array = pg.surfarray.array3d(self.window)
         img_array = cv2.transpose(img_array)
         img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
         cv2.imwrite("screenshot.png", img_array)
 
+    def entry_sequence(self):
+        ...
+    def exit_sequence(self):
+        # PSS consult_record handling
+        pss_answers = np.array(self.modules[0].answers)
+        pss_reverse_idx = np.array([3, 4, 6, 7])
+        pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
+        pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
+
+        # Wisconsin Card Test consult_record handling
+
+        self.output = {
+            "Consult_ID": self.id,
+            "User_ID": self.user.id,
+            "Date": date.today(),
+            "PSS_Score": np.sum(pss_answers),
+            "Wisconsin_Card_Score": None}
+
     def loop(self):
+        self.entry_sequence()
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
@@ -80,10 +122,24 @@ class Consultation:
                 elif event.type == pg.QUIT:
                     self.running = False
 
+        self.exit_sequence()
+
 
 if __name__ == "__main__":
     pg.init()
     consult = Consultation()
     consult.loop()
+
+    if consult.output is not None:
+        consult_record = pd.read_csv(
+            "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
+            delimiter="\t", index_col=0)
+        consult_record.loc[len(consult_record.index)] = consult.output
+
+        consult_record.to_csv(
+        "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
+        sep="\t")
+
+        print(consult_record.head())
 
 

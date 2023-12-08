@@ -30,8 +30,10 @@ class PSS:
         self.questions = [Question(question, hint) for question, hint in zip(pss_questions, hints)]
         self.questions = self.questions[:min(len(self.questions)-1, question_count)]
         self.question_idx = 0
-        self.running = True
 
+        self.answers = []
+
+        self.running = True
         self.awaiting_response = False
 
     def update_display(self, render=True):
@@ -112,7 +114,7 @@ class PSS:
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
                     if button_id is not None and self.awaiting_response:
-                        print(button_id)
+                        self.answers.append(int(button_id))
                         if infinite:
                             self.question_idx = (self.question_idx + 1) % len(self.questions)
                         else:

@@ -14,7 +14,8 @@ import speech_recognition as sr
 
 
 class User:
-    def __init__(self, name, age):
+    def __init__(self, name, age, id):
+        self.id = id
         self.name = name
         self.age = age
 
