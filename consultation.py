@@ -42,9 +42,9 @@ class Consultation:
         self.pss_question_count = 1
         self.modules = [PSS(self, question_count=self.pss_question_count)]
         self.module_idx = 0
-        
+
         self.output = None
-        
+
         self.running = True
 
         self.id = self.generate_unique_id()
@@ -83,6 +83,7 @@ class Consultation:
 
     def entry_sequence(self):
         ...
+
     def exit_sequence(self):
         # PSS consult_record handling
         pss_answers = np.array(self.modules[0].answers)
@@ -134,12 +135,10 @@ if __name__ == "__main__":
         consult_record = pd.read_csv(
             "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
             delimiter="\t", index_col=0)
-        consult_record.loc[len(consult_record.index)] = consult.output
+        consult_record.loc[consult.id] = consult.output
 
         consult_record.to_csv(
-        "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
-        sep="\t")
+            "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
+            sep="\t")
 
         print(consult_record.head())
-
-

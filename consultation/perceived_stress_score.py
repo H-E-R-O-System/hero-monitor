@@ -1,16 +1,9 @@
 import pygame as pg
 import time
 import gtts
-from consultation.questions import pss_questions
+from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen
 from consultation.display_screen import DisplayScreen
-
-
-class Question:
-    def __init__(self, text, hints):
-        self.text = text
-        self.hints = hints[:5]  # restrict to 5 hints per question
-        self.hint_count = len(self.hints)
 
 
 class PSS:
@@ -36,11 +29,10 @@ class PSS:
         self.running = True
         self.awaiting_response = False
 
-    def update_display(self, render=True):
-        if render:
-            self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
-            self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
-            pg.display.flip()
+    def update_display(self):
+        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+        pg.display.flip()
 
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)

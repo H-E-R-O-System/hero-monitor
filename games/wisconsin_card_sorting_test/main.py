@@ -94,7 +94,6 @@ while run:
         elif event.type == pg.MOUSEBUTTONDOWN:
             pos = pg.mouse.get_pos()
             for card in gameEngine.deck.cards:
-
                 if card.rect.collidepoint(pos):
                     if card.correct:
                         gameEngine.correct_selection(screen)

@@ -22,7 +22,7 @@
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
                         if event.key == pg.K_s:
-                            # do something with mouse click
+                            # do something with key press
                             ...
  
                     elif event.type == pg.MOUSEBUTTONDOWN:

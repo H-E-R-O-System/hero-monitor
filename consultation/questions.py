@@ -1,3 +1,10 @@
+class Question:
+    def __init__(self, text, hints):
+        self.text = text
+        self.hints = hints[:5]  # restrict to 5 hints per question
+        self.hint_count = len(self.hints)
+
+
 pss_questions = (
     "In the last month, how often have you been upset because of something that happened unexpectedly?",
     "In the last month, how often have you felt that you were unable to control the important things in your life?",
