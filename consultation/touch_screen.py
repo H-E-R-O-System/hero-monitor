@@ -51,9 +51,9 @@ class TouchScreen:
 
         return None
 
-    def load_likert_buttons(self, height):
+    def load_likert_buttons(self, height, count=5):
         buttons = []
-        count, gap = 5, 10
+        gap = 10
         labels = ["Never", "Almost Never", "Sometimes", "Very Often", "Always"]
         for idx in range(count):
             width = (self.screen.size.x - (count + 1) * gap) / count
