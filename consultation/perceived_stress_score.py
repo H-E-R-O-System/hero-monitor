@@ -77,8 +77,7 @@ class PSS:
         self.update_display()
 
     def exit_sequence(self):
-        messages = ["Thank you for completing the PSS module",
-                    "The next module will be the spiral test"]
+        messages = ["Thank you for completing the PSS module",]
         self.touch_screen.kill_sprites()
         for message in messages:
             self.ask_question(message)

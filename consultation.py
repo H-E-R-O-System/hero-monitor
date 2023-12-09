@@ -12,6 +12,8 @@ from consultation.touch_screen import TouchScreen
 from consultation.avatar import Avatar
 from consultation.perceived_stress_score import PSS
 
+from games.spiral.spiral import SpiralTest
+
 
 class Consultation:
     def __init__(self, user=None, enable_speech=True):
@@ -40,7 +42,7 @@ class Consultation:
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
         self.pss_question_count = 1
-        self.modules = [PSS(self, question_count=self.pss_question_count)]
+        self.modules = [SpiralTest(0.8, 5, (600, 600), parent=self), PSS(self, question_count=self.pss_question_count), ]
         self.module_idx = 0
 
         self.output = None
@@ -86,12 +88,18 @@ class Consultation:
 
     def exit_sequence(self):
         # PSS consult_record handling
-        pss_answers = np.array(self.modules[0].answers)
+        pss_answers = np.array(self.modules[1].answers)
         pss_reverse_idx = np.array([3, 4, 6, 7])
         pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
         pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
         # Wisconsin Card Test consult_record handling
+
+        # Spiral Test Handling
+
+        spiral_data = self.modules[0].create_dataframe()
+        spiral_data.to_csv('spiraldata.csv', index=False)
+        print("Spiral Data Written to CSV")
 
         self.output = {
             "Consult_ID": self.id,
@@ -108,10 +116,11 @@ class Consultation:
                     if event.key == pg.K_s:
                         module = self.modules[self.module_idx]
                         module.running = True
-                        print("Entering PSS Loop")
+                        print("Entering Module Loop")
                         module.loop()
+                        print("Exiting Module Loop")
                         self.update_display()
-                        print("Leaving PSS Loop")
+                        self.module_idx = (self.module_idx + 1) % len(self.modules)
 
                     elif event.key == pg.K_x:
                         self.touch_screen.show_sprites = not self.touch_screen.show_sprites
@@ -141,4 +150,4 @@ if __name__ == "__main__":
             "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
             sep="\t")
 
-        print(consult_record.head())
+        # print(consult_record.head())

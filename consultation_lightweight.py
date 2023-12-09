@@ -102,7 +102,7 @@ class Consultation:
     def update_consult_screen(self, instruction=None, question=None):
         if instruction:
             self.consult_screen.instruction = instruction
-        # add update main text screen and doctor screen
+        # add update main text touch_screen and doctor touch_screen
         self.consult_screen.update(question)
 
     def ask_question(self):

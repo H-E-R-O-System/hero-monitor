@@ -31,11 +31,11 @@ def render_game(window):
     # helpful info to see when testing:
     # font = pg.font.Font(None, 36)
     # text = font.render('Rule: ' + gameEngine.deck.rule, True, (0, 0, 0))
-    # window.blit(text, (0, 0))
+    # bottom_screen.blit(text, (0, 0))
     # text = font.render('Score: ' + str(gameEngine.score), True, (0, 0, 0))
-    # window.blit(text, (0, 20))
+    # bottom_screen.blit(text, (0, 20))
     # text = font.render('Turns: ' + str(gameEngine.turns), True, (0, 0, 0))
-    # window.blit(text, (0, 40))
+    # bottom_screen.blit(text, (0, 40))
 
     blit_card(window, card_surface_template.copy(), gameEngine.deck.quiz_card, (450, 50))
 
