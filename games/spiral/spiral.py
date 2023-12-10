@@ -26,6 +26,10 @@ class SpiralTest:
             self.top_screen = None
 
         self.display_screen = DisplayScreen(self.display_size)
+        if parent:
+            self.display_screen.avatar.face_colour = parent.display_screen.avatar.face_colour
+            self.display_screen.avatar.update_colours()
+
         self.touch_screen = Screen(size, colour=Colours.white)
 
         self.spiral_surface, self.target_coords, self.coords_polar = self.create_surface()
