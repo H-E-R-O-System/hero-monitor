@@ -43,8 +43,9 @@ class Consultation:
 
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
-        self.pss_question_count = 1
-        self.modules = [SpiralTest(0.8, 5, (600, 600), parent=self), PSS(self, question_count=self.pss_question_count), ]
+        self.pss_question_count = 5
+        self.modules = [SpiralTest(0.8, 5, (600, 600), parent=self),
+                        PSS(self, question_count=self.pss_question_count), ]
         self.module_idx = 0
 
         self.output = None
