@@ -22,3 +22,7 @@ and then run to install the latest set of command line tools
 
 sentencepiece
 protobuf
+
+### Some useful comands while using git
+git fetch --all
+git reset --hard origin/main
