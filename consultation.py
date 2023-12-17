@@ -44,8 +44,8 @@ class Consultation:
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
         self.pss_question_count = 5
-        self.modules = [SpiralTest(0.8, 5, (600, 600), parent=self),
-                        PSS(self, question_count=self.pss_question_count), ]
+        self.modules = [PSS(self, question_count=self.pss_question_count),
+                        SpiralTest(0.8, 5, (600, 600), parent=self), ]
         self.module_idx = 0
 
         self.output = None
@@ -119,16 +119,16 @@ class Consultation:
         self.speak_text("The consultation is now complete. Thank you for your time")
 
         # PSS consult_record handling
-        pss_answers = np.array(self.modules[1].answers)
-        pss_reverse_idx = np.array([3, 4, 6, 7])
-        pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
-        pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
+        pss_answers = np.array(self.modules[0].answers)
+        if pss_answers.size > 0:
+            pss_reverse_idx = np.array([3, 4, 6, 7])
+            pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
+            pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
         # Wisconsin Card Test consult_record handling
 
         # Spiral Test Handling
-
-        spiral_data = self.modules[0].create_dataframe()
+        spiral_data = self.modules[1].create_dataframe()
         spiral_data.to_csv('spiraldata.csv', index=False)
         print("Spiral Data Written to CSV")
 
