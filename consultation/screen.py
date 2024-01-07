@@ -14,6 +14,7 @@ class Colours(Enum):
     green = pg.Color(100, 255, 100)
     red = pg.Color(255, 100, 100)
     shadow = pg.Color(180, 180, 180)
+    blue = pg.Color(0, 0, 255)
 
 
 class BlitLocation(Enum):
@@ -63,6 +64,9 @@ class Screen:
         else:
             self.fonts = Fonts()
             self.font = self.fonts.normal
+
+        if not type(colour) == pg.Color:
+            colour = colour.value
 
         self.colour = colour
         if colour:

@@ -35,17 +35,5 @@ class CardGameEngine():
             text_rect = text_surface.get_rect(center=(512, 300))
             screen.blit(text_surface, text_rect)
             pg.display.flip() 
-            self.clock.tick(60)
-
-
-    def final_screen(self, screen):
-        font = pg.font.Font(None, 36)
-        screen.fill((255, 255, 255))
-        text_surface = font.render('Game Completed!', True, (0, 0, 0))  # Green text
-        text_rect = text_surface.get_rect(center=(512, 250))
-        screen.blit(text_surface, text_rect)
-        text_surface = font.render('Score: ' + str(self.score), True, (0, 0, 0))  # Green text
-        text_rect = text_surface.get_rect(center=(512, 300))
-        screen.blit(text_surface, text_rect)
-        pg.display.flip() 
+            self.clock.tick(60) 
         

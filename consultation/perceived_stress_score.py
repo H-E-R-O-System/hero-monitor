@@ -17,6 +17,10 @@ class PSS:
         self.touch_screen = TouchScreen(self.top_screen.get_size())
         self.display_screen = DisplayScreen(self.bottom_screen.get_size())
 
+        if parent:
+            self.display_screen.avatar.face_colour = parent.display_screen.avatar.face_colour
+            self.display_screen.avatar.update_colours()
+
         self.touch_screen.show_sprites = True
 
         hints = ["" for _ in pss_questions]
@@ -77,8 +81,7 @@ class PSS:
         self.update_display()
 
     def exit_sequence(self):
-        messages = ["Thank you for completing the PSS module",
-                    "The next module will be the spiral test"]
+        messages = ["Thank you for completing the PSS module",]
         self.touch_screen.kill_sprites()
         for message in messages:
             self.ask_question(message)

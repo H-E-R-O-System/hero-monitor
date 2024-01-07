@@ -1,16 +1,20 @@
-import pygame as pg
+import string
+from datetime import date
+
 import cv2
+import gtts
 import numpy as np
 import pandas as pd
-from datetime import date
-import string
+import pygame as pg
+import time
 
-from consultation.screen import Screen, BlitLocation, Colours, Fonts
-from consultation_lightweight import User, ConsultConfig
-from consultation.display_screen import DisplayScreen
-from consultation.touch_screen import TouchScreen
 from consultation.avatar import Avatar
+from consultation.display_screen import DisplayScreen
 from consultation.perceived_stress_score import PSS
+from consultation.screen import Fonts
+from consultation.touch_screen import TouchScreen
+from consultation_lightweight import User, ConsultConfig
+from games.spiral.spiral import SpiralTest
 
 
 class Consultation:
@@ -39,8 +43,9 @@ class Consultation:
 
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
-        self.pss_question_count = 1
-        self.modules = [PSS(self, question_count=self.pss_question_count)]
+        self.pss_question_count = 5
+        self.modules = [SpiralTest(0.8, 5, (600, 600), parent=self),
+                        PSS(self, question_count=self.pss_question_count), ]
         self.module_idx = 0
 
         self.output = None
@@ -71,6 +76,32 @@ class Consultation:
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
+    def speak_text(self, text):
+        self.display_screen.instruction = None
+        self.display_screen.update()
+
+        question_audio = gtts.gTTS(text=text, lang='en', slow=False)
+        question_audio_file = f'consultation/question_audio/tempsave_text_to_audio.mp3'
+        question_audio.save(question_audio_file)
+
+        pg.mixer.music.load(question_audio_file)
+        pg.mixer.music.play()
+
+        # Keep in idle loop while speaking
+        self.display_screen.avatar.state = 1
+        start = time.monotonic()
+        while pg.mixer.music.get_busy():
+            if time.monotonic() - start > 0.15:
+                self.display_screen.update()
+                self.update_display()
+                self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
+                start = time.monotonic()
+
+        self.display_screen.avatar.state = 0
+
+        self.display_screen.update()
+        self.update_display()
+
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
@@ -85,13 +116,21 @@ class Consultation:
         ...
 
     def exit_sequence(self):
+        self.speak_text("The consultation is now complete. Thank you for your time")
+
         # PSS consult_record handling
-        pss_answers = np.array(self.modules[0].answers)
+        pss_answers = np.array(self.modules[1].answers)
         pss_reverse_idx = np.array([3, 4, 6, 7])
         pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
         pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
         # Wisconsin Card Test consult_record handling
+
+        # Spiral Test Handling
+
+        spiral_data = self.modules[0].create_dataframe()
+        spiral_data.to_csv('spiraldata.csv', index=False)
+        print("Spiral Data Written to CSV")
 
         self.output = {
             "Consult_ID": self.id,
@@ -100,7 +139,7 @@ class Consultation:
             "PSS_Score": np.sum(pss_answers),
             "Wisconsin_Card_Score": None}
 
-    def loop(self):
+    def loop(self, infinite=False):
         self.entry_sequence()
         while self.running:
             for event in pg.event.get():
@@ -108,10 +147,16 @@ class Consultation:
                     if event.key == pg.K_s:
                         module = self.modules[self.module_idx]
                         module.running = True
-                        print("Entering PSS Loop")
+                        print("Entering Module Loop")
                         module.loop()
+                        print("Exiting Module Loop")
                         self.update_display()
-                        print("Leaving PSS Loop")
+                        if infinite:
+                            self.module_idx = (self.module_idx + 1) % len(self.modules)
+                        else:
+                            self.module_idx += 1
+                            if self.module_idx == len(self.modules):
+                                self.running = False
 
                     elif event.key == pg.K_x:
                         self.touch_screen.show_sprites = not self.touch_screen.show_sprites
@@ -141,4 +186,4 @@ if __name__ == "__main__":
             "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
             sep="\t")
 
-        print(consult_record.head())
+        # print(consult_record.head())

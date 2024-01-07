@@ -19,13 +19,17 @@ Run the following commands
 
 then
 
-    ssh-add ~/.ssh/id_rsa
+    ssh-add ~/.ssh/id_ed25519
+
+>[!note]
+> If you are on mac use 'ssh-add ~/.ssh/id_rsa'
 
 Next open the file and copy the key inside of it
 
-    open ~/.ssh/id_rsa.pub
+    open ~/.ssh/id_ed25519
 
 >[!note]
-> If you are on mac you can simply run `pbcopy < ~/.ssh/id_rsa.pub`. Which will copy the components of the file instead
+> If you are on mac use 'open ~/.ssh/id_rsa.pub'
+> or you can also simply run `pbcopy < ~/.ssh/id_rsa.pub`. Which will copy the components of the file instead
 
-You can the go to to `github > settings > SSH and GPG keys > New SSH key` and add paste the key into the key box (save and you should now have access to github)
+You can then go to to `github > settings > SSH and GPG keys > New SSH key` and add paste the key into the key box (save and you should now have access to github)
