@@ -76,7 +76,7 @@ class CardGame:
                                           pos=(self.display_size / 2) + pg.Vector2(0, 50),
                                           location=BlitLocation.centre)
         self.update_displays()
-        time.sleep(2)
+        time.sleep(1)
         self.running = False
 
     def loop(self):
