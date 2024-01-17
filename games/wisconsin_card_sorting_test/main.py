@@ -8,6 +8,7 @@ import os
 from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
+import math
 
 
 class CardGame:
@@ -34,10 +35,19 @@ class CardGame:
             
         self.running = True
         pg.display.set_caption('Wisconsin Card Sorting Test')
-        self.quiz_coord = (450, 50)
-        self.option_coords = [(150, 325), (450, 325), (750, 325)]
 
-        self.engine = CardGameEngine(self.quiz_coord, self.option_coords)
+        # Card positioning in the screen. The positions specify the center of the card.
+        option_count = 3
+        card_width, h_gap = math.pow(option_count + 1, -1), math.pow(option_count + 1, -2)
+        card_height, v_gap = math.pow(3, -1), math.pow(3, -2)
+
+        self.quiz_coord = (0.5*self.display_size.x *(1 - card_width), v_gap * self.display_size.y)
+        self.option_coords = [((idx*card_width + (idx+1) * h_gap) * self.display_size.x,
+                               (card_height + 2 * v_gap) * self.display_size.y)
+                              for idx in range(option_count)]
+
+        self.engine = CardGameEngine(self.quiz_coord, self.option_coords,
+                                     card_size=(self.display_size.x/4, self.display_size.y/3))
 
         self.max_turns = max_turns
 

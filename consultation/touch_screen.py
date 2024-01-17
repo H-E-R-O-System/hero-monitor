@@ -37,7 +37,7 @@ class GameObjects(pg.sprite.Group):
                                     sprite=True)
 
             elif obj.object_type == "card":
-                screen.add_surf(obj.image, pos=obj.rect.topleft, sprite=True)
+                screen.add_surf(obj.image, pos=obj.rect.topleft, location=BlitLocation.topLeft, sprite=True)
 
 
 class TouchScreen:

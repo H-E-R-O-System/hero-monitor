@@ -7,7 +7,7 @@ shapes = ['square', 'circle', 'triangle', 'diamond']
 
 
 class Card(pg.sprite.Sprite):
-    def __init__(self, deck, size=(164, 214), colour=None, shape=None, shape_count=None):
+    def __init__(self, deck, size, colour=None, shape=None, shape_count=None):
         super().__init__()
         self.object_type = "card"
         self.size = pg.Vector2(size)
@@ -71,18 +71,18 @@ class Card(pg.sprite.Sprite):
 
 
 class Deck:
-    def __init__(self, rule):
+    def __init__(self, rule, card_size):
         self.rule = rule
         self.quiz_shape = random.choice(shapes)
         self.quiz_colour = random.choice(colours)
         self.quiz_shape_count = random.randint(1, 3)
-        self.quiz_card = Card(deck=self, shape=self.quiz_shape,
+        self.quiz_card = Card(deck=self, size=card_size, shape=self.quiz_shape,
                               colour=self.quiz_colour, shape_count=self.quiz_shape_count)
 
         self.cards = []
-        self.cards.append(Card(deck=self, shape=self.quiz_shape))
-        self.cards.append(Card(deck=self, colour=self.quiz_colour))
-        self.cards.append(Card(deck=self, shape_count=self.quiz_shape_count))
+        self.cards.append(Card(deck=self, size=card_size, shape=self.quiz_shape))
+        self.cards.append(Card(deck=self, size=card_size, colour=self.quiz_colour))
+        self.cards.append(Card(deck=self, size=card_size, shape_count=self.quiz_shape_count))
 
         self.all_cards = [*self.cards.copy(), self.quiz_card]
     

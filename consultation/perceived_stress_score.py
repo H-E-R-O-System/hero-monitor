@@ -43,7 +43,7 @@ class PSS:
 
     def ask_question(self, text=None):
         if not text:
-            self.touch_screen.load_likert_buttons(height=275)
+            self.touch_screen.load_likert_buttons(height=self.touch_screen.screen.size.y / 2)
             question = self.questions[self.question_idx]
             text = question.text
             self.display_screen.instruction = None

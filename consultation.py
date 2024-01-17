@@ -19,7 +19,7 @@ from games.wisconsin_card_sorting_test.main import CardGame
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True):
+    def __init__(self, user=None, enable_speech=True, scale=1):
 
         if user:
             self.user = user
@@ -29,7 +29,8 @@ class Consultation:
 
         self.config = ConsultConfig(speech=enable_speech)
 
-        self.display_size = pg.Vector2(1024, 600)
+        self.display_size = pg.Vector2(1024, 600) * scale
+        print(self.display_size)
 
         # load all attributes which utilise any pygame surfaces!
 
@@ -178,7 +179,7 @@ class Consultation:
 
 if __name__ == "__main__":
     pg.init()
-    consult = Consultation()
+    consult = Consultation(scale=0.8)
     consult.loop()
 
     if consult.output is not None:
