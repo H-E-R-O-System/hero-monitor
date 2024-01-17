@@ -15,6 +15,7 @@ from consultation.screen import Fonts
 from consultation.touch_screen import TouchScreen
 from consultation_lightweight import User, ConsultConfig
 from games.spiral.spiral import SpiralTest
+from games.wisconsin_card_sorting_test.main import CardGame
 
 
 class Consultation:
@@ -44,8 +45,11 @@ class Consultation:
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
         self.pss_question_count = 5
-        self.modules = [PSS(self, question_count=self.pss_question_count),
-                        SpiralTest(0.8, 5, (600, 600), parent=self), ]
+        self.modules = {
+            "WCT": CardGame(max_turns=3, parent=self),
+            "PSS": PSS(self, question_count=self.pss_question_count),
+            "Spiral": SpiralTest(0.8, 5, (600, 600), parent=self), }
+
         self.module_idx = 0
 
         self.output = None
@@ -119,16 +123,17 @@ class Consultation:
         self.speak_text("The consultation is now complete. Thank you for your time")
 
         # PSS consult_record handling
-        pss_answers = np.array(self.modules[0].answers)
+        pss_answers = np.array(self.modules["PSS"].answers)
         if pss_answers.size > 0:
             pss_reverse_idx = np.array([3, 4, 6, 7])
             pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
             pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
         # Wisconsin Card Test consult_record handling
+        WCT_score = self.modules["WCT"].engine.score
 
         # Spiral Test Handling
-        spiral_data = self.modules[1].create_dataframe()
+        spiral_data = self.modules["Spiral"].create_dataframe()
         spiral_data.to_csv('spiraldata.csv', index=False)
         print("Spiral Data Written to CSV")
 
@@ -137,7 +142,7 @@ class Consultation:
             "User_ID": self.user.id,
             "Date": date.today(),
             "PSS_Score": np.sum(pss_answers),
-            "Wisconsin_Card_Score": None}
+            "Wisconsin_Card_Score": WCT_score}
 
     def loop(self, infinite=False):
         self.entry_sequence()
@@ -145,7 +150,7 @@ class Consultation:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_s:
-                        module = self.modules[self.module_idx]
+                        module = self.modules[list(self.modules.keys())[self.module_idx]]
                         module.running = True
                         print("Entering Module Loop")
                         module.loop()

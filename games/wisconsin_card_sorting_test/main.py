@@ -1,94 +1,87 @@
+import time
+
 import pygame as pg
-from models import *
-from engine import *
+from games.wisconsin_card_sorting_test.models import *
+from games.wisconsin_card_sorting_test.engine import *
+import os
+
+from consultation.touch_screen import TouchScreen, GameObjects
+from consultation.display_screen import DisplayScreen
+from consultation.screen import Colours, BlitLocation
+
 
 class CardGame:
 
-    def __init__(self):
-        pg.init()
+    def __init__(self, size=(1024, 600), max_turns=10, parent=None):
+        self.parent = parent
+
+        if parent is not None:
+            self.display_size = parent.display_size
+            self.bottom_screen = parent.bottom_screen
+            self.top_screen = parent.top_screen
+        else:
+            self.display_size = pg.Vector2(size)
+            self.bottom_screen = pg.display.set_mode(self.display_size)
+            self.top_screen = None
+
+        self.display_screen = DisplayScreen(self.display_size)
+        self.touch_screen = TouchScreen(self.display_size)
+        self.touch_screen.show_sprites = True
+
+        if parent:
+            self.display_screen.avatar.face_colour = parent.display_screen.avatar.face_colour
+            self.display_screen.avatar.update_colours()
+            
         self.running = True
-        screen_size = (1024, 600)
-        self.screen = pg.display.set_mode(screen_size)
         pg.display.set_caption('Wisconsin Card Sorting Test')
-        self.engine = CardGameEngine()
+        self.quiz_coord = (450, 50)
+        self.option_coords = [(150, 325), (450, 325), (750, 325)]
 
-        self.white = (255, 255, 255)
-        grey = (192, 192, 192)
-        self.black = (0, 0, 0)
-        self.colours = {'red': (181, 67, 67),
-                'blue': (67, 113, 181),
-                'green': (69, 181, 67),
-                'yellow': (252, 198, 3)}
+        self.engine = CardGameEngine(self.quiz_coord, self.option_coords)
 
-        card_width, card_height = 150, 200
-        white_fill = pg.Surface((card_width, card_height))
-        white_fill.fill(self.white)
-        self.card_surface_template = pg.Surface((card_width + 14, card_height + 14))
-        self.card_surface_template.fill(grey)
-        self.card_surface_template.blit(white_fill, (7, 7))
+        self.max_turns = max_turns
 
     def render_game(self):
-        self.screen.fill(self.white)
+        # print(self.engine.deck.all_cards)
+        self.touch_screen.refresh()
+        self.touch_screen.sprites = GameObjects(self.engine.deck.all_cards)
+        self.update_displays()
 
-        self.blit_card(self.card_surface_template.copy(), self.engine.deck.quiz_card, (450, 50))
+    def display_message(self, answer):
+        self.touch_screen.refresh()
+        self.touch_screen.kill_sprites()
+        if answer:
+            self.touch_screen.screen.add_text("Correct!", pos=self.display_size/2, location=BlitLocation.centre)
+        else:
+            self.touch_screen.screen.add_text("Incorrect!", pos=self.display_size / 2, location=BlitLocation.centre)
 
-        option_coords = [(150, 325), (450, 325), (750, 325)]
+        self.update_displays()
+        time.sleep(1)
 
-        for i in range(3):
-            self.blit_card(self.card_surface_template.copy(), self.engine.deck.cards[i], option_coords[i])
+    def update_displays(self):
+        if self.parent:
+            self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
 
+        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+        pg.display.flip()
 
-    def blit_card(self, card_surface, card, coords):
-        x, y = coords
-        colour = self.colours[card.colour]
-        shape = card.shape
-        shape_count = card.shape_count
-        
-        self.draw_shapes(card_surface, colour, shape, shape_count)
-
-        card.rect = card_surface.get_rect(topleft=(x, y))
-        self.screen.blit(card_surface, (x, y))
-
-    def draw_shapes(self, card_surface, colour, shape, count):
-        card_width, card_height = card_surface.get_size()
-
-        shape_size = min(card_width, card_height) // 5
-        spacing = (card_width - (count * shape_size)) // (count + 1)
-
-        for i in range(count):
-            x = spacing + i * (spacing + shape_size)
-            y = card_height // 2
-
-            if shape == 'triangle':
-                pg.draw.polygon(card_surface, colour, [(x, y - shape_size // 2),
-                                                        (x + shape_size, y - shape_size // 2),
-                                                        (x + shape_size // 2, y + shape_size // 2)])
-            elif shape == 'circle':
-                pg.draw.circle(card_surface, colour, (x + shape_size // 2, y), shape_size // 2)
-            elif shape == 'square':
-                pg.draw.rect(card_surface, colour, (x, y - shape_size // 2, shape_size, shape_size))
-            elif shape == 'diamond':
-                pg.draw.polygon(card_surface, colour, [(x, y),
-                                                        (x + shape_size // 2, y - shape_size // 2),
-                                                        (x + shape_size, y),
-                                                        (x + shape_size // 2, y + shape_size // 2)])
-                
     def entry_sequence(self):
-        pass
+        self.render_game()
 
     def exit_sequence(self):
-        font = pg.font.Font(None, 36)
-        self.screen.fill((255, 255, 255))
-        text_surface = font.render('Game Completed!', True, (0, 0, 0))  # Green text
-        text_rect = text_surface.get_rect(center=(512, 250))
-        self.screen.blit(text_surface, text_rect)
-        text_surface = font.render('Score: ' + str(self.engine.score), True, (0, 0, 0))  # Green text
-        text_rect = text_surface.get_rect(center=(512, 300))
-        self.screen.blit(text_surface, text_rect)
-        pg.display.flip() 
+        self.touch_screen.refresh()
+        self.touch_screen.kill_sprites()
+        self.touch_screen.screen.add_text("Game Completed!", pos=self.display_size / 2, location=BlitLocation.centre)
+        self.touch_screen.screen.add_text('Score: ' + str(self.engine.score),
+                                          pos=(self.display_size / 2) + pg.Vector2(0, 50),
+                                          location=BlitLocation.centre)
+        self.update_displays()
+        time.sleep(2)
+        self.running = False
 
     def loop(self):
         game_over = False
+        self.entry_sequence()
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -96,27 +89,29 @@ class CardGame:
                 elif game_over:
                     self.exit_sequence()
                 elif event.type == pg.MOUSEBUTTONDOWN:
-                    pos = pg.mouse.get_pos()
-                    for card in self.engine.deck.cards:
+                    if self.parent:
+                        pos = self.parent.get_relative_mose_pos()
+                    else:
+                        pos = pg.mouse.get_pos()
+                    selection = self.touch_screen.click_test(pos)
+                    if selection is not None:
+                        self.display_message(selection)
 
-                        if card.rect.collidepoint(pos):
-                            if card.correct:
-                                self.engine.correct_selection(self.screen)
-                            else:
-                                self.engine.incorrect_selection(self.screen)
-                            
-                            self.engine.turns += 1
-                            if self.engine.turns == 10:
-                                game_over = True
-                            else:
-                                self.engine.deal()
+                        if selection:
+                            self.engine.score += 1
 
-            if not game_over:
-                self.render_game()
+                        self.engine.turns += 1
+                        if self.engine.turns == self.max_turns:
+                            game_over = True
+                        else:
+                            self.engine.deal()
 
-            pg.display.update()
+                    if not game_over:
+                        self.render_game()
 
 if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    pg.init()
     card_game = CardGame()
     card_game.loop()
     print("Card game ran successfully")

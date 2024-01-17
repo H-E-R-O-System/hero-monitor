@@ -18,13 +18,15 @@ class GameButton(pg.sprite.Sprite):
         else:
             return False
 
+    def click_return(self):
+        return self.id
+
 
 class GameObjects(pg.sprite.Group):
     def __init__(self, sprites):
         super().__init__(self, sprites)
 
     def draw(self, screen: Screen, bgsurf=None, special_flags: int = 0):
-        screen.refresh()
         for obj in self.sprites():
             if obj.object_type == "button":
                 pg.draw.rect(screen.sprite_surface, obj.colour, obj.rect, border_radius=16)
@@ -34,20 +36,23 @@ class GameObjects(pg.sprite.Group):
                     screen.add_text(obj.label, colour=Colours.darkGrey, location=BlitLocation.midBottom, pos=obj.rect.midtop,
                                     sprite=True)
 
+            elif obj.object_type == "card":
+                screen.add_surf(obj.image, pos=obj.rect.topleft, sprite=True)
+
 
 class TouchScreen:
     def __init__(self, size):
         self.screen = Screen(size, colour=Colours.white.value)
         self.screen.refresh()
 
-        self.sprites = None
+        self.sprites = GameObjects([])
         self.show_sprites = False
 
     def click_test(self, pos):
         if self.sprites:
-            for button in self.sprites:
-                if button.is_clicked(pos):
-                    return button.id
+            for sprite in self.sprites:
+                if sprite.is_clicked(pos):
+                    return sprite.click_return()
 
         return None
 
@@ -69,5 +74,9 @@ class TouchScreen:
         self.sprites.empty()
         self.sprites.draw(self.screen)
 
+    def refresh(self):
+        self.screen.refresh()
+
     def get_surface(self):
+        self.sprites.draw(self.screen)
         return self.screen.get_surface(self.show_sprites)
