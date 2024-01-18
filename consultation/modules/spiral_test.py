@@ -9,6 +9,8 @@ import time
 from consultation.screen import Screen, Colours, BlitLocation
 from consultation.display_screen import DisplayScreen
 
+import matplotlib.pyplot as plt
+
 
 class SpiralTest:
     def __init__(self, amplitude, turns, size=(1200, 1200), parent=None):
@@ -47,7 +49,7 @@ class SpiralTest:
     def update_display(self):
         if self.top_screen is not None:
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
-        self.bottom_screen.blit(self.touch_screen.surface, ((self.display_size.x - self.touch_screen.size.x) / 2, 0))
+        self.bottom_screen.blit(self.touch_screen.get_surface(), ((self.display_size.x - self.touch_screen.size.x) / 2, 0))
         pg.display.flip()
 
     def ask_question(self, text):
@@ -119,6 +121,24 @@ class SpiralTest:
 
         return spiral_screen, coords , coords_polar
 
+    def create_surface_2(self, size=(550, 550)):
+        n = 500
+        a, b, n = 0, 0.5, 5
+        theta = np.logspace(0, np.log10(2 * np.pi), n)
+        x = (a+b*theta) * np.cos(t)
+        y = (a+b*theta) * np.sin(self.turns * t)
+        print(x.shape)
+        points = np.array(([x, y])).transpose()
+
+        fig, ax = plt.subplots()
+        plt.grid(True)
+
+        ax.plot(x, y)
+
+        plt.show()
+
+        print(points.shape)
+
     def create_dataframe(self):
         return pd.DataFrame(data=self.spiral_data.transpose(),
                             columns=["rel_pos_x", "rel_pos_y", "theta","error","time"])
@@ -185,7 +205,8 @@ if __name__ == "__main__":
 
     pg.init()
     spiral_test = SpiralTest(0.8, 5, (600, 600))
-    spiral_test.loop()  # optionally extract data from here as array
-    spiral_data = spiral_test.create_dataframe()
-    spiral_data.to_csv('spiraldata.csv', index=False)
-    print(spiral_data.head(5))
+    spiral_test.create_surface_2()
+    # spiral_test.loop()  # optionally extract data from here as array
+    # spiral_data = spiral_test.create_dataframe()
+    # spiral_data.to_csv('spiraldata.csv', index=False)
+    # print(spiral_data.head(5))

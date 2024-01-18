@@ -70,10 +70,11 @@ class Consultation:
 
         self.pss_question_count = 5
         self.modules = {
+            "Spiral": SpiralTest(0.8, 5, (600, 600), parent=self),
             "VAT": VisualAttentionTest(touch_size=(400, 400), parent=self),
             "WCT": CardGame(max_turns=3, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
-            "Spiral": SpiralTest(0.8, 5, (600, 600), parent=self), }
+             }
 
         self.module_idx = 0
 
