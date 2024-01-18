@@ -8,7 +8,7 @@ rules = ['colour', 'shape', 'shape_count']
 class CardGameEngine:
     def __init__(self, quiz_coord, option_coords, card_size=(164, 214)):
         self.rule = random.choice(rules)
-        print(self.rule)
+        print(f"Game rule: {self.rule}")
         self.score = 0
         self.turns = 0
         self.card_size = card_size

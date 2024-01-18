@@ -37,16 +37,13 @@ class GameObjects(pg.sprite.Group):
                                     sprite=True)
 
             elif obj.object_type == "card":
-                screen.add_surf(obj.image, pos=obj.rect.topleft, location=BlitLocation.topLeft, sprite=True)
+                screen.add_surf(obj.image, pos=obj.rect.topleft, sprite=True)
 
 
-class TouchScreen:
-    def __init__(self, size):
-        self.screen = Screen(size, colour=Colours.white.value)
-        self.screen.refresh()
-
+class TouchScreen(Screen):
+    def __init__(self, size, colour=Colours.white):
+        super().__init__(size, colour=colour)
         self.sprites = GameObjects([])
-        self.show_sprites = False
 
     def click_test(self, pos):
         if self.sprites:
@@ -56,27 +53,14 @@ class TouchScreen:
 
         return None
 
-    def load_likert_buttons(self, height, count=5):
-        buttons = []
-        gap = 10
-        labels = ["Never", "Almost Never", "Sometimes", "Very Often", "Always"]
-        for idx in range(count):
-            width = (self.screen.size.x - (count + 1) * gap) / count
-            position = gap + idx * ((self.screen.size.x - (count + 1) * gap) / count + gap)
-            button = GameButton(pg.Vector2(position, height), pg.Vector2(width, 50), idx, text=str(idx), label=labels[idx])
-            buttons.append(button)
-
-        self.sprites = GameObjects(buttons)
-        self.sprites.draw(self.screen)
-        self.show_sprites = True
-
     def kill_sprites(self):
         self.sprites.empty()
-        self.sprites.draw(self.screen)
-
-    def refresh(self):
-        self.screen.refresh()
 
     def get_surface(self):
-        self.sprites.draw(self.screen)
-        return self.screen.get_surface(self.show_sprites)
+        self.sprites.draw(self)
+        display_surf = self.base_surface.copy()
+        display_surf.blit(self.surface, (0, 0))
+        display_surf.blit(self.sprite_surface, (0, 0))
+
+        return display_surf
+

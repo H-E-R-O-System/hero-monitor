@@ -26,6 +26,7 @@ class CardGame:
             self.top_screen = None
 
         self.display_screen = DisplayScreen(self.display_size)
+        self.display_screen.instruction = "Match the card!"
         self.touch_screen = TouchScreen(self.display_size)
         self.touch_screen.show_sprites = True
 
@@ -34,7 +35,6 @@ class CardGame:
             self.display_screen.avatar.update_colours()
             
         self.running = True
-        pg.display.set_caption('Wisconsin Card Sorting Test')
 
         # Card positioning in the screen. The positions specify the center of the card.
         option_count = 3
@@ -54,6 +54,7 @@ class CardGame:
     def render_game(self):
         # print(self.engine.deck.all_cards)
         self.touch_screen.refresh()
+        self.display_screen.update()
         self.touch_screen.sprites = GameObjects(self.engine.deck.all_cards)
         self.update_displays()
 
@@ -90,14 +91,12 @@ class CardGame:
         self.running = False
 
     def loop(self):
-        game_over = False
         self.entry_sequence()
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.running = False
-                elif game_over:
-                    self.exit_sequence()
+
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     if self.parent:
                         pos = self.parent.get_relative_mose_pos()
@@ -112,16 +111,21 @@ class CardGame:
 
                         self.engine.turns += 1
                         if self.engine.turns == self.max_turns:
-                            game_over = True
+                            self.running = False
                         else:
                             self.engine.deal()
+                            self.render_game()
 
-                    if not game_over:
-                        self.render_game()
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_w:
+                        self.parent.take_screenshot()
+
+        self.exit_sequence()
+
 
 if __name__ == "__main__":
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     pg.init()
-    card_game = CardGame()
+    card_game = CardGame(max_turns=5)
     card_game.loop()
     print("Card game ran successfully")

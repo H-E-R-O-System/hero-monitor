@@ -1,21 +1,43 @@
-import string
-from datetime import date
+# import packages
+import os.path
 
 import cv2
 import gtts
+import os
+import string
+import shutil
+import time
+from datetime import date
+
 import numpy as np
 import pandas as pd
 import pygame as pg
-import time
 
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
-from consultation.perceived_stress_score import PSS
+# import consultation modules
+from consultation.modules.perceived_stress_score import PSS
+from consultation.modules.spiral_test import SpiralTest
+from consultation.modules.wisconsin_card_test import CardGame
+from consultation.modules.visual_attention_test import VisualAttentionTest
+# import graphics helpers
 from consultation.screen import Fonts
 from consultation.touch_screen import TouchScreen
-from consultation_lightweight import User, ConsultConfig
-from games.spiral.spiral import SpiralTest
-from games.wisconsin_card_sorting_test.main import CardGame
+
+
+class User:
+    def __init__(self, name, age, id):
+        self.id = id
+        self.name = name
+        self.age = age
+
+
+class ConsultConfig:
+    def __init__(self, speech=True):
+        self.speech = speech
+        self.text = True
+        self.output_lang = 'en'
+        self.input_lang = 'en'
 
 
 class Consultation:
@@ -28,9 +50,10 @@ class Consultation:
             self.user = User("Demo", 65, 0)
 
         self.config = ConsultConfig(speech=enable_speech)
+        if not os.path.isdir("consultation/question_audio_tmp"):
+            os.mkdir("consultation/question_audio_tmp")
 
         self.display_size = pg.Vector2(1024, 600) * scale
-        print(self.display_size)
 
         # load all attributes which utilise any pygame surfaces!
 
@@ -47,6 +70,7 @@ class Consultation:
 
         self.pss_question_count = 5
         self.modules = {
+            "VAT": VisualAttentionTest(touch_size=(400, 400), parent=self),
             "WCT": CardGame(max_turns=3, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
             "Spiral": SpiralTest(0.8, 5, (600, 600), parent=self), }
@@ -75,37 +99,37 @@ class Consultation:
         return id
 
     def update_display(self):
-        self.touch_screen.screen.refresh()
+        self.touch_screen.refresh()
         self.display_screen.update()
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
-    def speak_text(self, text):
-        self.display_screen.instruction = None
-        self.display_screen.update()
-
+    def speak_text(self, text, visual=True):
         question_audio = gtts.gTTS(text=text, lang='en', slow=False)
-        question_audio_file = f'consultation/question_audio/tempsave_text_to_audio.mp3'
+        question_audio_file = 'consultation/question_audio_tmp/tempsave.mp3'
         question_audio.save(question_audio_file)
 
         pg.mixer.music.load(question_audio_file)
         pg.mixer.music.play()
+        if visual:
+            self.display_screen.instruction = None
+            self.display_screen.update()
 
-        # Keep in idle loop while speaking
-        self.display_screen.avatar.state = 1
-        start = time.monotonic()
-        while pg.mixer.music.get_busy():
-            if time.monotonic() - start > 0.15:
-                self.display_screen.update()
-                self.update_display()
-                self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
-                start = time.monotonic()
+            # Keep in idle loop while speaking
+            self.display_screen.avatar.state = 1
+            start = time.monotonic()
+            while pg.mixer.music.get_busy():
+                if time.monotonic() - start > 0.15:
+                    self.display_screen.update()
+                    self.update_display()
+                    self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
+                    start = time.monotonic()
 
-        self.display_screen.avatar.state = 0
+            self.display_screen.avatar.state = 0
 
-        self.display_screen.update()
-        self.update_display()
+            self.display_screen.update()
+            self.update_display()
 
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
@@ -145,6 +169,8 @@ class Consultation:
             "PSS_Score": np.sum(pss_answers),
             "Wisconsin_Card_Score": WCT_score}
 
+        shutil.rmtree("consultation/question_audio_tmp")
+
     def loop(self, infinite=False):
         self.entry_sequence()
         while self.running:
@@ -156,6 +182,7 @@ class Consultation:
                         print("Entering Module Loop")
                         module.loop()
                         print("Exiting Module Loop")
+                        self.display_screen.instruction = "Press S to start"
                         self.update_display()
                         if infinite:
                             self.module_idx = (self.module_idx + 1) % len(self.modules)
@@ -163,10 +190,6 @@ class Consultation:
                             self.module_idx += 1
                             if self.module_idx == len(self.modules):
                                 self.running = False
-
-                    elif event.key == pg.K_x:
-                        self.touch_screen.show_sprites = not self.touch_screen.show_sprites
-                        self.update_display()
 
                 # elif event.type == pg.MOUSEBUTTONDOWN:
                 #     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())

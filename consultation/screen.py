@@ -66,8 +66,9 @@ class Screen:
             self.fonts = Fonts()
             self.font = self.fonts.normal
 
-        if not type(colour) == pg.Color:
-            colour = colour.value
+        if colour:
+            if not type(colour) == pg.Color:
+                colour = colour.value
 
         self.colour = colour
         if colour:
@@ -259,8 +260,7 @@ class Screen:
         # self.surface = new_surf
 
     def refresh(self):
-        self.size = pg.Vector2(self.base_surface.get_size())
-        self.surface = self.base_surface.copy()
+        self.surface = pg.Surface(self.size, pg.SRCALPHA)
         self.sprite_surface = pg.Surface(self.size, pg.SRCALPHA)
 
     def clear_surfaces(self):
@@ -268,12 +268,12 @@ class Screen:
         self.base_surface = None
         self.font = None
 
-    def get_surface(self, sprites=False):
+    def get_surface(self):
+        display_surf = self.base_surface.copy()
+        display_surf.blit(self.surface, (0, 0))
+        display_surf.blit(self.sprite_surface, (0, 0))
 
-        if sprites:
-            self.surface.blit(self.sprite_surface, (0, 0))
-
-        return self.surface
+        return display_surf
 
     def scale_surface(self, scale, base=False):
         self.size = pg.Vector2(self.base_surface.get_size()) * scale

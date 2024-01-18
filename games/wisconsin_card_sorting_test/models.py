@@ -7,13 +7,14 @@ shapes = ['square', 'circle', 'triangle', 'diamond']
 
 
 class Card(pg.sprite.Sprite):
-    def __init__(self, deck, size, colour=None, shape=None, shape_count=None):
+    def __init__(self, deck, size, colour=None, shape=None, shape_count=None, quiz_card=False):
         super().__init__()
         self.object_type = "card"
         self.size = pg.Vector2(size)
         self.rect = pg.Rect((0, 0), self.size)
         self.shape = shape
         self.shape_count = shape_count
+        self.quiz_card = quiz_card
 
         # if the attribute that is the current rule has been given, this card is set as 'correct':
         if (deck.rule == 'colour' and colour) or (deck.rule == 'shape' and shape) or (deck.rule == 'shape_count' and shape_count):
@@ -61,7 +62,9 @@ class Card(pg.sprite.Sprite):
         return surf
 
     def is_clicked(self, pos):
-        if self.rect.collidepoint(pos):
+        if self.quiz_card:
+            return None
+        elif self.rect.collidepoint(pos):
             return True
         else:
             return False
@@ -77,7 +80,7 @@ class Deck:
         self.quiz_colour = random.choice(colours)
         self.quiz_shape_count = random.randint(1, 3)
         self.quiz_card = Card(deck=self, size=card_size, shape=self.quiz_shape,
-                              colour=self.quiz_colour, shape_count=self.quiz_shape_count)
+                              colour=self.quiz_colour, shape_count=self.quiz_shape_count, quiz_card=True)
 
         self.cards = []
         self.cards.append(Card(deck=self, size=card_size, shape=self.quiz_shape))
