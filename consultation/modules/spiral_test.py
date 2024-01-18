@@ -6,6 +6,7 @@ import os
 import gtts
 import time
 
+from consultation.touch_screen import TouchScreen
 from consultation.screen import Screen, Colours, BlitLocation
 from consultation.display_screen import DisplayScreen
 
@@ -32,9 +33,10 @@ class SpiralTest:
             self.display_screen.avatar.face_colour = parent.display_screen.avatar.face_colour
             self.display_screen.avatar.update_colours()
 
-        self.touch_screen = Screen(size, colour=Colours.white)
+        self.touch_screen = TouchScreen(size, colour=Colours.white)
 
         self.spiral_surface, self.target_coords, self.coords_polar = self.create_surface()
+        self.spiral_surface = self.create_surface_2()
         self.touch_screen.add_surf(self.spiral_surface, pg.Vector2(size) / 2, location=BlitLocation.centre, base=True)
         self.touch_screen.refresh()
         self.offset = np.array(self.touch_screen.size - self.spiral_surface.get_size()) / 2
@@ -121,23 +123,37 @@ class SpiralTest:
 
         return spiral_screen, coords , coords_polar
 
-    def create_surface_2(self, size=(550, 550)):
-        n = 500
-        a, b, n = 0, 0.5, 5
-        theta = np.logspace(0, np.log10(2 * np.pi), n)
-        x = (a+b*theta) * np.cos(t)
-        y = (a+b*theta) * np.sin(self.turns * t)
-        print(x.shape)
-        points = np.array(([x, y])).transpose()
+    def create_surface_2(self, size=(500, 500), clockwise=True):
+        count = 300
+        a = 0
+        b = 0.5 / (2*np.pi)
+        n = 3
+        theta = np.linspace(0, 2 * np.pi, count)
+        x = (a+b*theta) * np.cos(n*theta)
+        y = (a+b*theta) * np.sin(n*theta)
+
+        points = np.array(([x+0.5, y+0.5])).transpose()
+
+        points = np.array([points[:, 0] * size[0], (points[:, 1]) * size[1]]).transpose()
+
+        if not clockwise:
+            points[:, 1] = (size[1] - points[:, 1])
 
         fig, ax = plt.subplots()
         plt.grid(True)
 
-        ax.plot(x, y)
+        ax.plot(points[:, 0], points[:, 1])
 
         plt.show()
 
-        print(points.shape)
+        coords = [(points[idx, 0], points[idx, 1]) for idx in range(np.size(points, 0))]
+        print(coords)
+
+        surf = pg.Surface(size, pg.SRCALPHA)
+        surf.fill(Colours.white.value)
+        pg.draw.lines(surf, Colours.black.value, False, points, width=3)
+
+        return surf
 
     def create_dataframe(self):
         return pd.DataFrame(data=self.spiral_data.transpose(),
@@ -185,8 +201,8 @@ class SpiralTest:
                     self.spiral_data = np.append(self.spiral_data, data, axis=1)
 
                     self.touch_screen.refresh()
-                    pg.draw.circle(self.touch_screen.base_surface, center=coord, color=Colours.red.value, radius=5)
-                    pg.draw.circle(self.touch_screen.base_surface, center=pos, color=Colours.blue.value, radius=5)
+                    pg.draw.circle(self.touch_screen.base_surface, center=coord, color=Colours.red.value, radius=3)
+                    pg.draw.circle(self.touch_screen.base_surface, center=pos, color=Colours.blue.value, radius=3)
 
                     self.update_display()
 
@@ -200,13 +216,13 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
     spiral_test = SpiralTest(0.8, 5, (600, 600))
-    spiral_test.create_surface_2()
-    # spiral_test.loop()  # optionally extract data from here as array
+    spiral_test.loop()  # optionally extract data from here as array
     # spiral_data = spiral_test.create_dataframe()
     # spiral_data.to_csv('spiraldata.csv', index=False)
     # print(spiral_data.head(5))

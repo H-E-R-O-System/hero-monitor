@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import gtts
 import time
+import matplotlib.pyplot as plt
 
 from consultation.screen import Screen, Colours, BlitLocation
 from consultation.display_screen import DisplayScreen
@@ -119,6 +120,15 @@ class SpiralTest:
 
         return spiral_screen, coords , coords_polar
 
+    def create_surface(self, size=(550, 550)):
+        a, b, n = 0, 2, 1
+        theta = np.logspace(0, 2*np.pi)
+        x = (a+b*theta)*np.cos(theta)
+        y = (a + b * theta) * np.sin(theta)
+
+        plt.scatter(x, y, alpha=0.5)
+        plt.show()
+
     def create_dataframe(self):
         return pd.DataFrame(data=self.spiral_data.transpose(),
                             columns=["rel_pos_x", "rel_pos_y", "theta","error","time"])
@@ -179,7 +189,8 @@ class SpiralTest:
 
 if __name__ == "__main__":
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
 
     pg.init()
     spiral_test = SpiralTest(0.8, 5, (600, 600))
