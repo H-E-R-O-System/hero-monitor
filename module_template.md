@@ -11,6 +11,7 @@ from consultation.screen import Colours
 
 class ModuleName:
     def __init__(self, size=(1024, 600), parent=None):
+        self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
@@ -27,9 +28,7 @@ class ModuleName:
         self.thing1 = None
         self.thing2 = None
         
-        # initialise module
-        self.update_display()
-        self.running = True
+        self.running = False
         
     def update_display(self):
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
@@ -40,9 +39,9 @@ class ModuleName:
         # pre-loop initialisation section
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
-        
-        # only OPTIONAL and can leave blank
-        ...
+        self.running = True
+        self.update_display() # render graphics to main consult
+        # add code below
     
     def do_something(self, ):
         # Do something useful
@@ -80,6 +79,7 @@ class ModuleName:
 
 
 if __name__ == "__main__":
+    pg.init()
     # Module Testing
     module_name = ModuleName()
     module_name.loop()

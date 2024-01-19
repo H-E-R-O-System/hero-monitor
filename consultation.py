@@ -20,6 +20,7 @@ from consultation.modules.perceived_stress_score import PSS
 from consultation.modules.spiral_test import SpiralTest
 from consultation.modules.wisconsin_card_test import CardGame
 from consultation.modules.visual_attention_test import VisualAttentionTest
+from consultation.modules.shape_searcher import ShapeSearcher
 # import graphics helpers
 from consultation.screen import Fonts
 from consultation.touch_screen import TouchScreen
@@ -70,8 +71,9 @@ class Consultation:
 
         self.pss_question_count = 5
         self.modules = {
-            "Spiral": SpiralTest(0.8, 5, (600, 600), parent=self),
-            "VAT": VisualAttentionTest(touch_size=(400, 400), parent=self),
+            "Shapes": ShapeSearcher(max_turns=3, parent=self),
+            "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
+            "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "WCT": CardGame(max_turns=3, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
              }
@@ -203,7 +205,7 @@ class Consultation:
 
 if __name__ == "__main__":
     pg.init()
-    consult = Consultation(scale=0.6)
+    consult = Consultation()
     consult.loop()
 
     if consult.output is not None:

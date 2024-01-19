@@ -30,9 +30,11 @@ class GameObjects(pg.sprite.Group):
         for obj in self.sprites():
             if obj.object_type == "button":
                 pg.draw.rect(screen.sprite_surface, obj.colour, obj.rect, border_radius=16)
-                if obj.label:
+                if obj.text:
                     screen.add_text(obj.text, colour=Colours.white, location=BlitLocation.centre, pos=obj.rect.center,
                                     sprite=True)
+                if obj.label:
+
                     screen.add_text(obj.label, colour=Colours.darkGrey, location=BlitLocation.midBottom, pos=obj.rect.midtop,
                                     sprite=True)
 
