@@ -1,4 +1,5 @@
 # import packages
+import datetime
 import os.path
 
 import cv2
@@ -71,7 +72,7 @@ class Consultation:
 
         self.pss_question_count = 5
         self.modules = {
-            "Shapes": ShapeSearcher(max_turns=3, parent=self),
+            "Shapes": ShapeSearcher(max_turns=10, parent=self),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "WCT": CardGame(max_turns=3, parent=self),
@@ -137,12 +138,14 @@ class Consultation:
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
-    def take_screenshot(self):
+    def take_screenshot(self, filename):
         print("Taking Screenshot")
         img_array = pg.surfarray.array3d(self.window)
         img_array = cv2.transpose(img_array)
         img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-        cv2.imwrite("screenshot.png", img_array)
+        if not filename:
+            filename = datetime.datetime.now()
+        cv2.imwrite(f"screenshots/{filename}.png", img_array)
 
     def entry_sequence(self):
         ...

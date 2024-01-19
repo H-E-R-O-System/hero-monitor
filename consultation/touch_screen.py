@@ -38,7 +38,7 @@ class GameObjects(pg.sprite.Group):
                     screen.add_text(obj.label, colour=Colours.darkGrey, location=BlitLocation.midBottom, pos=obj.rect.midtop,
                                     sprite=True)
 
-            elif obj.object_type == "card":
+            elif obj.object_type == "card" or obj.object_type=="circle":
                 screen.add_surf(obj.image, pos=obj.rect.topleft, sprite=True)
 
 

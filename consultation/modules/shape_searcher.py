@@ -4,8 +4,7 @@ import pygame as pg
 import os
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.display_screen import DisplayScreen
-from consultation.screen import Colours, BlitLocation
-import random
+from consultation.screen import Colours
 import numpy as np
 import pandas as pd
 
@@ -22,6 +21,25 @@ shapes = {"rocket": rocket, "lightning_1": lightning_1,
           "arrow_2": arrow_2, "gem": gem, "staple": staple}
 
 shape_colours = [Colours.red, Colours.blue, Colours.green, Colours.yellow, Colours.shadow]
+
+
+class Circle(pg.sprite.Sprite):
+    def __init__(self, position, size, colour, text=None, label=None):
+        super().__init__()
+        self.object_type = "circle"
+        surf_size = pg.Vector2(size, size)
+        self.image = pg.Surface(surf_size, pg.SRCALPHA)
+        pg.draw.circle(self.image, colour.value, surf_size/2, size/2)
+        self.rect = pg.Rect(position, surf_size)
+
+    def is_clicked(self, pos):
+        if self.rect.collidepoint(pos):
+            return True
+        else:
+            return False
+
+    def click_return(self):
+        return True
 
 
 def create_shape_surf(name, scale, colour):
@@ -67,7 +85,7 @@ class ShapeSearcher:
 
         self.score, self.turns, self.max_turns = 0, 0, max_turns
 
-        self.question_type = "binding"
+        self.question_type = "speed"
 
         # initialise module
         self.running = False
@@ -86,6 +104,8 @@ class ShapeSearcher:
         # only OPTIONAL and can leave blank
         if self.question_type == "perception":
             self.perception_question()
+        elif self.question_type == "speed":
+            self.speed_question()
         else:
             self.binding_question()
 
@@ -95,7 +115,7 @@ class ShapeSearcher:
     def check_ok(self, pos, existing):
         for point in existing:
             invalid = pg.Rect((point.x - self.shape_size.x, point.y - self.shape_size.y),
-                              self.shape_size * 2).scale_by(1.1)
+                              self.shape_size * 2).scale_by(1.1, 1.1)
 
             if invalid.collidepoint(pos):
                 return False
@@ -103,16 +123,18 @@ class ShapeSearcher:
         else:
             return True
 
-    def generate_symbol_set(self, area, shape_count, scene_shapes=None, colours=None, match=False):
+    def generate_symbol_set(self, area, shape_count, scene_shapes=None, colours=None):
         area.size -= self.shape_size
         if colours is None:
+            # Select random colours form group
             colours = pd.Series(shape_colours)[np.random.permutation(len(shape_colours))[range(shape_count)]]
         if scene_shapes is None:
+            # select random_shapes form group
             scene_shapes = pd.Series(shapes.keys())[np.random.permutation(len(shapes))[range(shape_count)]]
         elif not self.match:
+            # select shapes for set. The while loop ensures that the sets are not the same by chance
             new_shapes = pd.Series(shapes.keys())[np.random.permutation(len(shapes))[range(shape_count)]]
-            while any(x in new_shapes for x in scene_shapes):
-                print("ah")
+            while all(x in new_shapes for x in scene_shapes):
                 new_shapes = pd.Series(shapes.keys())[np.random.permutation(len(shapes))[range(shape_count)]]
             scene_shapes = new_shapes
 
@@ -138,9 +160,8 @@ class ShapeSearcher:
 
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.7, 0.9)
 
-        place_area_top = pg.Rect(place_area.topleft, (place_area.width, place_area.height / 2)).scale_by(0.9)
-        place_area_bottom = pg.Rect(place_area.midleft, (place_area.width, place_area.height / 2)).scale_by(0.9)
-        shape_count = np.random.randint(2, 4)
+        place_area_top = pg.Rect(place_area.topleft, (place_area.width, place_area.height / 2)).scale_by(0.9, 0.9)
+        place_area_bottom = pg.Rect(place_area.midleft, (place_area.width, place_area.height / 2)).scale_by(0.9, 0.9)
 
         symbol_set_1, scene_shapes, scene_colours = self.generate_symbol_set(place_area_top, 3)
 
@@ -156,6 +177,8 @@ class ShapeSearcher:
 
         for symbol, pos in symbol_set_2:
             self.touch_screen.add_surf(symbol, pos)
+
+        self.update_display()
 
     def binding_question(self):
         self.touch_screen.refresh()
@@ -179,10 +202,28 @@ class ShapeSearcher:
 
         self.touch_screen.refresh()
         self.update_display()
-        time.sleep(2)  # Time to see shapes
+        time.sleep(2)  # Time invisible for
 
         for symbol, pos in symbol_set_2:
             self.touch_screen.add_surf(symbol, pos)
+        self.update_display()
+
+    def speed_question(self):
+        self.touch_screen.refresh()
+        self.touch_screen.kill_sprites()
+
+        size = np.random.randint(10, 51)
+        place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.6, 0.6)
+        place_area.size -= pg.Vector2(size, size)
+
+        pos = (place_area.topleft +
+                    pg.Vector2(np.random.randint(0, place_area.width + 1),
+                               np.random.randint(0, place_area.height + 1)))
+
+        circle = Circle(pos, size, Colours.red)
+
+        self.touch_screen.sprites = GameObjects([circle])
+        self.update_display()
 
     def exit_sequence(self):
         # post-loop completion section
@@ -195,7 +236,7 @@ class ShapeSearcher:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_w:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            self.parent.take_screenshot(filename="shape_searcher")
                             ...
                         elif event.key == pg.K_ESCAPE:
                             self.running = False
@@ -210,24 +251,35 @@ class ShapeSearcher:
                     selection = self.touch_screen.click_test(pos)
 
                     if selection is not None:
-                        if (selection and self.match) or (not selection and not self.match):
-                            self.score += 1
-                            print("Correct")
+                        if self.question_type == "speed":
+                            print("selected")
+                            self.touch_screen.kill_sprites()  # Remove circle from touch screen
                         else:
-                            print("Incorrect")
+                            if (selection and self.match) or (not selection and not self.match):
+                                self.score += 1
+                                print("Correct")
+                            else:
+                                print("Incorrect")
 
                         self.turns += 1
                         if self.turns == self.max_turns:
                             self.running = False
                         else:
-                            if self.turns >= (self.max_turns / 2) - 1:
+                            if self.turns >= 2*((self.max_turns-1) / 3):
                                 self.question_type = "perception"
+                            elif self.turns >= ((self.max_turns-1) / 3):
+                                self.question_type = "binding"
+
                             # Update for next question
                             if self.question_type == "perception":
+                                self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
                                 self.perception_question()
+                            elif self.question_type == "speed":
+                                self.touch_screen.kill_sprites()
+                                self.speed_question()
                             else:
+                                self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
                                 self.binding_question()
-                            self.update_display()
 
                 elif event.type == pg.QUIT:
                     # break the running loop
