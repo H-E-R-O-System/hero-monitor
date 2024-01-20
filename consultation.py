@@ -24,7 +24,7 @@ from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.shape_searcher import ShapeSearcher
 # import graphics helpers
 from consultation.screen import Fonts
-from consultation.touch_screen import TouchScreen
+from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 
 class User:
@@ -65,8 +65,11 @@ class Consultation:
 
         self.fonts = Fonts()
         self.display_screen = DisplayScreen(self.top_screen.get_size())
-        self.display_screen.instruction = "Press S to Start"
+        self.display_screen.instruction = "Click the button to start"
         self.touch_screen = TouchScreen(self.bottom_screen.get_size())
+        button_size = pg.Vector2(300, 200)
+        self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
+        self.touch_screen.sprites = GameObjects([self.main_button])
 
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
@@ -78,6 +81,8 @@ class Consultation:
             "WCT": CardGame(max_turns=3, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
              }
+
+        self.module_order = ["Spiral", "Shapes", "VAT", "WCT", "PSS"]
 
         self.module_idx = 0
 
@@ -182,13 +187,18 @@ class Consultation:
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_s:
-                        module = self.modules[list(self.modules.keys())[self.module_idx]]
+                    ...
+
+                elif event.type == pg.MOUSEBUTTONDOWN:
+                    button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
+                    if button_id:
+                        self.touch_screen.kill_sprites()
+                        module = self.modules[self.module_order[self.module_idx]]
                         module.running = True
                         print("Entering Module Loop")
                         module.loop()
                         print("Exiting Module Loop")
-                        self.display_screen.instruction = "Press S to start"
+                        self.display_screen.instruction = "Click the button to start"
                         self.update_display()
                         if infinite:
                             self.module_idx = (self.module_idx + 1) % len(self.modules)
@@ -197,8 +207,8 @@ class Consultation:
                             if self.module_idx == len(self.modules):
                                 self.running = False
 
-                # elif event.type == pg.MOUSEBUTTONDOWN:
-                #     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
+                        self.touch_screen.sprites = GameObjects([self.main_button])
+                        self.update_display()
 
                 elif event.type == pg.QUIT:
                     self.running = False

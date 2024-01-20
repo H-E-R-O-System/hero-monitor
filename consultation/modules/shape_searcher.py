@@ -63,7 +63,7 @@ class ShapeSearcher:
 
         self.display_screen = DisplayScreen(self.display_size)
         self.display_screen = DisplayScreen(self.display_size)
-        self.display_screen.instruction = "Do the sets match?"
+        self.display_screen.instruction = None
         if parent:
             self.display_screen.avatar = parent.display_screen.avatar
         self.display_screen.update()
@@ -157,6 +157,8 @@ class ShapeSearcher:
     def perception_question(self):
 
         self.touch_screen.refresh()
+        self.display_screen.instruction = "Do the sets match?"
+        self.display_screen.update()
 
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.7, 0.9)
 
@@ -182,6 +184,9 @@ class ShapeSearcher:
 
     def binding_question(self):
         self.touch_screen.refresh()
+        self.display_screen.instruction = "Do the sets match?"
+        self.display_screen.update()
+        self.touch_screen.kill_sprites()
 
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.6, 0.6)
 
@@ -206,11 +211,14 @@ class ShapeSearcher:
 
         for symbol, pos in symbol_set_2:
             self.touch_screen.add_surf(symbol, pos)
+        self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
         self.update_display()
 
     def speed_question(self):
         self.touch_screen.refresh()
         self.touch_screen.kill_sprites()
+        self.display_screen.instruction = "Touch the dot!"
+        self.display_screen.update()
 
         size = np.random.randint(10, 51)
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.6, 0.6)
