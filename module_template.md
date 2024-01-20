@@ -5,19 +5,46 @@
 
 ```python
 import pygame as pg
-
+from consultation.touch_screen import TouchScreen
+from consultation.display_screen import DisplayScreen
+from consultation.screen import Colours
 
 class ModuleName:
-    def __init__(self):
-        self.running = False
+    def __init__(self, size=(1024, 600), parent=None):
+        self.parent = parent
+        if parent is not None:
+            self.display_size = parent.display_size
+            self.bottom_screen = parent.bottom_screen
+            self.top_screen = parent.top_screen
+        else:
+            self.display_size = pg.Vector2(size)
+            self.bottom_screen = pg.display.set_mode(self.display_size)
+            self.top_screen = pg.display.set_mode(self.display_size) # can set to None if not required
+
+        self.display_screen = DisplayScreen(self.display_size)
+        self.touch_screen = TouchScreen(self.display_size)
+        
         # Additional class properties
+        self.thing1 = None
+        self.thing2 = None
+        
+        self.running = False
+        
+    def update_display(self):
+        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+        pg.display.flip()
     
     def entry_sequence(self):
         # pre-loop initialisation section
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
-        
-        # only OPTIONAL and can leave blank
+        self.running = True
+        self.update_display() # render graphics to main consult
+        # add code below
+    
+    def do_something(self, ):
+        # Do something useful
         ...
     
     def exit_sequence(self):
@@ -26,6 +53,7 @@ class ModuleName:
         
         # only OPTIONAL and can leave blank
         ...
+    
 
     def loop(self):
         self.entry_sequence()
@@ -51,6 +79,7 @@ class ModuleName:
 
 
 if __name__ == "__main__":
+    pg.init()
     # Module Testing
     module_name = ModuleName()
     module_name.loop()

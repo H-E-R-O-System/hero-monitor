@@ -1,4 +1,4 @@
-import time
+import random
 
 import numpy as np
 import pygame as pg
@@ -120,6 +120,13 @@ class Avatar:
         self.speak_state = 0
         self.whistle_state = 0
 
+        gender = ("male", "female")[random.randint(0, 1)]
+        self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
+        self.image = pg.transform.scale(self.image, size)
+        self.size = self.image.get_size()
+
+        self.mode = 0
+
     def update_colours(self):
         self.colours = [pg.Color(0, 0, 0, 0), pg.Color(55, 55, 55, 255), self.face_colour,
                         pg.Color("#ADCAE6"), pg.Color(0, 0, 0), pg.Color("#D37070")]
@@ -144,9 +151,12 @@ class Avatar:
         return surf
 
     def get_surface(self):
-        if self.state == 0:
-            return self.smile
-        elif self.state == 1:
-            return self.speak_surfs[self.speak_state]
+        if self.mode == 0:
+            return self.image
         else:
-            return self.whistle_surfs[self.whistle_state]
+            if self.state == 0:
+                return self.smile
+            elif self.state == 1:
+                return self.speak_surfs[self.speak_state]
+            else:
+                return self.whistle_surfs[self.whistle_state]

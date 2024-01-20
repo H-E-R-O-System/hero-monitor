@@ -1,24 +1,49 @@
-import string
-from datetime import date
+# import packages
+import datetime
+import os.path
 
 import cv2
 import gtts
+import os
+import string
+import shutil
+import time
+from datetime import date
+
 import numpy as np
 import pandas as pd
 import pygame as pg
-import time
 
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
-from consultation.perceived_stress_score import PSS
+# import consultation modules
+from consultation.modules.perceived_stress_score import PSS
+from consultation.modules.spiral_test import SpiralTest
+from consultation.modules.wisconsin_card_test import CardGame
+from consultation.modules.visual_attention_test import VisualAttentionTest
+from consultation.modules.shape_searcher import ShapeSearcher
+# import graphics helpers
 from consultation.screen import Fonts
 from consultation.touch_screen import TouchScreen
-from consultation_lightweight import User, ConsultConfig
-from games.spiral.spiral import SpiralTest
+
+
+class User:
+    def __init__(self, name, age, id):
+        self.id = id
+        self.name = name
+        self.age = age
+
+
+class ConsultConfig:
+    def __init__(self, speech=True):
+        self.speech = speech
+        self.text = True
+        self.output_lang = 'en'
+        self.input_lang = 'en'
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True):
+    def __init__(self, user=None, enable_speech=True, scale=1):
 
         if user:
             self.user = user
@@ -27,8 +52,10 @@ class Consultation:
             self.user = User("Demo", 65, 0)
 
         self.config = ConsultConfig(speech=enable_speech)
+        if not os.path.isdir("consultation/question_audio_tmp"):
+            os.mkdir("consultation/question_audio_tmp")
 
-        self.display_size = pg.Vector2(1024, 600)
+        self.display_size = pg.Vector2(1024, 600) * scale
 
         # load all attributes which utilise any pygame surfaces!
 
@@ -44,8 +71,14 @@ class Consultation:
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
         self.pss_question_count = 5
-        self.modules = [SpiralTest(0.8, 5, (600, 600), parent=self),
-                        PSS(self, question_count=self.pss_question_count), ]
+        self.modules = {
+            "Shapes": ShapeSearcher(max_turns=10, parent=self),
+            "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
+            "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
+            "WCT": CardGame(max_turns=3, parent=self),
+            "PSS": PSS(self, question_count=self.pss_question_count),
+             }
+
         self.module_idx = 0
 
         self.output = None
@@ -70,47 +103,49 @@ class Consultation:
         return id
 
     def update_display(self):
-        self.touch_screen.screen.refresh()
+        self.touch_screen.refresh()
         self.display_screen.update()
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
-    def speak_text(self, text):
-        self.display_screen.instruction = None
-        self.display_screen.update()
-
+    def speak_text(self, text, visual=True):
         question_audio = gtts.gTTS(text=text, lang='en', slow=False)
-        question_audio_file = f'consultation/question_audio/tempsave_text_to_audio.mp3'
+        question_audio_file = 'consultation/question_audio_tmp/tempsave.mp3'
         question_audio.save(question_audio_file)
 
         pg.mixer.music.load(question_audio_file)
         pg.mixer.music.play()
+        if visual:
+            self.display_screen.instruction = None
+            self.display_screen.update()
 
-        # Keep in idle loop while speaking
-        self.display_screen.avatar.state = 1
-        start = time.monotonic()
-        while pg.mixer.music.get_busy():
-            if time.monotonic() - start > 0.15:
-                self.display_screen.update()
-                self.update_display()
-                self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
-                start = time.monotonic()
+            # Keep in idle loop while speaking
+            self.display_screen.avatar.state = 1
+            start = time.monotonic()
+            while pg.mixer.music.get_busy():
+                if time.monotonic() - start > 0.15:
+                    self.display_screen.update()
+                    self.update_display()
+                    self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
+                    start = time.monotonic()
 
-        self.display_screen.avatar.state = 0
+            self.display_screen.avatar.state = 0
 
-        self.display_screen.update()
-        self.update_display()
+            self.display_screen.update()
+            self.update_display()
 
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
-    def take_screenshot(self):
+    def take_screenshot(self, filename):
         print("Taking Screenshot")
         img_array = pg.surfarray.array3d(self.window)
         img_array = cv2.transpose(img_array)
         img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-        cv2.imwrite("screenshot.png", img_array)
+        if not filename:
+            filename = datetime.datetime.now()
+        cv2.imwrite(f"screenshots/{filename}.png", img_array)
 
     def entry_sequence(self):
         ...
@@ -119,16 +154,17 @@ class Consultation:
         self.speak_text("The consultation is now complete. Thank you for your time")
 
         # PSS consult_record handling
-        pss_answers = np.array(self.modules[1].answers)
-        pss_reverse_idx = np.array([3, 4, 6, 7])
-        pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
-        pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
+        pss_answers = np.array(self.modules["PSS"].answers)
+        if pss_answers.size > 0:
+            pss_reverse_idx = np.array([3, 4, 6, 7])
+            pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
+            pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
         # Wisconsin Card Test consult_record handling
+        WCT_score = self.modules["WCT"].engine.score
 
         # Spiral Test Handling
-
-        spiral_data = self.modules[0].create_dataframe()
+        spiral_data = self.modules["Spiral"].create_dataframe()
         spiral_data.to_csv('spiraldata.csv', index=False)
         print("Spiral Data Written to CSV")
 
@@ -137,7 +173,9 @@ class Consultation:
             "User_ID": self.user.id,
             "Date": date.today(),
             "PSS_Score": np.sum(pss_answers),
-            "Wisconsin_Card_Score": None}
+            "Wisconsin_Card_Score": WCT_score}
+
+        shutil.rmtree("consultation/question_audio_tmp")
 
     def loop(self, infinite=False):
         self.entry_sequence()
@@ -145,11 +183,12 @@ class Consultation:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_s:
-                        module = self.modules[self.module_idx]
+                        module = self.modules[list(self.modules.keys())[self.module_idx]]
                         module.running = True
                         print("Entering Module Loop")
                         module.loop()
                         print("Exiting Module Loop")
+                        self.display_screen.instruction = "Press S to start"
                         self.update_display()
                         if infinite:
                             self.module_idx = (self.module_idx + 1) % len(self.modules)
@@ -157,10 +196,6 @@ class Consultation:
                             self.module_idx += 1
                             if self.module_idx == len(self.modules):
                                 self.running = False
-
-                    elif event.key == pg.K_x:
-                        self.touch_screen.show_sprites = not self.touch_screen.show_sprites
-                        self.update_display()
 
                 # elif event.type == pg.MOUSEBUTTONDOWN:
                 #     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())

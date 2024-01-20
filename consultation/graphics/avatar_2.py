@@ -1,4 +1,4 @@
-import time
+import time, random
 
 import pygame as pg
 from math import floor
@@ -12,6 +12,9 @@ class AvatarV2:
         self.mouth_sprites = SpriteSet("consultation/graphics/mouth_sprites.png", 4, pg.Vector2(64, 64), pg.Vector2(5, 5))
         self.mouth_sprites.scale_sprites(4)
         self.mouth_idx = 0
+        gender = ("male", "female")[random.randint(0, 1)]
+        print(gender)
+        self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
 
     def update(self):
         self.mouth_sprites.update_active(self.mouth_idx)

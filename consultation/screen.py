@@ -11,10 +11,11 @@ class Colours(Enum):
     darkGrey = pg.Color(60, 60, 60)
     midGrey = pg.Color(150, 150, 150)
     lightGrey = pg.Color(200, 200, 200)
-    green = pg.Color(100, 255, 100)
-    red = pg.Color(255, 100, 100)
+    green = pg.Color(69, 181, 67)
+    red = pg.Color(181, 67, 67)
     shadow = pg.Color(180, 180, 180)
-    blue = pg.Color(0, 0, 255)
+    blue = pg.Color(67, 113, 181)
+    yellow = pg.Color(252, 198, 3)
 
 
 class BlitLocation(Enum):
@@ -65,14 +66,15 @@ class Screen:
             self.fonts = Fonts()
             self.font = self.fonts.normal
 
-        if not type(colour) == pg.Color:
-            colour = colour.value
+        if colour:
+            if not type(colour) == pg.Color:
+                colour = colour.value
 
         self.colour = colour
         if colour:
             self.base_surface.fill(colour)
 
-    def add_surf(self, surf: pg.Surface, pos=(0, 0), base=False, location=BlitLocation.topLeft):
+    def add_surf(self, surf: pg.Surface, pos=(0, 0), base=False, location=BlitLocation.topLeft, sprite=False):
         surf_rect = pg.Rect(pos, surf.get_size())
 
         if location == BlitLocation.centre:
@@ -85,7 +87,9 @@ class Screen:
             surf_rect.y -= surf_rect.height
             surf_rect.x -= surf_rect.width / 2
 
-        if base:
+        if sprite:
+            self.sprite_surface.blit(surf, surf_rect.topleft)
+        elif base:
             self.base_surface.blit(surf, surf_rect.topleft)
         else:
             self.surface.blit(surf, surf_rect.topleft)
@@ -256,21 +260,20 @@ class Screen:
         # self.surface = new_surf
 
     def refresh(self):
-        self.size = pg.Vector2(self.base_surface.get_size())
-        self.surface = self.base_surface.copy()
-        self.sprite_surface = self.base_surface.copy()
+        self.surface = pg.Surface(self.size, pg.SRCALPHA)
+        self.sprite_surface = pg.Surface(self.size, pg.SRCALPHA)
 
     def clear_surfaces(self):
         self.surface = None
         self.base_surface = None
         self.font = None
 
-    def get_surface(self, sprites=False):
+    def get_surface(self):
+        display_surf = self.base_surface.copy()
+        display_surf.blit(self.surface, (0, 0))
+        display_surf.blit(self.sprite_surface, (0, 0))
 
-        if sprites:
-            self.surface.blit(self.sprite_surface, (0, 0))
-
-        return self.surface
+        return display_surf
 
     def scale_surface(self, scale, base=False):
         self.size = pg.Vector2(self.base_surface.get_size()) * scale

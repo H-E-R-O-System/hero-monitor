@@ -18,56 +18,51 @@ class GameButton(pg.sprite.Sprite):
         else:
             return False
 
+    def click_return(self):
+        return self.id
+
 
 class GameObjects(pg.sprite.Group):
     def __init__(self, sprites):
         super().__init__(self, sprites)
 
     def draw(self, screen: Screen, bgsurf=None, special_flags: int = 0):
-        screen.refresh()
         for obj in self.sprites():
             if obj.object_type == "button":
                 pg.draw.rect(screen.sprite_surface, obj.colour, obj.rect, border_radius=16)
-                if obj.label:
+                if obj.text:
                     screen.add_text(obj.text, colour=Colours.white, location=BlitLocation.centre, pos=obj.rect.center,
                                     sprite=True)
+                if obj.label:
+
                     screen.add_text(obj.label, colour=Colours.darkGrey, location=BlitLocation.midBottom, pos=obj.rect.midtop,
                                     sprite=True)
 
+            elif obj.object_type == "card" or obj.object_type=="circle":
+                screen.add_surf(obj.image, pos=obj.rect.topleft, sprite=True)
 
-class TouchScreen:
-    def __init__(self, size):
-        self.screen = Screen(size, colour=Colours.white.value)
-        self.screen.refresh()
 
-        self.sprites = None
-        self.show_sprites = False
+class TouchScreen(Screen):
+    def __init__(self, size, colour=Colours.white):
+        super().__init__(size, colour=colour)
+        self.sprites = GameObjects([])
 
     def click_test(self, pos):
         if self.sprites:
-            for button in self.sprites:
-                if button.is_clicked(pos):
-                    return button.id
+            for sprite in self.sprites:
+                if sprite.is_clicked(pos):
+                    return sprite.click_return()
 
         return None
 
-    def load_likert_buttons(self, height, count=5):
-        buttons = []
-        gap = 10
-        labels = ["Never", "Almost Never", "Sometimes", "Very Often", "Always"]
-        for idx in range(count):
-            width = (self.screen.size.x - (count + 1) * gap) / count
-            position = gap + idx * ((self.screen.size.x - (count + 1) * gap) / count + gap)
-            button = GameButton(pg.Vector2(position, height), pg.Vector2(width, 50), idx, text=str(idx), label=labels[idx])
-            buttons.append(button)
-
-        self.sprites = GameObjects(buttons)
-        self.sprites.draw(self.screen)
-        self.show_sprites = True
-
     def kill_sprites(self):
         self.sprites.empty()
-        self.sprites.draw(self.screen)
 
     def get_surface(self):
-        return self.screen.get_surface(self.show_sprites)
+        self.sprites.draw(self)
+        display_surf = self.base_surface.copy()
+        display_surf.blit(self.surface, (0, 0))
+        display_surf.blit(self.sprite_surface, (0, 0))
+
+        return display_surf
+

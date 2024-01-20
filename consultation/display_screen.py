@@ -1,6 +1,7 @@
 import pygame as pg
 from consultation.screen import Screen, BlitLocation, Colours, Fonts
 from consultation.avatar import Avatar
+from consultation.questions import Question
 import os
 import math
 
@@ -88,7 +89,7 @@ class DisplayScreen:
 
         self.avatar_display.screen.add_surf(self.avatar.get_surface(), pos=avatar_pos, location=BlitLocation.centre)
 
-        self.screen.add_surf(self.text_screen_info.surface, (0, self.screen.size.y), location=BlitLocation.bottomLeft)
+        self.screen.add_surf(self.text_screen_info.get_surface(), (0, self.screen.size.y), location=BlitLocation.bottomLeft)
         self.screen.add_surf(self.avatar_display.get_surface(), (0, 0))
 
         if question:
@@ -97,10 +98,10 @@ class DisplayScreen:
             for idx, hint in enumerate(question.hints):
                 self.text_screen_main.add_text("• " + hint, (40, 70 + 50*idx))
 
-            self.screen.add_surf(self.text_screen_main.surface, pos=(self.screen.size.x, 0), location=BlitLocation.topRight)
+            self.screen.add_surf(self.text_screen_main.get_surface(), pos=(self.screen.size.x, 0), location=BlitLocation.topRight)
 
     def get_surface(self):
-        return self.screen.surface
+        return self.screen.get_surface()
 
 
 if __name__ == "__main__":

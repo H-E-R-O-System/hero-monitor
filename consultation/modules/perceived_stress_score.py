@@ -1,37 +1,66 @@
 import pygame as pg
 import time
+import os
 import gtts
 from consultation.questions import Question, pss_questions
-from consultation.touch_screen import TouchScreen
+from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.display_screen import DisplayScreen
 
 
 class PSS:
     def __init__(self, parent, question_count=10):
         self.parent = parent
-        self.display_size = pg.Vector2(1024, 600)
+        if not os.path.isdir("consultation/question_audio_tmp/pss"):
+            os.mkdir("consultation/question_audio_tmp/pss")
+
+        self.display_size = self.parent.display_size
 
         self.top_screen: pg.Surface = parent.top_screen
         self.bottom_screen: pg.Surface = parent.bottom_screen
 
         self.touch_screen = TouchScreen(self.top_screen.get_size())
         self.display_screen = DisplayScreen(self.bottom_screen.get_size())
+        self.display_screen.avatar = parent.display_screen.avatar
+        count = 5
+
+        gap = 10
+        labels = ["Never", "Almost Never", "Sometimes", "Very Often", "Always"]
+
+        self.likert_buttons = []
+        for idx in range(count):
+            width = (self.display_size.x - (count + 1) * gap) / count
+            position = gap + idx * ((self.display_size.x - (count + 1) * gap) / count + gap)
+            button = GameButton(pg.Vector2(position, self.display_size.y/2), pg.Vector2(width, 50), idx, text=str(idx),
+                                label=labels[idx])
+            self.likert_buttons.append(button)
 
         if parent:
             self.display_screen.avatar.face_colour = parent.display_screen.avatar.face_colour
             self.display_screen.avatar.update_colours()
 
-        self.touch_screen.show_sprites = True
-
         hints = ["" for _ in pss_questions]
         self.questions = [Question(question, hint) for question, hint in zip(pss_questions, hints)]
         self.questions = self.questions[:min(len(self.questions)-1, question_count)]
+
+        self.preload_audio()
+
         self.question_idx = 0
 
         self.answers = []
 
         self.running = True
         self.awaiting_response = False
+
+    def preload_audio(self):
+        exit_text = "Thank you for completing the PSS survey"
+        exit_audio = gtts.gTTS(text=exit_text, lang='en', slow=False)
+        exit_audio_file = f'consultation/question_audio_tmp/pss/exit.mp3'
+        exit_audio.save(exit_audio_file)
+
+        for idx, question in enumerate(self.questions):
+            question_audio = gtts.gTTS(text=question.text, lang='en', slow=False)
+            question_audio_file = f'consultation/question_audio_tmp/pss/question_{idx}.mp3'
+            question_audio.save(question_audio_file)
 
     def update_display(self):
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
@@ -43,19 +72,20 @@ class PSS:
 
     def ask_question(self, text=None):
         if not text:
-            self.touch_screen.load_likert_buttons(height=275)
+            self.touch_screen.sprites = GameObjects(self.likert_buttons)
+
             question = self.questions[self.question_idx]
-            text = question.text
             self.display_screen.instruction = None
             self.display_screen.update(question)
         else:
-            question=None
+            question = None
             self.display_screen.instruction = "Section Complete"
             self.display_screen.update()
 
-        self.question_audio = gtts.gTTS(text=text, lang='en', slow=False)
-        question_audio_file = f'consultation/question_audio/tempsave_question_{str(self.question_idx)}.mp3'
-        self.question_audio.save(question_audio_file)
+        if self.question_idx < len(self.questions):
+            question_audio_file = f'consultation/question_audio_tmp/pss/question_{str(self.question_idx)}.mp3'
+        else:
+            question_audio_file = f'consultation/question_audio_tmp/pss/exit.mp3'
 
         pg.mixer.music.load(question_audio_file)
         pg.mixer.music.play()
@@ -81,10 +111,7 @@ class PSS:
         self.update_display()
 
     def exit_sequence(self):
-        messages = ["Thank you for completing the PSS module",]
-        self.touch_screen.kill_sprites()
-        for message in messages:
-            self.ask_question(message)
+        self.parent.speak_text("Thank you for completing the PSS module")
 
     def loop(self, infinite=False):
         self.entry_sequence()
@@ -96,18 +123,14 @@ class PSS:
 
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_x:
-                        self.touch_screen.show_sprites = not self.touch_screen.show_sprites
-                        self.update_display()
-
-                    elif event.key == pg.K_ESCAPE:
+                    if event.key == pg.K_ESCAPE:
                         self.running = False
 
                     elif event.key == pg.K_w:
                         self.parent.take_screenshot()
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
-                    button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
+                    button_id = self.touch_screen.click_test(self.parent.get_relative_mose_pos())
                     if button_id is not None and self.awaiting_response:
                         self.answers.append(int(button_id))
                         if infinite:
@@ -119,6 +142,7 @@ class PSS:
                         self.awaiting_response = False
 
                         if self.question_idx == len(self.questions):
+                            print("stop")
                             self.running = False
 
                 elif event.type == pg.QUIT:
