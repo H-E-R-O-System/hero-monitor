@@ -43,7 +43,7 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1):
+    def __init__(self, user=None, enable_speech=True, scale=1, full_screen=False):
 
         if user:
             self.user = user
@@ -59,8 +59,9 @@ class Consultation:
 
         # load all attributes which utilise any pygame surfaces!
 
-        # self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
-        self.window = pg.display.set_mode( (0, 0), pg.FULLSCREEN, pg.SCALED)
+        self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA, pg.SCALED)
+        if full_screen:
+            pg.display.toggle_fullscreen()
 
         self.top_screen = self.window.subsurface(((0, 0), self.display_size))
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
@@ -85,7 +86,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
              }
 
-        self.module_order = ["Spiral", "Shapes", "VAT", "WCT", "PSS"]
+        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
 
         self.module_idx = 0
 

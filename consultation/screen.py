@@ -2,6 +2,8 @@ import math
 from enum import Enum
 
 import pygame as pg
+import numpy as np
+import pandas as pd
 
 
 class Colours(Enum):
@@ -161,29 +163,48 @@ class Screen:
         else:
             self.surface.blit(textSurf, blitPos)
 
-    def add_multiline_text(self, text, pos, lines=None, location=BlitLocation.topLeft, sprite=False, base=False):
-        if not lines:
-            lines = math.ceil(self.font.render(text, True, Colours.black.value).get_width() / self.size.x)
+    def add_multiline_text(self, text, rect, location=BlitLocation.topLeft, base=False):
+        rect: pg.Rect
 
-        text_length = len(text)
-        text_per_line = math.floor(text_length / lines)
+        # words = pd.Series(text.split(" "))
+        # widths = np.cumsum([self.font.size(word + " ")[0] for word in words], dtype=np.uint16)
+        # lines = np.floor((widths + widths[0]) / rect.w)
+        # print(widths, lines)
+        # for line in range(int(np.max(lines))+1):
+        #     print(" ".join(words[lines == line]))
+        #     print(self.font.size(" ".join(words[lines == line]))[0])
+
+        ids = [0]
+        line_width = 0
+        for idx, word in enumerate(text.split(" ")):
+            width = self.font.size(word + " ")[0]
+            # print(word, width, line_width)
+            if line_width + self.font.size(word)[0] > rect.width:
+                ids.append(idx)
+                line_width = width
+            else:
+                line_width += width
+        ids.append(len(text.split(" ")))
+
         height, gap = 0, 10
         text_surfs = []
-        for line in range(lines):
-            line_text = text[text_per_line*line:min(text_per_line*(line + 1), text_length)]
-            line_text_surf = self.font.render(line_text, True, Colours.black.value)
+        for line in range(len(ids)-1):
+            line_words = text.split(" ")[ids[line]:ids[line+1]]
+            line_text_surf = self.font.render(" ".join(line_words), True, Colours.black.value)
 
             text_surfs.append(line_text_surf)
 
-            height += line_text_surf.get_height() + gap # cumulative height with 5px padding
+            height += line_text_surf.get_height() + gap  # cumulative height with 5px padding
 
-        max_width = max([surf.get_width() for surf in text_surfs])
-        text_surf = pg.Surface((max_width, height - gap), pg.SRCALPHA)
+        text_surf = pg.Surface(rect.size, pg.SRCALPHA)
         for idx, surf in enumerate(text_surfs):
             text_surf.blit(surf, (0, idx*(surf.get_height() + gap)))
 
-        blitPos = pos
-        size = pg.Vector2(text_surf.get_size())
+        blitPos = rect.topleft
+        size = rect.size
+
+        # pg.draw.rect(self.surface, Colours.red.value, rect, width=5)
+
         if location == BlitLocation.centre:
             blitPos -= size / 2
         elif location == BlitLocation.topRight:
@@ -191,8 +212,6 @@ class Screen:
         elif location == BlitLocation.midTop:
             blitPos -= pg.Vector2(size.x / 2, 0)
 
-        if sprite:
-            self.sprite_surface.blit(text_surf, pos)
         elif base:
             self.base_surface.blit(text_surf, blitPos)
         else:
