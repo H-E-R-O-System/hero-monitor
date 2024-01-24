@@ -104,6 +104,22 @@ class DisplayScreen:
         return self.screen.get_surface()
 
 
+class DisplayScreenV2(Screen):
+    def __init__(self, size):
+        super().__init__(size, colour=Colours.white)
+        self.avatar = Avatar()
+        self.instruction = None
+        self.state = 0
+
+    def get_surface(self):
+
+        display_surf = self.base_surface.copy()
+        display_surf.blit(self.surface, (0, 0))
+        display_surf.blit(self.sprite_surface, (0, 0))
+
+        return display_surf
+
+
 if __name__ == "__main__":
     os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
     pg.init()

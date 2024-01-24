@@ -59,7 +59,9 @@ class Consultation:
 
         # load all attributes which utilise any pygame surfaces!
 
-        self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+        # self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+        self.window = pg.display.set_mode( (0, 0), pg.FULLSCREEN, pg.SCALED)
+
         self.top_screen = self.window.subsurface(((0, 0), self.display_size))
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
 
@@ -187,7 +189,10 @@ class Consultation:
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
-                    ...
+                    if event.key == pg.K_f:
+                        pg.display.toggle_fullscreen()
+                    elif event.key == pg.K_ESCAPE:
+                        self.running = False
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
