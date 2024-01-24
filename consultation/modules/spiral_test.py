@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import time
 
-from consultation.touch_screen import TouchScreen
+from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
 
@@ -23,14 +23,16 @@ class SpiralTest:
             self.top_screen = None
 
         self.display_screen = DisplayScreen(self.display_size)
-        if parent:
-            self.display_screen.avatar = parent.display_screen.avatar
-
         self.display_screen.instruction = "Start in the center"
-        self.display_screen.update()
 
         self.touch_size = touch_size
         self.touch_screen = TouchScreen(touch_size, colour=Colours.white)
+
+        if parent:
+            self.display_screen.avatar = parent.display_screen.avatar
+            self.touch_screen.sprites = GameObjects([parent.quit_button])
+
+        self.display_screen.update()
 
         self.target_coords = None
         self.load_surface(size=touch_size, turns=turns)

@@ -23,7 +23,7 @@ from consultation.modules.wisconsin_card_test import CardGame
 from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.shape_searcher import ShapeSearcher
 # import graphics helpers
-from consultation.screen import Fonts
+from consultation.screen import Colours, Fonts
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 
@@ -70,8 +70,9 @@ class Consultation:
         self.display_screen.instruction = "Click the button to start"
         self.touch_screen = TouchScreen(self.bottom_screen.get_size())
         button_size = pg.Vector2(300, 200)
+        self.quit_button = GameButton((10, 10), pg.Vector2(70, 50), id=2, text="QUIT", colour=Colours.red)
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
-        self.touch_screen.sprites = GameObjects([self.main_button])
+        self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
         self.avatar = Avatar(size=(256, 256 * 1.125))
 
@@ -196,8 +197,9 @@ class Consultation:
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
-                    if button_id:
+                    if button_id == 1:
                         self.touch_screen.kill_sprites()
+                        self.update_display()
                         module = self.modules[self.module_order[self.module_idx]]
                         module.running = True
                         print("Entering Module Loop")
@@ -212,8 +214,11 @@ class Consultation:
                             if self.module_idx == len(self.modules):
                                 self.running = False
 
-                        self.touch_screen.sprites = GameObjects([self.main_button])
+                        self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
                         self.update_display()
+
+                    elif button_id == 2:
+                        self.running = False
 
                 elif event.type == pg.QUIT:
                     self.running = False

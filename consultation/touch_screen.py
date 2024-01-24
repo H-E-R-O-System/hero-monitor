@@ -3,12 +3,15 @@ import pygame as pg
 
 
 class GameButton(pg.sprite.Sprite):
-    def __init__(self, position, size, id, text=None, label=None):
+    def __init__(self, position, size, id, text=None, label=None, colour=None):
         super().__init__()
         self.object_type = "button"
         self.rect = pg.Rect(position, size)
         self.id = id
-        self.colour = Colours.darkGrey.value
+        if colour:
+            self.colour = colour.value
+        else:
+            self.colour = Colours.darkGrey.value
         self.text = text
         self.label = label
 
