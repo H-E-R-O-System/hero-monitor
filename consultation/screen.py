@@ -178,7 +178,6 @@ class Screen:
         line_width = 0
         for idx, word in enumerate(text.split(" ")):
             width = self.font.size(word + " ")[0]
-            # print(word, width, line_width)
             if line_width + self.font.size(word)[0] > rect.width:
                 ids.append(idx)
                 line_width = width

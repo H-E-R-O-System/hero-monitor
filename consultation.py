@@ -229,7 +229,7 @@ class Consultation:
 
 if __name__ == "__main__":
     pg.init()
-    consult = Consultation()
+    consult = Consultation(full_screen=True)
     consult.loop()
 
     if consult.output is not None:
