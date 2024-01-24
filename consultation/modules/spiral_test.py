@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import time
 
-from consultation.touch_screen import TouchScreen
+from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
 
@@ -23,14 +23,16 @@ class SpiralTest:
             self.top_screen = None
 
         self.display_screen = DisplayScreen(self.display_size)
-        if parent:
-            self.display_screen.avatar = parent.display_screen.avatar
-
         self.display_screen.instruction = "Start in the center"
-        self.display_screen.update()
 
         self.touch_size = touch_size
         self.touch_screen = TouchScreen(touch_size, colour=Colours.white)
+
+        if parent:
+            self.display_screen.avatar = parent.display_screen.avatar
+            self.touch_screen.sprites = GameObjects([parent.quit_button])
+
+        self.display_screen.update()
 
         self.target_coords = None
         self.load_surface(size=touch_size, turns=turns)
@@ -42,6 +44,7 @@ class SpiralTest:
 
         self.spiral_data = np.zeros((5, 0))
         self.spiral_started = False
+        self.spiral_finished = False
 
     def update_display(self):
         if self.parent:
@@ -130,9 +133,11 @@ class SpiralTest:
                                      self.target_coords[self.coord_idx, :], self.target_coords[idx, :], width=3)
                         self.coord_idx += 1
 
+                        if self.coord_idx == len(self.target_coords) - 1:
+                            self.spiral_finished = True
                         self.update_display()
 
-                elif event.type == pg.MOUSEBUTTONUP:
+                elif event.type == pg.MOUSEBUTTONUP and self.spiral_finished:
                     self.running = False
 
                 elif event.type == pg.KEYDOWN:
@@ -152,7 +157,7 @@ if __name__ == "__main__":
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
-    spiral_test = SpiralTest(turns=3, touch_size=(300, 300))
+    spiral_test = SpiralTest(turns=3, touch_size=(600, 600))
     spiral_test.loop()  # optionally extract data from here as array
     # spiral_data = spiral_test.create_dataframe()
     # spiral_data.to_csv('spiraldata.csv', index=False)
