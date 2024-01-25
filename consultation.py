@@ -59,7 +59,7 @@ class Consultation:
 
         # load all attributes which utilise any pygame surfaces!
 
-        self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA, pg.SCALED)
+        self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.FULLSCREEN, pg.SRCALPHA,)
         if full_screen:
             pg.display.toggle_fullscreen()
 
