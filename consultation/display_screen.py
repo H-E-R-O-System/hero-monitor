@@ -76,6 +76,7 @@ class DisplayScreen:
     def update(self, question=None):
         self.text_screen_info.refresh()
         self.text_screen_main.refresh()
+
         self.avatar_display.update()
         self.screen.refresh()
 
