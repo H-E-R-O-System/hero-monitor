@@ -67,6 +67,7 @@ class DisplayScreen:
         self.text_screen_main = Screen((size.x * 0.6,
                                        size.y - self.text_screen_info.size.y),
                                        fonts.normal, colour=Colours.lightGrey.value)
+        self.text_area = self.text_screen_main.surface.get_rect().scale_by(0.9, 0.9)
 
         self.avatar = Avatar(size=(256, 288))
         self.avatar.state = 0
@@ -75,6 +76,7 @@ class DisplayScreen:
     def update(self, question=None):
         self.text_screen_info.refresh()
         self.text_screen_main.refresh()
+
         self.avatar_display.update()
         self.screen.refresh()
 
@@ -93,8 +95,8 @@ class DisplayScreen:
         self.screen.add_surf(self.avatar_display.get_surface(), (0, 0))
 
         if question:
-            # self.text_screen_main.add_text(question.text, (20, 20))
-            self.text_screen_main.add_multiline_text(question.text, (20, 20))
+            self.text_screen_main.add_multiline_text(question.text, rect=self.text_area)
+            # self.text_screen_main.add_multiline_text(question.text, (20, 20))
             for idx, hint in enumerate(question.hints):
                 self.text_screen_main.add_text("• " + hint, (40, 70 + 50*idx))
 

@@ -43,7 +43,8 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1):
+    def __init__(self, user=None, enable_speech=True, scale=1, full_screen=False):
+        pi = False
 
         if user:
             self.user = user
@@ -59,8 +60,13 @@ class Consultation:
 
         # load all attributes which utilise any pygame surfaces!
 
-        # self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
-        self.window = pg.display.set_mode( (0, 0), pg.FULLSCREEN, pg.SCALED)
+        if pi:
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.NOFRAME | pg.SRCALPHA)
+        else:
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+
+        if full_screen:
+            pg.display.toggle_fullscreen()
 
         self.top_screen = self.window.subsurface(((0, 0), self.display_size))
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
@@ -85,7 +91,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
              }
 
-        self.module_order = ["Spiral", "Shapes", "VAT", "WCT", "PSS"]
+        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
 
         self.module_idx = 0
 
@@ -113,6 +119,9 @@ class Consultation:
     def update_display(self):
         self.touch_screen.refresh()
         self.display_screen.update()
+
+        speech_size = pg.Vector2(self.display_size.x, self.display_size.y*0.2)
+
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
@@ -227,8 +236,9 @@ class Consultation:
 
 
 if __name__ == "__main__":
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)
     pg.init()
-    consult = Consultation()
+    consult = Consultation(full_screen=False, scale=0.7)
     consult.loop()
 
     if consult.output is not None:

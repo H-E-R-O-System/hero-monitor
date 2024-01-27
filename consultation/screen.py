@@ -2,6 +2,8 @@ import math
 from enum import Enum
 
 import pygame as pg
+import numpy as np
+import pandas as pd
 
 
 class Colours(Enum):
@@ -161,29 +163,47 @@ class Screen:
         else:
             self.surface.blit(textSurf, blitPos)
 
-    def add_multiline_text(self, text, pos, lines=None, location=BlitLocation.topLeft, sprite=False, base=False):
-        if not lines:
-            lines = math.ceil(self.font.render(text, True, Colours.black.value).get_width() / self.size.x)
+    def add_multiline_text(self, text, rect, location=BlitLocation.topLeft, base=False):
+        rect: pg.Rect
 
-        text_length = len(text)
-        text_per_line = math.floor(text_length / lines)
+        # words = pd.Series(text.split(" "))
+        # widths = np.cumsum([self.font.size(word + " ")[0] for word in words], dtype=np.uint16)
+        # lines = np.floor((widths + widths[0]) / rect.w)
+        # print(widths, lines)
+        # for line in range(int(np.max(lines))+1):
+        #     print(" ".join(words[lines == line]))
+        #     print(self.font.size(" ".join(words[lines == line]))[0])
+
+        ids = [0]
+        line_width = 0
+        for idx, word in enumerate(text.split(" ")):
+            width = self.font.size(word + " ")[0]
+            if line_width + self.font.size(word)[0] > rect.width:
+                ids.append(idx)
+                line_width = width
+            else:
+                line_width += width
+        ids.append(len(text.split(" ")))
+
         height, gap = 0, 10
         text_surfs = []
-        for line in range(lines):
-            line_text = text[text_per_line*line:min(text_per_line*(line + 1), text_length)]
-            line_text_surf = self.font.render(line_text, True, Colours.black.value)
+        for line in range(len(ids)-1):
+            line_words = text.split(" ")[ids[line]:ids[line+1]]
+            line_text_surf = self.font.render(" ".join(line_words), True, Colours.black.value)
 
             text_surfs.append(line_text_surf)
 
-            height += line_text_surf.get_height() + gap # cumulative height with 5px padding
+            height += line_text_surf.get_height() + gap  # cumulative height with 5px padding
 
-        max_width = max([surf.get_width() for surf in text_surfs])
-        text_surf = pg.Surface((max_width, height - gap), pg.SRCALPHA)
+        text_surf = pg.Surface(rect.size, pg.SRCALPHA)
         for idx, surf in enumerate(text_surfs):
             text_surf.blit(surf, (0, idx*(surf.get_height() + gap)))
 
-        blitPos = pos
-        size = pg.Vector2(text_surf.get_size())
+        blitPos = rect.topleft
+        size = rect.size
+
+        # pg.draw.rect(self.surface, Colours.red.value, rect, width=5)
+
         if location == BlitLocation.centre:
             blitPos -= size / 2
         elif location == BlitLocation.topRight:
@@ -191,8 +211,6 @@ class Screen:
         elif location == BlitLocation.midTop:
             blitPos -= pg.Vector2(size.x / 2, 0)
 
-        if sprite:
-            self.sprite_surface.blit(text_surf, pos)
         elif base:
             self.base_surface.blit(text_surf, blitPos)
         else:
@@ -258,6 +276,63 @@ class Screen:
         # new_surf = pg.surfarray.make_surface(new_array)
         # new_surf.set_alpha()
         # self.surface = new_surf
+
+    def add_speech_bubble(self, rect, border=4, tiers=4, colour=Colours.black, base=False):
+        rect: pg.Rect
+
+        inside_tiers = max([2, math.floor(tiers/2)])
+        blit_width = border / tiers
+        surf = pg.Surface(rect.size, pg.SRCALPHA)
+        # surf.fill(Colours.white.value)
+
+        tier_rect = rect
+        # create the outside boundary
+        for idx, tier in enumerate(range(tiers-1)):
+            tier_width =  (tiers - idx) * border / tiers
+
+            top_line = pg.Rect((tier_width, tier_rect.top),
+                               (tier_rect.width - (1-idx/(tiers-idx))*tier_width * 2, tier_width))
+            bottom_line = pg.Rect((tier_width, tier_rect.top + tier_rect.height - tier_width),
+                                  (tier_rect.width - (1-idx/(tiers-idx))*tier_width * 2, tier_width))
+            left_line = pg.Rect((tier_rect.left, tier_width), (tier_width, tier_rect.height - (1-idx/(tiers-idx))* 2 * tier_width))
+            right_line = pg.Rect((tier_rect.left + tier_rect.width - tier_width, tier_width),
+                                 (tier_width, tier_rect.height - 2 * (1-idx/(tiers-idx))*tier_width))
+            border_lines = [top_line, bottom_line, left_line, right_line]
+
+            for line in border_lines:
+                pg.draw.rect(surf, colour.value, line)
+
+            tier_rect = tier_rect.inflate(-(2 * border) / tiers, - (2 * border) / tiers)
+
+        # create inside border
+        tier_rect = rect.inflate(-border*2, -border*2)
+
+        # print(border)
+        for idx, count in enumerate(range(inside_tiers)):
+            # pg.draw.rect(surf, Colours.red.value, tier_rect, width=1)
+            top_line_1 = pg.Rect(tier_rect.topleft,
+                                 ((inside_tiers-idx)*blit_width, blit_width))
+            top_line_2 = pg.Rect(tier_rect.topright - pg.Vector2((inside_tiers - idx) * blit_width, 0),
+                                 ((inside_tiers - idx) * blit_width, blit_width))
+
+            bottom_line_1 = pg.Rect(tier_rect.bottomleft - pg.Vector2(0, blit_width),
+                                    ((inside_tiers-idx)*blit_width, blit_width))
+            bottom_line_2 = pg.Rect(tier_rect.bottomright - pg.Vector2((inside_tiers - idx) * blit_width, blit_width),
+                                 ((inside_tiers - idx) * blit_width, blit_width))
+
+            tier_rect = tier_rect.inflate(0, -blit_width * 2)
+            # print(top_line_2)
+
+            # for line in border_lines:
+            pg.draw.rect(surf, colour.value, top_line_1)
+            pg.draw.rect(surf, colour.value, top_line_2)
+            pg.draw.rect(surf, colour.value, bottom_line_1)
+            pg.draw.rect(surf, colour.value, bottom_line_2)
+
+        if base:
+            self.base_surface.blit(surf, rect.topleft)
+        else:
+            self.surface.blit(surf, rect.topleft)
 
     def refresh(self):
         self.surface = pg.Surface(self.size, pg.SRCALPHA)

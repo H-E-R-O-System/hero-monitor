@@ -220,7 +220,7 @@ class ShapeSearcher:
         self.display_screen.instruction = "Touch the dot!"
         self.display_screen.update()
 
-        size = np.random.randint(10, 51)
+        size = np.random.randint(20, 51)
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.6, 0.6)
         place_area.size -= pg.Vector2(size, size)
 
