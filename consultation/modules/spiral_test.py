@@ -182,13 +182,15 @@ if __name__ == "__main__":
     print(spiral_data.head(5))
     spiral_data.to_csv('spiraldata.csv', index=False)
 
-    spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)
-    spiral_image.fill(Colours.white.value)
+    # reconstruct image
+    spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
+    spiral_image.fill(Colours.white.value)  # fill with white background
+    # draw in lines between each point recorded
     pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(), width=3)
-    print("ok")
-    img_array = pg.surfarray.array3d(spiral_image)
-    img_array = cv2.transpose(img_array)
-    img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-    cv2.imwrite("spiral.png", img_array)
+
+    img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
+    img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
+    img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
+    cv2.imwrite("spiral.png", img_array)  # Save image
     print("ok")
 
