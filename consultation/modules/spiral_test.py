@@ -3,6 +3,7 @@ import pygame as pg
 import pandas as pd
 import os
 import time
+import cv2
 
 from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
@@ -44,7 +45,7 @@ class SpiralTest:
 
         self.running = True
 
-        self.spiral_data = np.zeros((5, 0))
+        self.spiral_data = np.zeros((7, 0))
         self.spiral_started = False
         self.spiral_finished = False
 
@@ -91,7 +92,7 @@ class SpiralTest:
 
     def create_dataframe(self):
         return pd.DataFrame(data=self.spiral_data.transpose(),
-                            columns=["rel_pos_x", "rel_pos_y", "theta", "error", "time"])
+                            columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error", "time"]), self.touch_size
 
     def get_relative_mose_pos(self):
         if self.parent:
@@ -121,8 +122,10 @@ class SpiralTest:
                     if not self.spiral_started:
                         pos = self.get_relative_mose_pos()
                         rel_pos = pos - self.display_size / 2
+                        pixel_pos = pos - self.touch_offset
+                        print(pixel_pos)
                         error = np.linalg.norm(np.array([pos.x, pos.y]) - self.target_coords[0, :])
-                        data = np.expand_dims([*rel_pos, np.arctan2(*rel_pos), error, 0], axis=1)
+                        data = np.expand_dims([*pixel_pos, *rel_pos, np.arctan2(*rel_pos), error, 0], axis=1)
                         self.spiral_data = np.append(self.spiral_data, data, axis=1)
                         start_time = time.perf_counter()
                         self.spiral_started = True
@@ -133,8 +136,10 @@ class SpiralTest:
                     pos = self.get_relative_mose_pos()
                     idx, coord, error = self.get_closest_coord_2(np.array(pos))
                     rel_pos = pos - self.display_size / 2
+                    pixel_pos = pos - self.touch_offset
+                    print(pixel_pos)
                     # could use pygame inbuilt Vector2 to_polar
-                    data = np.expand_dims([*rel_pos, np.arctan2(*rel_pos), error, time.perf_counter() - start_time], axis=1)
+                    data = np.expand_dims([*pixel_pos, *rel_pos, np.arctan2(*rel_pos), error, time.perf_counter() - start_time], axis=1)
                     self.spiral_data = np.append(self.spiral_data, data, axis=1)
 
                     # self.touch_screen.refresh()
@@ -171,7 +176,19 @@ if __name__ == "__main__":
     pg.init()
     spiral_test = SpiralTest(turns=3)
     spiral_test.loop()  # optionally extract data from here as array
-    spiral_data = spiral_test.create_dataframe()
-    print(spiral_data.head())
-    spiral_data.to_csv('spiraldata.csv', index=False)
+    spiral_data, spiral_size = spiral_test.create_dataframe()
+    # Spiral data is a pd dataframe that contains the coordinates
+    # reconstructed image should be of size spiral_size
     print(spiral_data.head(5))
+    spiral_data.to_csv('spiraldata.csv', index=False)
+
+    spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)
+    spiral_image.fill(Colours.white.value)
+    pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(), width=3)
+    print("ok")
+    img_array = pg.surfarray.array3d(spiral_image)
+    img_array = cv2.transpose(img_array)
+    img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+    cv2.imwrite("spiral.png", img_array)
+    print("ok")
+
