@@ -173,5 +173,5 @@ if __name__ == "__main__":
     spiral_test.loop()  # optionally extract data from here as array
     spiral_data = spiral_test.create_dataframe()
     print(spiral_data.head())
-    # spiral_data.to_csv('spiraldata.csv', index=False)
-    # print(spiral_data.head(5))
+    spiral_data.to_csv('spiraldata.csv', index=False)
+    print(spiral_data.head(5))
