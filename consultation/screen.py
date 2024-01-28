@@ -140,13 +140,18 @@ class Screen:
         else:
             surf.blit(image, pos)
 
-    def add_text(self, text, pos, lines=1, colour=Colours.black, location=BlitLocation.topLeft, sprite=False, base=False):
+    def add_text(self, text, pos, lines=1, colour=Colours.black, bg_colour=None, location=BlitLocation.topLeft, sprite=False, base=False):
         # pos will be either a tuple (x, y), or BlitPosition
 
-        textSurf = self.font.render(text, True, colour.value)
+        text_surf = self.font.render(text, True, colour.value)
+        if bg_colour:
+            bg_surf = pg.Surface(text_surf.get_size(), pg.SRCALPHA)
+            bg_surf.fill(bg_colour.value)
+            bg_surf.blit(text_surf, (0, 0))
+            text_surf = bg_surf
 
         blitPos = pos
-        size = pg.Vector2(textSurf.get_size())
+        size = pg.Vector2(text_surf.get_size())
         if location == BlitLocation.centre:
             blitPos -= size / 2
         elif location == BlitLocation.topRight:
@@ -157,47 +162,62 @@ class Screen:
             blitPos -= pg.Vector2(size.x / 2, size.y)
 
         if sprite:
-            self.sprite_surface.blit(textSurf, blitPos)
+            self.sprite_surface.blit(text_surf, blitPos)
         elif base:
-            self.base_surface.blit(textSurf, blitPos)
+            self.base_surface.blit(text_surf, blitPos)
         else:
-            self.surface.blit(textSurf, blitPos)
+            self.surface.blit(text_surf, blitPos)
 
-    def add_multiline_text(self, text, rect, location=BlitLocation.topLeft, base=False):
+    def add_multiline_text(self, text, rect, location=BlitLocation.topLeft, center_horizontal=False, center_vertical=False,
+                           colour=None, bg_colour=None, font_size=None, base=False):
         rect: pg.Rect
 
-        # words = pd.Series(text.split(" "))
-        # widths = np.cumsum([self.font.size(word + " ")[0] for word in words], dtype=np.uint16)
-        # lines = np.floor((widths + widths[0]) / rect.w)
-        # print(widths, lines)
-        # for line in range(int(np.max(lines))+1):
-        #     print(" ".join(words[lines == line]))
-        #     print(self.font.size(" ".join(words[lines == line]))[0])
+        if colour is None:
+            colour = Colours.black
+
+        if font_size == "large":
+            self.font = self.fonts.large
 
         ids = [0]
         line_width = 0
         for idx, word in enumerate(text.split(" ")):
-            width = self.font.size(word + " ")[0]
-            if line_width + self.font.size(word)[0] > rect.width:
+            if word == "\n":
                 ids.append(idx)
-                line_width = width
+                line_width = 0
             else:
-                line_width += width
+                width = self.font.size(word + " ")[0]
+                if line_width + self.font.size(word)[0] > rect.width:
+                    ids.append(idx)
+                    line_width = width
+                else:
+                    line_width += width
         ids.append(len(text.split(" ")))
 
         height, gap = 0, 10
         text_surfs = []
         for line in range(len(ids)-1):
-            line_words = text.split(" ")[ids[line]:ids[line+1]]
-            line_text_surf = self.font.render(" ".join(line_words), True, Colours.black.value)
+            line_words = text.replace("\n ", "").split(" ")[ids[line]:ids[line+1]]
+            line_text_surf = self.font.render(" ".join(line_words), True, colour.value)
 
             text_surfs.append(line_text_surf)
 
             height += line_text_surf.get_height() + gap  # cumulative height with 5px padding
 
         text_surf = pg.Surface(rect.size, pg.SRCALPHA)
+        if bg_colour:
+            text_surf.fill(bg_colour.value)
+        total_height = sum([surf.get_height() for surf in text_surfs])
+        total_height += gap*(len(text_surfs)-1)
+        if center_vertical:
+            y_offset = (rect.h - total_height) / 2
+        else:
+            y_offset = 0
+
         for idx, surf in enumerate(text_surfs):
-            text_surf.blit(surf, (0, idx*(surf.get_height() + gap)))
+            if center_horizontal:
+                text_surf.blit(surf, ((rect.width - surf.get_width())/2, y_offset + idx * (surf.get_height() + gap)))
+            else:
+                text_surf.blit(surf, (0, y_offset + idx*(surf.get_height() + gap)))
 
         blitPos = rect.topleft
         size = rect.size
@@ -215,6 +235,8 @@ class Screen:
             self.base_surface.blit(text_surf, blitPos)
         else:
             self.surface.blit(text_surf, blitPos)
+
+        self.font = self.fonts.normal
 
     def create_layered_shape(self, pos, shape, size, number, colours, offsets,
                              radii, offsetWidth=False, offsetHeight=False, base=False):
@@ -277,18 +299,19 @@ class Screen:
         # new_surf.set_alpha()
         # self.surface = new_surf
 
-    def add_speech_bubble(self, rect, border=4, tiers=4, colour=Colours.black, base=False):
+    def add_speech_bubble(self, rect, pos, border=4, tiers=4, colour=Colours.black, base=False):
         rect: pg.Rect
 
         inside_tiers = max([2, math.floor(tiers/2)])
         blit_width = border / tiers
         surf = pg.Surface(rect.size, pg.SRCALPHA)
-        # surf.fill(Colours.white.value)
+        # surf.fill(Colours.red.value)
 
         tier_rect = rect
+        tier_rect.topleft = (0, 0)
         # create the outside boundary
         for idx, tier in enumerate(range(tiers-1)):
-            tier_width =  (tiers - idx) * border / tiers
+            tier_width = (tiers - idx) * border / tiers
 
             top_line = pg.Rect((tier_width, tier_rect.top),
                                (tier_rect.width - (1-idx/(tiers-idx))*tier_width * 2, tier_width))
@@ -305,7 +328,9 @@ class Screen:
             tier_rect = tier_rect.inflate(-(2 * border) / tiers, - (2 * border) / tiers)
 
         # create inside border
-        tier_rect = rect.inflate(-border*2, -border*2)
+        tier_rect = rect
+        tier_rect.topleft = (0, 0)
+        tier_rect = tier_rect.inflate(-border*2, -border*2)
 
         # print(border)
         for idx, count in enumerate(range(inside_tiers)):
@@ -330,9 +355,9 @@ class Screen:
             pg.draw.rect(surf, colour.value, bottom_line_2)
 
         if base:
-            self.base_surface.blit(surf, rect.topleft)
+            self.base_surface.blit(surf, pos)
         else:
-            self.surface.blit(surf, rect.topleft)
+            self.surface.blit(surf, pos)
 
     def refresh(self):
         self.surface = pg.Surface(self.size, pg.SRCALPHA)

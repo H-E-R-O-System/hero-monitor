@@ -4,7 +4,7 @@ import os
 import gtts
 from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.display_screen import DisplayScreen
+from consultation.display_screen import DisplayScreen, DisplayScreenV2
 
 
 class PSS:
@@ -19,7 +19,7 @@ class PSS:
         self.bottom_screen: pg.Surface = parent.bottom_screen
 
         self.touch_screen = TouchScreen(self.top_screen.get_size())
-        self.display_screen = DisplayScreen(self.bottom_screen.get_size())
+        self.display_screen = DisplayScreenV2(self.bottom_screen.get_size(), info_height=0.2)
         self.display_screen.avatar = parent.display_screen.avatar
         count = 5
 
@@ -35,8 +35,7 @@ class PSS:
             self.likert_buttons.append(button)
 
         if parent:
-            self.display_screen.avatar.face_colour = parent.display_screen.avatar.face_colour
-            self.display_screen.avatar.update_colours()
+            self.display_screen.avatar = parent.display_screen.avatar
 
         hints = ["" for _ in pss_questions]
         self.questions = [Question(question, hint) for question, hint in zip(pss_questions, hints)]
@@ -63,6 +62,7 @@ class PSS:
             question_audio.save(question_audio_file)
 
     def update_display(self):
+        self.display_screen.refresh()
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
@@ -76,11 +76,13 @@ class PSS:
 
             question = self.questions[self.question_idx]
             self.display_screen.instruction = None
-            self.display_screen.update(question)
+            self.display_screen.speech_text = question.text
         else:
             question = None
             self.display_screen.instruction = "Section Complete"
-            self.display_screen.update()
+            self.display_screen.speech_text = None
+
+        self.update_display()
 
         if self.question_idx < len(self.questions):
             question_audio_file = f'consultation/question_audio_tmp/pss/question_{str(self.question_idx)}.mp3'
@@ -95,7 +97,7 @@ class PSS:
         start = time.monotonic()
         while pg.mixer.music.get_busy():
             if time.monotonic() - start > 0.15:
-                self.display_screen.update(question=question)
+                # self.display_screen.update(question=question)
                 self.update_display()
                 self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
                 start = time.monotonic()
@@ -104,7 +106,7 @@ class PSS:
 
         if question:
             self.display_screen.instruction = "Select an option below"
-        self.display_screen.update(question=question)
+        # self.display_screen.update(question=question)
         self.update_display()
 
     def entry_sequence(self):
@@ -127,7 +129,7 @@ class PSS:
                         self.running = False
 
                     elif event.key == pg.K_w:
-                        self.parent.take_screenshot()
+                        self.parent.take_screenshot("pss")
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     button_id = self.touch_screen.click_test(self.parent.get_relative_mose_pos())

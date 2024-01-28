@@ -107,13 +107,45 @@ class DisplayScreen:
 
 
 class DisplayScreenV2(Screen):
-    def __init__(self, size):
+    def __init__(self, size, info_height=0.2):
         super().__init__(size, colour=Colours.white)
-        self.avatar = Avatar()
+        # make the base background
+
+        self.avatar = Avatar(size=(256, 256 * 1.125))
         self.instruction = None
+        self.speech_text = None
+        self.speech_textbox = pg.Rect(0.54*self.size.x, 0.25*self.size.y, 0.35*self.size.x, 0.4*self.size.y)
+        self.info_textbox = pg.Rect(0, (1-info_height)*self.size.y, self.size.x, info_height*self.size.y)
+        self.load_image("consultation/graphics/consult_background.png", fill=True, base=True, pos=(0, 0))
+        pg.draw.rect(self.base_surface, Colours.lightGrey.value, self.info_textbox)
+
         self.state = 0
 
     def get_surface(self):
+        if self.instruction:
+            self.add_multiline_text(self.instruction, self.info_textbox, center_horizontal=True, center_vertical=True)
+
+        print("ok")
+        if self.speech_text:
+            border = 10
+            # self.add_speech_bubble(self.speech_textbox.copy(), self.speech_textbox.topleft, border=border, tiers=4)
+            triangle_points = (self.speech_textbox.topleft + pg.Vector2(0, 0.8*self.speech_textbox.h),
+                               self.speech_textbox.topleft + pg.Vector2(0, 0.9*self.speech_textbox.h),
+                               self.speech_textbox.topleft + pg.Vector2(-0.1*self.speech_textbox.w, 0.9*self.speech_textbox.h))
+
+            self.add_multiline_text(self.speech_text, self.speech_textbox.inflate(-2*border, -2*border),
+                                    center_vertical=True, center_horizontal=True, bg_colour=Colours.white)
+            pg.draw.rect(self.surface, Colours.lightGrey.value, self.speech_textbox, border_radius=int(border * 2),
+                         width=border)
+            pg.draw.polygon(self.surface, Colours.lightGrey.value, triangle_points)
+
+            self.add_surf(self.avatar.get_surface(), (0.4*self.size.x, self.size.y - self.info_textbox.h), location=BlitLocation.midBottom)
+
+        elif self.state == 1:
+            self.add_surf(self.avatar.get_surface(), (0, self.size.y - self.info_textbox.h), location=BlitLocation.bottomLeft)
+        else:
+            self.add_surf(self.avatar.get_surface(), self.size / 2, location=BlitLocation.centre)
+
 
         display_surf = self.base_surface.copy()
         display_surf.blit(self.surface, (0, 0))

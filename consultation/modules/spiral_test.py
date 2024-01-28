@@ -26,7 +26,7 @@ class SpiralTest:
         self.display_screen.instruction = "Start in the center"
 
         self.touch_size = touch_size
-        self.touch_screen = TouchScreen(touch_size, colour=Colours.white)
+        self.touch_screen = TouchScreen(size, colour=Colours.white)
 
         if parent:
             self.display_screen.avatar = parent.display_screen.avatar
@@ -35,10 +35,12 @@ class SpiralTest:
         self.display_screen.update()
 
         self.target_coords = None
+        self.touch_offset = (self.display_size - self.touch_size) / 2
         self.load_surface(size=touch_size, turns=turns)
 
-        self.touch_offset = (self.display_size - self.touch_size) / 2
         self.coord_idx = 0
+
+        self.mouse_down = False
 
         self.running = True
 
@@ -50,7 +52,7 @@ class SpiralTest:
         if self.parent:
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
 
-        self.bottom_screen.blit(self.touch_screen.get_surface(), self.touch_offset)
+        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
     def get_closest_coord_2(self, pos):
@@ -82,6 +84,8 @@ class SpiralTest:
         if not clockwise:
             points[:, 1] = (size[1] - points[:, 1])
 
+        points += np.array([self.touch_offset.x, self.touch_offset.y])
+
         pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
         self.target_coords = points
 
@@ -91,9 +95,9 @@ class SpiralTest:
 
     def get_relative_mose_pos(self):
         if self.parent:
-            pos = pg.Vector2(self.parent.get_relative_mose_pos()) - self.touch_offset
+            pos = pg.Vector2(self.parent.get_relative_mose_pos())
         else:
-            pos = pg.Vector2(pg.mouse.get_pos()) - self.touch_offset
+            pos = pg.Vector2(pg.mouse.get_pos())
 
         return pos
 
@@ -113,18 +117,24 @@ class SpiralTest:
 
         while self.running:
             for event in pg.event.get():
-                if event.type == pg.MOUSEBUTTONDOWN and not self.spiral_started:
-                    rel_pos = self.get_relative_mose_pos()
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if not self.spiral_started:
+                        pos = self.get_relative_mose_pos()
+                        rel_pos = pos - self.display_size / 2
+                        error = np.linalg.norm(np.array([pos.x, pos.y]) - self.target_coords[0, :])
+                        data = np.expand_dims([*rel_pos, np.arctan2(*rel_pos), error, 0], axis=1)
+                        self.spiral_data = np.append(self.spiral_data, data, axis=1)
+                        start_time = time.perf_counter()
+                        self.spiral_started = True
 
-                    data = np.expand_dims([*rel_pos, np.arctan2(*rel_pos), 0, 0], axis=1)
-                    self.spiral_data = np.append(self.spiral_data, data, axis=1)
-                    start_time = time.perf_counter()
-                    self.spiral_started = True
+                    self.mouse_down = True
 
-                elif event.type == pg.MOUSEMOTION and self.spiral_started:
+                elif event.type == pg.MOUSEMOTION and self.mouse_down:
                     pos = self.get_relative_mose_pos()
                     idx, coord, error = self.get_closest_coord_2(np.array(pos))
-                    data = np.expand_dims([*pos, np.arctan2(*pos), error, time.perf_counter() - start_time], axis=1)
+                    rel_pos = pos - self.display_size / 2
+                    # could use pygame inbuilt Vector2 to_polar
+                    data = np.expand_dims([*rel_pos, np.arctan2(*rel_pos), error, time.perf_counter() - start_time], axis=1)
                     self.spiral_data = np.append(self.spiral_data, data, axis=1)
 
                     # self.touch_screen.refresh()
@@ -135,10 +145,12 @@ class SpiralTest:
 
                         if self.coord_idx == len(self.target_coords) - 1:
                             self.spiral_finished = True
+                            self.running = False
+
                         self.update_display()
 
-                elif event.type == pg.MOUSEBUTTONUP and self.spiral_finished:
-                    self.running = False
+                elif event.type == pg.MOUSEBUTTONUP:
+                    self.mouse_down = False
 
                 elif event.type == pg.KEYDOWN:
                     if event.key == pg.K_x:
@@ -157,8 +169,9 @@ if __name__ == "__main__":
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
-    spiral_test = SpiralTest(turns=3, touch_size=(600, 600))
+    spiral_test = SpiralTest(turns=3)
     spiral_test.loop()  # optionally extract data from here as array
-    # spiral_data = spiral_test.create_dataframe()
+    spiral_data = spiral_test.create_dataframe()
+    print(spiral_data.head())
     # spiral_data.to_csv('spiraldata.csv', index=False)
     # print(spiral_data.head(5))
