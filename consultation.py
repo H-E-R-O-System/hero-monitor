@@ -80,18 +80,19 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(256, 256 * 1.125))
+        self.avatar = Avatar(size=(320, 320 * 1.125))
+        self.display_screen.avatar = self.avatar
 
-        self.pss_question_count = 5
+        self.pss_question_count = 3
         self.modules = {
             "Shapes": ShapeSearcher(max_turns=10, parent=self),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
-            "WCT": CardGame(max_turns=3, parent=self),
+            "WCT": CardGame(max_turns=8, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
-             }
+        }
 
-        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
+        self.module_order = ["WCT", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
 
         self.module_idx = 0
 
@@ -119,8 +120,6 @@ class Consultation:
     def update_display(self):
         self.touch_screen.refresh()
         self.display_screen.update()
-
-        speech_size = pg.Vector2(self.display_size.x, self.display_size.y*0.2)
 
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
@@ -155,12 +154,12 @@ class Consultation:
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
-    def take_screenshot(self, filename):
+    def take_screenshot(self, filename=None):
         print("Taking Screenshot")
         img_array = pg.surfarray.array3d(self.window)
         img_array = cv2.transpose(img_array)
         img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-        if not filename:
+        if filename is None:
             filename = datetime.datetime.now()
         cv2.imwrite(f"screenshots/{filename}.png", img_array)
 
@@ -199,9 +198,7 @@ class Consultation:
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_f:
-                        pg.display.toggle_fullscreen()
-                    elif event.key == pg.K_ESCAPE:
+                    if event.key == pg.K_ESCAPE:
                         self.running = False
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
@@ -238,7 +235,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)
     pg.init()
-    consult = Consultation(full_screen=False, scale=0.7)
+    consult = Consultation(full_screen=False)
     consult.loop()
 
     if consult.output is not None:
