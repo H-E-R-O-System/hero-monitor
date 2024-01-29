@@ -36,7 +36,8 @@ class SpiralTest:
         self.display_screen.update()
 
         self.target_coords = None
-        self.touch_offset = (self.display_size - self.touch_size) / 2
+        self.image_offset = (self.display_size - self.touch_size) / 2
+        self.center_offset = self.display_size / 2
         self.load_surface(size=touch_size, turns=turns)
 
         self.coord_idx = 0
@@ -88,7 +89,7 @@ class SpiralTest:
         if not clockwise:
             points[:, 1] = (size[1] - points[:, 1])
 
-        points += np.array([self.touch_offset.x, self.touch_offset.y])
+        points += np.array([self.image_offset.x, self.image_offset.y])
 
         pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
         self.target_coords = points
@@ -116,9 +117,9 @@ class SpiralTest:
         if self.parent:
             self.parent.speak_text("Thank you for completing the spiral test", visual=False)
         print(self.spiral_data.shape)
-        pixel_positions = [self.mouse_positions[idx, 0:2] - self.touch_offset for idx in
+        pixel_positions = [self.mouse_positions[idx, 0:2] - self.image_offset for idx in
                            range(len(self.mouse_positions))]
-        rel_positions = [self.mouse_positions[idx, 0:2] - self.display_size / 2 for idx in
+        rel_positions = [self.mouse_positions[idx, 0:2] - self.center_offset for idx in
                          range(len(self.mouse_positions))]
         errors = [(self.get_closest_coord_2(self.mouse_positions[idx, 0:2]))[2] for idx in
                   range(len(self.mouse_positions))]

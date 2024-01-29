@@ -92,7 +92,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
         }
 
-        self.module_order = ["Spiral", "Shapes", "VAT", "WCT", "PSS"]
+        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
 
         self.module_idx = 0
 
