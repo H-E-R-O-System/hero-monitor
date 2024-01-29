@@ -36,6 +36,8 @@ class SpiralTest:
         self.display_screen.update()
 
         self.target_coords = None
+        self.theta_vals = None
+        self.turns = turns
         self.image_offset = (self.display_size - self.touch_size) / 2
         self.center_offset = self.display_size / 2
         self.load_surface(size=touch_size, turns=turns)
@@ -46,7 +48,7 @@ class SpiralTest:
 
         self.running = True
 
-        self.mouse_positions = np.zeros((0, 3))
+        self.mouse_positions = np.zeros((0, 4))
         self.spiral_data = np.zeros((7, 0))
         self.spiral_started = False
         self.spiral_finished = False
@@ -78,6 +80,7 @@ class SpiralTest:
         n = 100  # Number of points to approximate spiral
         b = 0.5 / (2 * np.pi)  # Do not alter, ensures the scale is correct
         theta = np.linspace(0, 2 * np.pi, n)  # Spiral parametrised by theta
+        self.theta_vals = theta * turns
         x = (b * theta) * np.cos(turns * theta)  # x component of coordinate
         y = (b * theta) * np.sin(turns * theta)  # y component of coordinate
         points = np.array(([x + 0.5, y + 0.5])).transpose()  # spiral coordinates: Nx2 np array (N is number of points)
@@ -123,15 +126,20 @@ class SpiralTest:
                          range(len(self.mouse_positions))]
         errors = [(self.get_closest_coord_2(self.mouse_positions[idx, 0:2]))[2] for idx in
                   range(len(self.mouse_positions))]
+
         polar = [np.arctan2(*rel_pos) for rel_pos in rel_positions]
+
+        turns = [np.floor(self.theta_vals[int(self.mouse_positions[idx, 3])] / (2*np.pi)) for idx in range(len(self.mouse_positions))]
+        print(turns)
 
         data = np.concatenate((np.array(pixel_positions), np.array(rel_positions),
                                np.expand_dims(np.array(polar), axis=1),
                                np.expand_dims(np.array(errors), axis=1),
-                               np.expand_dims(np.array(self.mouse_positions[:, 2] - self.mouse_positions[0, 2]), axis=1)), axis=1)
+                              np.expand_dims(np.array(self.mouse_positions[:, 2] - self.mouse_positions[0, 2]), axis=1),
+                              np.expand_dims(np.array(turns), axis=1)), axis=1)
         self.output = pd.DataFrame(data=data,
                                    columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error",
-                                            "time"]), self.touch_size
+                                            "time", "turns"]), self.touch_size
 
     def loop(self):
         self.entry_sequence()
@@ -140,8 +148,9 @@ class SpiralTest:
                 if event.type == pg.MOUSEBUTTONDOWN:
                     if not self.spiral_started:
                         pos = self.get_relative_mose_pos()
+                        idx, _, _ = self.get_closest_coord_2(np.array(pos))
                         self.mouse_positions = np.append(
-                            self.mouse_positions, np.expand_dims([*pos, time.perf_counter()], axis=0), axis=0)
+                            self.mouse_positions, np.expand_dims([*pos, time.perf_counter(), idx], axis=0), axis=0)
                         self.spiral_started = True
 
                     self.mouse_down = True
@@ -150,7 +159,7 @@ class SpiralTest:
                     pos = self.get_relative_mose_pos()
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
-                                                     np.expand_dims([*pos, time.perf_counter()], axis=0), axis=0)
+                                                     np.expand_dims([*pos, time.perf_counter(), idx], axis=0), axis=0)
 
                     if idx - self.coord_idx == 1:
                         pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
@@ -178,9 +187,9 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
     spiral_test = SpiralTest(turns=3)
