@@ -45,9 +45,12 @@ class SpiralTest:
 
         self.running = True
 
+        self.mouse_positions = np.zeros((0, 3))
         self.spiral_data = np.zeros((7, 0))
         self.spiral_started = False
         self.spiral_finished = False
+
+        self.output = None
 
     def update_display(self):
         if self.parent:
@@ -92,7 +95,8 @@ class SpiralTest:
 
     def create_dataframe(self):
         return pd.DataFrame(data=self.spiral_data.transpose(),
-                            columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error", "time"]), self.touch_size
+                            columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error",
+                                     "time"]), self.touch_size
 
     def get_relative_mose_pos(self):
         if self.parent:
@@ -111,38 +115,42 @@ class SpiralTest:
         self.update_display()
         if self.parent:
             self.parent.speak_text("Thank you for completing the spiral test", visual=False)
+        print(self.spiral_data.shape)
+        pixel_positions = [self.mouse_positions[idx, 0:2] - self.touch_offset for idx in
+                           range(len(self.mouse_positions))]
+        rel_positions = [self.mouse_positions[idx, 0:2] - self.display_size / 2 for idx in
+                         range(len(self.mouse_positions))]
+        errors = [(self.get_closest_coord_2(self.mouse_positions[idx, 0:2]))[2] for idx in
+                  range(len(self.mouse_positions))]
+        polar = [np.arctan2(*rel_pos) for rel_pos in rel_positions]
+
+        data = np.concatenate((np.array(pixel_positions), np.array(rel_positions),
+                               np.expand_dims(np.array(polar), axis=1),
+                               np.expand_dims(np.array(errors), axis=1),
+                               np.expand_dims(np.array(self.mouse_positions[:, 2] - self.mouse_positions[0, 2]), axis=1)), axis=1)
+        self.output = pd.DataFrame(data=data,
+                                   columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error",
+                                            "time"]), self.touch_size
 
     def loop(self):
         self.entry_sequence()
-        start_time = time.perf_counter()
-
         while self.running:
             for event in pg.event.get():
                 if event.type == pg.MOUSEBUTTONDOWN:
                     if not self.spiral_started:
                         pos = self.get_relative_mose_pos()
-                        rel_pos = pos - self.display_size / 2
-                        pixel_pos = pos - self.touch_offset
-                        print(pixel_pos)
-                        error = np.linalg.norm(np.array([pos.x, pos.y]) - self.target_coords[0, :])
-                        data = np.expand_dims([*pixel_pos, *rel_pos, np.arctan2(*rel_pos), error, 0], axis=1)
-                        self.spiral_data = np.append(self.spiral_data, data, axis=1)
-                        start_time = time.perf_counter()
+                        self.mouse_positions = np.append(
+                            self.mouse_positions, np.expand_dims([*pos, time.perf_counter()], axis=0), axis=0)
                         self.spiral_started = True
 
                     self.mouse_down = True
 
                 elif event.type == pg.MOUSEMOTION and self.mouse_down:
                     pos = self.get_relative_mose_pos()
-                    idx, coord, error = self.get_closest_coord_2(np.array(pos))
-                    rel_pos = pos - self.display_size / 2
-                    pixel_pos = pos - self.touch_offset
-                    print(pixel_pos)
-                    # could use pygame inbuilt Vector2 to_polar
-                    data = np.expand_dims([*pixel_pos, *rel_pos, np.arctan2(*rel_pos), error, time.perf_counter() - start_time], axis=1)
-                    self.spiral_data = np.append(self.spiral_data, data, axis=1)
+                    idx, _, _ = self.get_closest_coord_2(np.array(pos))
+                    self.mouse_positions = np.append(self.mouse_positions,
+                                                     np.expand_dims([*pos, time.perf_counter()], axis=0), axis=0)
 
-                    # self.touch_screen.refresh()
                     if idx - self.coord_idx == 1:
                         pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                                      self.target_coords[self.coord_idx, :], self.target_coords[idx, :], width=3)
@@ -176,7 +184,7 @@ if __name__ == "__main__":
     pg.init()
     spiral_test = SpiralTest(turns=3)
     spiral_test.loop()  # optionally extract data from here as array
-    spiral_data, spiral_size = spiral_test.create_dataframe()
+    spiral_data, spiral_size = spiral_test.output
     # Spiral data is a pd dataframe that contains the coordinates
     # reconstructed image should be of size spiral_size
     print(spiral_data.head(5))
@@ -193,4 +201,3 @@ if __name__ == "__main__":
     img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
     cv2.imwrite("spiral.png", img_array)  # Save image
     print("ok")
-

@@ -180,9 +180,18 @@ class Consultation:
         WCT_score = self.modules["WCT"].engine.score
 
         # Spiral Test Handling
-        spiral_data = self.modules["Spiral"].create_dataframe()
+        spiral_data, spiral_size = self.modules["Spiral"].create_dataframe()
         spiral_data.to_csv('spiraldata.csv', index=False)
-        print("Spiral Data Written to CSV")
+
+        spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
+        spiral_image.fill(Colours.white.value)  # fill with white background
+        # draw in lines between each point recorded
+        pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(), width=3)
+
+        img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
+        img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
+        img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
+        cv2.imwrite("consultation/response_data/spiral.png", img_array)  # Save image
 
         self.output = {
             "Consult_ID": self.id,
@@ -233,7 +242,7 @@ class Consultation:
 
 
 if __name__ == "__main__":
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (0, 0)
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
     consult = Consultation(full_screen=False)
     consult.loop()
