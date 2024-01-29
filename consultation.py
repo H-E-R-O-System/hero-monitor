@@ -180,7 +180,7 @@ class Consultation:
         WCT_score = self.modules["WCT"].engine.score
 
         # Spiral Test Handling
-        spiral_data, spiral_size = self.modules["Spiral"].create_dataframe()
+        spiral_data, spiral_size = self.modules["Spiral"].output
         spiral_data.to_csv('spiraldata.csv', index=False)
 
         spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
