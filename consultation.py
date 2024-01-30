@@ -40,6 +40,7 @@ class ConsultConfig:
         self.text = True
         self.output_lang = 'en'
         self.input_lang = 'en'
+        ...
 
 
 class Consultation:
