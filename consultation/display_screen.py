@@ -116,7 +116,7 @@ class DisplayScreenV2(Screen):
         self.speech_text = None
         self.speech_textbox = pg.Rect(0.54*self.size.x, 0.25*self.size.y, 0.35*self.size.x, 0.4*self.size.y)
         self.info_textbox = pg.Rect(0, (1-info_height)*self.size.y, self.size.x, info_height*self.size.y)
-        self.load_image("consultation/graphics/background.png", fill=True, base=True, pos=(0, 0))
+        self.load_image("consultation/graphics/graveyard.png", fill=True, base=True, pos=(0, 0))
         pg.draw.rect(self.base_surface, Colours.lightGrey.value, self.info_textbox)
 
         self.state = 0
