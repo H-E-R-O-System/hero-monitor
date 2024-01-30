@@ -37,6 +37,8 @@ class SpiralTest:
 
         self.target_coords = None
         self.theta_vals = None
+
+        self.plot_data = None
         self.turns = turns
         self.image_offset = (self.display_size - self.touch_size) / 2
         self.center_offset = self.display_size / 2
@@ -52,6 +54,9 @@ class SpiralTest:
         self.spiral_data = np.zeros((7, 0))
         self.spiral_started = False
         self.spiral_finished = False
+        self.prev_angle = 0
+        self.prev_pos = None
+        self.turns = 0
 
         self.output = None
 
@@ -66,7 +71,6 @@ class SpiralTest:
         distances = np.linalg.norm(self.target_coords - pos, axis=1)
         closest_idx = np.where(distances == min(distances))[0]
         if len(closest_idx) > 1:
-            print("Clash")
             if self.coord_idx in closest_idx:
                 ...
             closest_idx = closest_idx[0]
@@ -92,9 +96,25 @@ class SpiralTest:
         if not clockwise:
             points[:, 1] = (size[1] - points[:, 1])
 
+        center_points = points - pg.Vector2(size)/2
+
+        plot_data = np.concatenate([
+            np.expand_dims(center_points[:, 0], axis=1), np.expand_dims(center_points[:, 1], axis=1), np.expand_dims(theta*turns, axis=1),
+            np.expand_dims(np.linalg.norm(np.concatenate([np.expand_dims(center_points[:, 0], axis=1),
+                                                          np.expand_dims(center_points[:, 1], axis=1)], axis=1),
+                                          axis=1), axis=1)], axis=1)
+
+        self.plot_data = pd.DataFrame(plot_data, columns=["x", "y", "theta", "mag"])
+
         points += np.array([self.image_offset.x, self.image_offset.y])
 
         pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
+
+        screen_rect = self.touch_screen.base_surface.get_rect()
+        pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
+                      points=[screen_rect.midtop, screen_rect.midbottom])
+        pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
+                      points=[screen_rect.midleft, screen_rect.midright])
         self.target_coords = points
 
     def create_dataframe(self):
@@ -127,19 +147,15 @@ class SpiralTest:
         errors = [(self.get_closest_coord_2(self.mouse_positions[idx, 0:2]))[2] for idx in
                   range(len(self.mouse_positions))]
 
-        polar = [np.arctan2(*rel_pos) for rel_pos in rel_positions]
-
-        turns = [np.floor(self.theta_vals[int(self.mouse_positions[idx, 3])] / (2*np.pi)) for idx in range(len(self.mouse_positions))]
-        print(turns)
-
         data = np.concatenate((np.array(pixel_positions), np.array(rel_positions),
-                               np.expand_dims(np.array(polar), axis=1),
+                               np.expand_dims(self.mouse_positions[:, 3], axis=1),
                                np.expand_dims(np.array(errors), axis=1),
-                              np.expand_dims(np.array(self.mouse_positions[:, 2] - self.mouse_positions[0, 2]), axis=1),
-                              np.expand_dims(np.array(turns), axis=1)), axis=1)
+                               np.expand_dims(np.array(self.mouse_positions[:, 2] - self.mouse_positions[0, 2]),
+                                              axis=1)), axis=1)
+
         self.output = pd.DataFrame(data=data,
                                    columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error",
-                                            "time", "turns"]), self.touch_size
+                                            "time"]), self.touch_size
 
     def loop(self):
         self.entry_sequence()
@@ -152,14 +168,32 @@ class SpiralTest:
                         self.mouse_positions = np.append(
                             self.mouse_positions, np.expand_dims([*pos, time.perf_counter(), idx], axis=0), axis=0)
                         self.spiral_started = True
+                        self.prev_pos = pos - self.center_offset
+
+                        if (pos - self.center_offset)[1] < 0:
+                            self.turns -= 1
 
                     self.mouse_down = True
 
                 elif event.type == pg.MOUSEMOTION and self.mouse_down:
                     pos = self.get_relative_mose_pos()
+                    rel_pos = pos - self.center_offset
+
+                    if rel_pos[0] > 0 and self.prev_pos[0] > 0 and self.prev_pos[1] >= 0 > rel_pos[1]:
+                        self.turns -= 1  # anit-clockwise crossing of positive x-axis
+                    elif rel_pos[0] > 0 and self.prev_pos[0] > self.prev_pos[1] <= 0 < rel_pos[1]:
+                        self.turns += 1  # clockwise crossing of positive x-axis
+
+                    if np.arctan2(*np.flip(pos - self.center_offset)) > 0:
+                        angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * self.turns
+                    else:
+                        angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
+
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
-                                                     np.expand_dims([*pos, time.perf_counter(), idx], axis=0), axis=0)
+                                                     np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
+
+                    self.prev_pos = rel_pos
 
                     if idx - self.coord_idx == 1:
                         pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
@@ -187,9 +221,9 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
     spiral_test = SpiralTest(turns=3)
@@ -197,8 +231,8 @@ if __name__ == "__main__":
     spiral_data, spiral_size = spiral_test.output
     # Spiral data is a pd dataframe that contains the coordinates
     # reconstructed image should be of size spiral_size
-    print(spiral_data.head(5))
-    spiral_data.to_csv('spiraldata.csv', index=False)
+    spiral_data.to_csv('spiral_data_user.csv', index=False)
+    spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
 
     # reconstruct image
     spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
@@ -210,4 +244,3 @@ if __name__ == "__main__":
     img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
     img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
     cv2.imwrite("spiral.png", img_array)  # Save image
-    print("ok")
