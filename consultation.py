@@ -44,7 +44,7 @@ class ConsultConfig:
 
 class Consultation:
     def __init__(self, user=None, enable_speech=True, scale=1, full_screen=False):
-        pi = True
+        pi = False
 
         if user:
             self.user = user
@@ -92,7 +92,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
         }
 
-        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
+        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT",]
 
         self.module_idx = 0
 

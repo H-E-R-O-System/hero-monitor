@@ -139,7 +139,7 @@ class SpiralTest:
         self.update_display()
         if self.parent:
             self.parent.speak_text("Thank you for completing the spiral test", visual=False)
-        print(self.spiral_data.shape)
+
         pixel_positions = [self.mouse_positions[idx, 0:2] - self.image_offset for idx in
                            range(len(self.mouse_positions))]
         rel_positions = [self.mouse_positions[idx, 0:2] - self.center_offset for idx in
@@ -189,6 +189,8 @@ class SpiralTest:
                     else:
                         angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
 
+                    print(angle)
+
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
                                                      np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
@@ -221,9 +223,9 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
     spiral_test = SpiralTest(turns=3)
