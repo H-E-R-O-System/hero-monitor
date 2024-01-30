@@ -44,7 +44,7 @@ class ConsultConfig:
 
 class Consultation:
     def __init__(self, user=None, enable_speech=True, scale=1, full_screen=False):
-        pi = False
+        pi = True
 
         if user:
             self.user = user
