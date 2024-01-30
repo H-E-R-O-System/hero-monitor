@@ -15,7 +15,7 @@ import pandas as pd
 import pygame as pg
 
 from consultation.avatar import Avatar
-from consultation.display_screen import DisplayScreen
+from consultation.display_screen import DisplayScreen, DisplayScreenV2
 # import consultation modules
 from consultation.modules.perceived_stress_score import PSS
 from consultation.modules.spiral_test import SpiralTest
@@ -72,7 +72,7 @@ class Consultation:
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
 
         self.fonts = Fonts()
-        self.display_screen = DisplayScreen(self.top_screen.get_size())
+        self.display_screen = DisplayScreenV2(self.top_screen.get_size())
         self.display_screen.instruction = "Click the button to start"
         self.touch_screen = TouchScreen(self.bottom_screen.get_size())
         button_size = pg.Vector2(300, 200)
@@ -80,7 +80,7 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(320, 320 * 1.125))
+        self.avatar = Avatar(size=(520, 520 * 1.125))
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = 3
@@ -119,7 +119,7 @@ class Consultation:
 
     def update_display(self):
         self.touch_screen.refresh()
-        self.display_screen.update()
+        self.display_screen.refresh()
 
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
@@ -134,21 +134,18 @@ class Consultation:
         pg.mixer.music.play()
         if visual:
             self.display_screen.instruction = None
-            self.display_screen.update()
 
             # Keep in idle loop while speaking
             self.display_screen.avatar.state = 1
             start = time.monotonic()
             while pg.mixer.music.get_busy():
                 if time.monotonic() - start > 0.15:
-                    self.display_screen.update()
                     self.update_display()
                     self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
                     start = time.monotonic()
 
             self.display_screen.avatar.state = 0
 
-            self.display_screen.update()
             self.update_display()
 
     def get_relative_mose_pos(self):

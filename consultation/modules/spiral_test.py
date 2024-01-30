@@ -54,7 +54,6 @@ class SpiralTest:
         self.spiral_data = np.zeros((7, 0))
         self.spiral_started = False
         self.spiral_finished = False
-        self.prev_angle = 0
         self.prev_pos = None
         self.turns = 0
 
@@ -195,8 +194,6 @@ class SpiralTest:
                     self.mouse_positions = np.append(self.mouse_positions,
                                                      np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
 
-                    self.prev_pos = rel_pos
-
                     if idx - self.coord_idx == 1:
                         pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                                      self.target_coords[self.coord_idx, :], self.target_coords[idx, :], width=3)
@@ -207,6 +204,8 @@ class SpiralTest:
                             self.running = False
 
                         self.update_display()
+
+                    self.prev_pos = rel_pos
 
                 elif event.type == pg.MOUSEBUTTONUP:
                     self.mouse_down = False
