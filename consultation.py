@@ -80,7 +80,7 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(520, 520 * 1.125))
+        self.avatar = Avatar(size=(420, 420 * 1.125))
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = 3
