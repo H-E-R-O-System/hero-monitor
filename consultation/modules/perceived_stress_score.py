@@ -4,7 +4,7 @@ import os
 import gtts
 from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.display_screen import DisplayScreen, DisplayScreenV2
+from consultation.display_screen import DisplayScreen
 
 
 class PSS:
@@ -19,7 +19,7 @@ class PSS:
         self.bottom_screen: pg.Surface = parent.bottom_screen
 
         self.touch_screen = TouchScreen(self.top_screen.get_size())
-        self.display_screen = DisplayScreenV2(self.bottom_screen.get_size(), info_height=0.2)
+        self.display_screen = DisplayScreen(self.bottom_screen.get_size(), info_height=0.2)
         self.display_screen.avatar = parent.display_screen.avatar
         count = 5
 

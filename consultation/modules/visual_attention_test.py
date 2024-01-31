@@ -47,7 +47,6 @@ class VisualAttentionTest:
         if self.parent:
             self.display_screen.avatar = parent.display_screen.avatar
         self.display_screen.instruction = "Find the odd letter!"
-        self.display_screen.update()
 
         self.touch_screen = TouchScreen(touch_size)
         self.touch_size = pg.Vector2(touch_size)

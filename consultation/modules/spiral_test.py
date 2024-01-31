@@ -33,8 +33,6 @@ class SpiralTest:
             self.display_screen.avatar = parent.display_screen.avatar
             self.touch_screen.sprites = GameObjects([parent.quit_button])
 
-        self.display_screen.update()
-
         self.target_coords = None
         self.theta_vals = None
 
@@ -109,11 +107,11 @@ class SpiralTest:
 
         pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
 
-        screen_rect = self.touch_screen.base_surface.get_rect()
-        pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
-                      points=[screen_rect.midtop, screen_rect.midbottom])
-        pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
-                      points=[screen_rect.midleft, screen_rect.midright])
+        # screen_rect = self.touch_screen.base_surface.get_rect()
+        # pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
+        #               points=[screen_rect.midtop, screen_rect.midbottom])
+        # pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
+        #               points=[screen_rect.midleft, screen_rect.midright])
         self.target_coords = points
 
     def create_dataframe(self):

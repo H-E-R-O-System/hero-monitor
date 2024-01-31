@@ -5,7 +5,7 @@ import os
 import random
 
 from consultation.touch_screen import GameObjects, TouchScreen, GameButton
-from consultation.display_screen import DisplayScreenV2
+from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
 import math
 import cv2
@@ -146,7 +146,7 @@ class CardGame:
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = None
 
-        self.display_screen = DisplayScreenV2(self.display_size)
+        self.display_screen = DisplayScreen(self.display_size)
         self.display_screen.instruction = "Match the card!"
         self.touch_screen = TouchScreen(self.display_size, colour=Colours.white.value)
 

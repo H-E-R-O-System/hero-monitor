@@ -15,7 +15,7 @@ import pandas as pd
 import pygame as pg
 
 from consultation.avatar import Avatar
-from consultation.display_screen import DisplayScreen, DisplayScreenV2
+from consultation.display_screen import DisplayScreen
 # import consultation modules
 from consultation.modules.perceived_stress_score import PSS
 from consultation.modules.spiral_test import SpiralTest
@@ -72,7 +72,7 @@ class Consultation:
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
 
         self.fonts = Fonts()
-        self.display_screen = DisplayScreenV2(self.top_screen.get_size())
+        self.display_screen = DisplayScreen(self.top_screen.get_size())
         self.display_screen.instruction = "Click the button to start"
         self.touch_screen = TouchScreen(self.bottom_screen.get_size())
         button_size = pg.Vector2(300, 200)
