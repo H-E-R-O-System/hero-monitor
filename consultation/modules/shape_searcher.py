@@ -66,7 +66,6 @@ class ShapeSearcher:
         self.display_screen.instruction = None
         if parent:
             self.display_screen.avatar = parent.display_screen.avatar
-        self.display_screen.update()
 
         self.touch_screen = TouchScreen(self.display_size)
         self.button_size = pg.Vector2(120, 100)
@@ -92,6 +91,7 @@ class ShapeSearcher:
 
     def update_display(self):
         if self.parent:
+            self.display_screen.refresh()
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
@@ -155,10 +155,9 @@ class ShapeSearcher:
                 name, colour, position in zip(scene_shapes, colours, positions)], scene_shapes, colours
 
     def perception_question(self):
-
         self.touch_screen.refresh()
+
         self.display_screen.instruction = "Do the sets match?"
-        self.display_screen.update()
 
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.7, 0.9)
 
@@ -185,7 +184,6 @@ class ShapeSearcher:
     def binding_question(self):
         self.touch_screen.refresh()
         self.display_screen.instruction = "Do the sets match?"
-        self.display_screen.update()
         self.touch_screen.kill_sprites()
 
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.6, 0.6)
@@ -218,7 +216,6 @@ class ShapeSearcher:
         self.touch_screen.refresh()
         self.touch_screen.kill_sprites()
         self.display_screen.instruction = "Touch the dot!"
-        self.display_screen.update()
 
         size = np.random.randint(20, 51)
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.6, 0.6)

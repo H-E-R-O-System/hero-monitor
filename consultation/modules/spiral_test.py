@@ -33,8 +33,6 @@ class SpiralTest:
             self.display_screen.avatar = parent.display_screen.avatar
             self.touch_screen.sprites = GameObjects([parent.quit_button])
 
-        self.display_screen.update()
-
         self.target_coords = None
         self.theta_vals = None
 
@@ -54,7 +52,6 @@ class SpiralTest:
         self.spiral_data = np.zeros((7, 0))
         self.spiral_started = False
         self.spiral_finished = False
-        self.prev_angle = 0
         self.prev_pos = None
         self.turns = 0
 
@@ -110,11 +107,11 @@ class SpiralTest:
 
         pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
 
-        screen_rect = self.touch_screen.base_surface.get_rect()
-        pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
-                      points=[screen_rect.midtop, screen_rect.midbottom])
-        pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
-                      points=[screen_rect.midleft, screen_rect.midright])
+        # screen_rect = self.touch_screen.base_surface.get_rect()
+        # pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
+        #               points=[screen_rect.midtop, screen_rect.midbottom])
+        # pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
+        #               points=[screen_rect.midleft, screen_rect.midright])
         self.target_coords = points
 
     def create_dataframe(self):
@@ -139,7 +136,7 @@ class SpiralTest:
         self.update_display()
         if self.parent:
             self.parent.speak_text("Thank you for completing the spiral test", visual=False)
-        print(self.spiral_data.shape)
+
         pixel_positions = [self.mouse_positions[idx, 0:2] - self.image_offset for idx in
                            range(len(self.mouse_positions))]
         rel_positions = [self.mouse_positions[idx, 0:2] - self.center_offset for idx in
@@ -189,11 +186,11 @@ class SpiralTest:
                     else:
                         angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
 
+                    print(angle)
+
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
                                                      np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
-
-                    self.prev_pos = rel_pos
 
                     if idx - self.coord_idx == 1:
                         pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
@@ -205,6 +202,8 @@ class SpiralTest:
                             self.running = False
 
                         self.update_display()
+
+                    self.prev_pos = rel_pos
 
                 elif event.type == pg.MOUSEBUTTONUP:
                     self.mouse_down = False
@@ -221,9 +220,9 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
     spiral_test = SpiralTest(turns=3)

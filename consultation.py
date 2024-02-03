@@ -80,7 +80,7 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(320, 320 * 1.125))
+        self.avatar = Avatar(size=(420, 420 * 1.125))
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = 3
@@ -92,7 +92,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
         }
 
-        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT", "PSS"]
+        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT",]
 
         self.module_idx = 0
 
@@ -119,7 +119,7 @@ class Consultation:
 
     def update_display(self):
         self.touch_screen.refresh()
-        self.display_screen.update()
+        self.display_screen.refresh()
 
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
@@ -134,21 +134,18 @@ class Consultation:
         pg.mixer.music.play()
         if visual:
             self.display_screen.instruction = None
-            self.display_screen.update()
 
             # Keep in idle loop while speaking
             self.display_screen.avatar.state = 1
             start = time.monotonic()
             while pg.mixer.music.get_busy():
                 if time.monotonic() - start > 0.15:
-                    self.display_screen.update()
                     self.update_display()
                     self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
                     start = time.monotonic()
 
             self.display_screen.avatar.state = 0
 
-            self.display_screen.update()
             self.update_display()
 
     def get_relative_mose_pos(self):
