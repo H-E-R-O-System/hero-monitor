@@ -43,8 +43,7 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1, full_screen=False):
-        pi = True
+    def __init__(self, user=None, enable_speech=True, scale=1, pi=True):
 
         if user:
             self.user = user
@@ -65,9 +64,6 @@ class Consultation:
         else:
             self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
 
-        if full_screen:
-            pg.display.toggle_fullscreen()
-
         self.top_screen = self.window.subsurface(((0, 0), self.display_size))
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
 
@@ -80,10 +76,10 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(420, 420 * 1.125))
+        self.avatar = Avatar(size=(self.display_size.y * 0.8*0.9, self.display_size.y * 0.8*0.9))
         self.display_screen.avatar = self.avatar
 
-        self.pss_question_count = 3
+        self.pss_question_count = 2
         self.modules = {
             "Shapes": ShapeSearcher(max_turns=10, parent=self),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
@@ -92,7 +88,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
         }
 
-        self.module_order = ["PSS", "Spiral", "Shapes", "VAT", "WCT",]
+        self.module_order = ["WCT", "Shapes", "PSS", "Spiral", "VAT",]
 
         self.module_idx = 0
 
@@ -241,7 +237,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(full_screen=False)
+    consult = Consultation(pi=False, scale=0.7)
     consult.loop()
 
     if consult.output is not None:
