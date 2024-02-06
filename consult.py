@@ -76,7 +76,7 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(self.display_size.y * 0.8*0.9, self.display_size.y * 0.8*0.9))
+        self.avatar = Avatar(size=(self.display_size.y * 0.8*0.75, self.display_size.y * 0.8*0.8))
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = 2
@@ -237,7 +237,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False, scale=0.7)
+    consult = Consultation(pi=False)
     consult.loop()
 
     if consult.output is not None:

@@ -40,7 +40,7 @@ class DisplayScreen(Screen):
             pg.draw.polygon(self.surface, Colours.lightGrey.value, triangle_points)
 
         elif self.state == 1:
-            self.add_surf(self.avatar.get_surface(), (0, self.size.y - self.info_textbox.h), location=BlitLocation.bottomLeft)
+            self.add_surf(self.avatar.get_surface(), (-self.size.x*0.05, self.size.y - self.info_textbox.h), location=BlitLocation.bottomLeft)
         else:
             self.add_surf(self.avatar.get_surface(), (self.size.x/2, self.size.y - self.info_textbox.h), location=BlitLocation.midBottom)
 
