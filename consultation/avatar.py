@@ -32,7 +32,8 @@ class Avatar:
 
     def get_surface(self):
         surface = self.image.copy()
-        surface.blit(self.mouth_sprites[self.mouth_idx], (0, 0))
+        if self.mouth_idx > 0:
+            surface.blit(self.mouth_sprites[self.mouth_idx], (0, 0))
         return surface
 
 
