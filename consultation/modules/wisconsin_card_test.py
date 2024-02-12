@@ -155,7 +155,7 @@ class CardGame:
 
         self.running = True
 
-        # Card positioning in the screen. The positions specify the center of the card.
+        # Card positioning in the display_screen. The positions specify the center of the card.
         option_count = 3
         card_width, h_gap = math.pow(option_count + 1, -1), math.pow(option_count + 1, -2)
         card_height, v_gap = math.pow(3, -1), math.pow(3, -2)
@@ -268,7 +268,11 @@ class CardGame:
         self.render_game()
         self.display_screen.instruction = "Match the card!"
         if self.parent:
-            self.parent.speak_text("Please match the card", visual=False)
+            self.parent.speak_text("Please match the card",
+                                   display_screen=self.display_screen, touch_screen=self.touch_screen)
+
+        # self.display_screen.state = 0
+        self.render_game()
 
     def exit_sequence(self):
         self.touch_screen.refresh()

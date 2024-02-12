@@ -8,6 +8,7 @@ import os
 import string
 import shutil
 import time
+import re
 from datetime import date
 
 import numpy as np
@@ -76,7 +77,8 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
         self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
-        self.avatar = Avatar(size=(self.display_size.y * 0.8*0.75, self.display_size.y * 0.8*0.8))
+        self.avatar = Avatar(size=(self.display_size.y * 0.7, self.display_size.y * 0.7))
+        # self.avatar = Avatar(scale=pg.Vector2(3, 3))
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = 2
@@ -113,36 +115,65 @@ class Consultation:
 
         return id
 
-    def update_display(self):
-        self.touch_screen.refresh()
-        self.display_screen.refresh()
+    def update_display(self, display_screen=None, touch_screen=None):
+        if display_screen is None:
+            display_screen = self.display_screen
+        if touch_screen is None:
+            touch_screen = self.touch_screen
 
-        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
-        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+        # touch_screen.refresh()
+        # display_screen.refresh()
+
+        self.top_screen.blit(display_screen.get_surface(), (0, 0))
+        self.bottom_screen.blit(touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
-    def speak_text(self, text, visual=True):
+    def speak_text(self, text, visual=True, display_screen=None, touch_screen=None):
+
+        text_index = text.lower()
+        text_index = text_index.replace(" ", "0 ").replace(".", "  ")
+        rep_1 = {"th": "11 ", "sh": "9 ", "ch": "9 ", "ee": "3 "}
+        rep_2 = {"a": "1 ", "e": "1 ", "i": "1 ", "o": "2 ", "c": "4 ", "d": "4 ", "g": "4 ",
+                 "k": "4 ", "n": "4 ", "s": "4 ", "t": "3 ", "x": "4 ", "y": "4 ", "z": "4 ",
+                 "q": "5 ", "w": "5 ", "b": "6 ", "m": "6 ", "p": "6 ", "l": "7 ", "f": "8 ",
+                 "v": "8 ", "j": "9 ", "r": "10", "h": "1 ", "u": "2 "}  # define desired replacements here
+
+        # use these three lines to do the replacement
+        rep_1 = dict((re.escape(k), v) for k, v in rep_1.items())
+        # Python 3 renamed dict.iteritems to dict.items so use rep_1.items() for latest versions
+        pattern = re.compile("|".join(rep_1.keys()))
+        text_index = pattern.sub(lambda m: rep_1[re.escape(m.group(0))], text_index)
+
+        rep_2 = dict((re.escape(k), v) for k, v in rep_2.items())
+        # Python 3 renamed dict.iteritems to dict.items so use rep_1.items() for latest versions
+        pattern = re.compile("|".join(rep_2.keys()))
+        text_index = pattern.sub(lambda m: rep_2[re.escape(m.group(0))], text_index).strip()
+
+        mouth_ids = [int(num) for num in text_index.split(" ")]
+
         question_audio = gtts.gTTS(text=text, lang='en', slow=False)
         question_audio_file = 'consultation/question_audio_tmp/tempsave.mp3'
         question_audio.save(question_audio_file)
 
         pg.mixer.music.load(question_audio_file)
         pg.mixer.music.play()
+
+        mouth_idx = 0
         if visual:
-            self.display_screen.instruction = None
+            display_screen.instruction = None
 
             # Keep in idle loop while speaking
-            self.display_screen.avatar.state = 1
             start = time.monotonic()
             while pg.mixer.music.get_busy():
                 if time.monotonic() - start > 0.15:
-                    self.update_display()
-                    self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
+                    display_screen.avatar.mouth_idx = mouth_ids[mouth_idx]
+                    self.update_display(display_screen=display_screen, touch_screen=touch_screen)
                     start = time.monotonic()
+                    mouth_idx += 1
 
-            self.display_screen.avatar.state = 0
+            display_screen.avatar.mouth_idx = 0
 
-            self.update_display()
+            self.update_display(display_screen=display_screen, touch_screen=touch_screen)
 
     def get_relative_mose_pos(self):
         return pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
@@ -202,6 +233,9 @@ class Consultation:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         self.running = False
+
+                    elif event.key == pg.K_s:
+                        self.take_screenshot()
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     button_id = self.touch_screen.click_test(self.get_relative_mose_pos())

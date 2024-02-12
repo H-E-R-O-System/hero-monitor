@@ -1,60 +1,86 @@
-import random
+import time, random
 
-import numpy as np
 import pygame as pg
+from consultation.screen import Screen, Colours
+import os
+import re
+
 
 class Avatar:
-    def __init__(self, state=0, face_colour=None, size=(128, 128 * 1.125)):
-        self.size = size
-        self.colours = None
-        self.speak_surfs = None
-        self.smile = None
-        self.whistle_surfs = None
-
-        self.update_colours()
-
-        # State 0: Smile, 1: Speak, 2: Whistle
-        self.state = state
-        self.speak_state = 0
-        self.whistle_state = 0
-
+    def __init__(self, size=None):
         gender = ("male", "female")[random.randint(0, 1)]
-        self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
-        self.image = pg.transform.scale(self.image, size)
-        self.size = self.image.get_size()
-
-        self.mode = 0
-
-    def update_colours(self):
-        self.colours = [pg.Color(0, 0, 0, 0), pg.Color(55, 55, 55, 255), self.face_colour,
-                        pg.Color("#ADCAE6"), pg.Color(0, 0, 0), pg.Color("#D37070")]
-
-        self.speak_surfs = [self.convert_array_to_surf(arr, self.size) for arr in [speak_1, speak_2]]
-        self.smile = self.convert_array_to_surf(smile, self.size)
-        self.whistle_surfs = [self.convert_array_to_surf(whistle, self.size, edit_colour=note_colour) for note_colour in
-                              [pg.Color("#1a6bff"), pg.Color("#ffae1a")]]
-
-    def convert_array_to_surf(self, array, size=None, edit_colour=pg.Color("#ffae1a")):
-
-        array = array.transpose()
-        surf = pg.Surface(array.shape[:2], pg.SRCALPHA)
-        for key, colour in zip(range(7), self.colours + [edit_colour]):
-            coords = np.transpose(np.nonzero(array == key))
-            for coord in coords:
-                surf.set_at(coord, colour)
+        print(gender)
+        # self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
+        self.image = pg.image.load(f"consultation/graphics/Male103.png")
 
         if size:
-            surf = pg.transform.scale(surf, size)
+            self.size = pg.Vector2(size)
+            prev_size = pg.Vector2(self.image.get_size())
+            self.image = pg.transform.scale(self.image, size)
+            scale = pg.Vector2(self.size.x / prev_size.x, self.size.y / prev_size.y)
+        else:
+            self.size = pg.Vector2(self.image.get_size())
+            scale = pg.Vector2(1, 1)
 
-        return surf
+        self.mouth_sprites = [pg.image.load(f"consultation/graphics/sprites/mouths/mouth_{idx}.png")
+                              for idx in range(12)]
+
+        if scale.x != 1 or scale.y != 1:
+            self.mouth_sprites = [pg.transform.scale_by(surface, scale) for surface in self.mouth_sprites]
+
+        self.mouth_idx = 0
 
     def get_surface(self):
-        if self.mode == 0:
-            return self.image
-        else:
-            if self.state == 0:
-                return self.smile
-            elif self.state == 1:
-                return self.speak_surfs[self.speak_state]
-            else:
-                return self.whistle_surfs[self.whistle_state]
+        surface = self.image.copy()
+        surface.blit(self.mouth_sprites[self.mouth_idx], (0, 0))
+        return surface
+
+
+if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir('/Users/benhoskings/Documents/Projects/hero-monitor')
+    sprite_path = "consultation/graphics/sprites"
+
+    pg.init()
+    window = pg.display.set_mode(pg.Vector2(512, 512))
+
+    avatar = Avatar(size=(512, 512))
+
+    screen = Screen(window.get_size(), colour=Colours.white)
+    start = time.monotonic()
+
+    text = "welcome       to      "
+
+    text = text.replace(" ", "0 ")
+    rep_1 = {"th": "11 ", "sh": "9 ", "ch": "9 ", "ee": "3 "}
+    rep_2 = {"a": "1 ", "e": "1 ", "i": "1 ", "o": "2 ", "c": "4 ", "d": "4 ", "g": "4 ",
+             "k": "4 ", "n": "4 ", "s": "4 ", "t": "3 ", "x": "4 ", "y": "4 ", "z": "4 ",
+             "q": "5 ", "w": "5 ", "b": "6 ", "m": "6 ", "p": "6 ", "l": "7 ", "f": "8 ",
+             "v": "8 ", "j": "9 ", "r": "10", "h": "1 ", "u": "2 "}  # define desired replacements here}
+
+    # use these three lines to do the replacement
+    rep_1 = dict((re.escape(k), v) for k, v in rep_1.items())
+    # Python 3 renamed dict.iteritems to dict.items so use rep_1.items() for latest versions
+    pattern = re.compile("|".join(rep_1.keys()))
+    text = pattern.sub(lambda m: rep_1[re.escape(m.group(0))], text)
+
+    rep_2 = dict((re.escape(k), v) for k, v in rep_2.items())
+    # Python 3 renamed dict.iteritems to dict.items so use rep_1.items() for latest versions
+    pattern = re.compile("|".join(rep_2.keys()))
+    text = pattern.sub(lambda m: rep_2[re.escape(m.group(0))], text).strip()
+
+    mouth_ids = [int(num) for num in text.split(" ")]
+    seq_idx = 0
+    while True:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                quit()
+
+        if time.monotonic() - start > 0.25:
+            screen.refresh()
+            avatar.mouth_idx = mouth_ids[seq_idx]
+            screen.add_surf(avatar.get_surface(), (0, 0))
+            window.blit(screen.get_surface(), (0, 0))
+            pg.display.update()
+            start = time.monotonic()
+            seq_idx = (seq_idx + 1) % len(mouth_ids)
