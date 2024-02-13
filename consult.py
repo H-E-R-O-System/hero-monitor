@@ -90,7 +90,7 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count),
         }
 
-        self.module_order = ["WCT", "Shapes", "PSS", "Spiral", "VAT",]
+        self.module_order = ["Spiral", "WCT", "Shapes", "PSS", "Spiral", "VAT",]
 
         self.module_idx = 0
 
@@ -131,12 +131,13 @@ class Consultation:
     def speak_text(self, text, visual=True, display_screen=None, touch_screen=None):
 
         text_index = text.lower()
-        text_index = text_index.replace(" ", "0 ").replace(".", "  ")
+
+        text_index = text_index.replace(" ", "0 ").replace(".", "0 ").replace(",", "0 ")
         rep_1 = {"th": "11 ", "sh": "9 ", "ch": "9 ", "ee": "3 "}
         rep_2 = {"a": "1 ", "e": "1 ", "i": "1 ", "o": "2 ", "c": "4 ", "d": "4 ", "g": "4 ",
                  "k": "4 ", "n": "4 ", "s": "4 ", "t": "3 ", "x": "4 ", "y": "4 ", "z": "4 ",
                  "q": "5 ", "w": "5 ", "b": "6 ", "m": "6 ", "p": "6 ", "l": "7 ", "f": "8 ",
-                 "v": "8 ", "j": "9 ", "r": "10", "h": "1 ", "u": "2 "}  # define desired replacements here
+                 "v": "8 ", "j": "9 ", "r": "10 ", "h": "", "u": "2 "}  # define desired replacements here
 
         # use these three lines to do the replacement
         rep_1 = dict((re.escape(k), v) for k, v in rep_1.items())

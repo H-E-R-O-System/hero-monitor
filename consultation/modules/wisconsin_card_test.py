@@ -182,7 +182,7 @@ class CardGame:
                      info_rect)
 
         self.display_screen.add_multiline_text("Match The Card!", rect=info_rect.scale_by(0.9, 0.9),
-                                               font_size="large")
+                                               font_size=50)
 
         self.display_screen.add_multiline_text(
             rect=info_rect.scale_by(0.9, 0.9), text=

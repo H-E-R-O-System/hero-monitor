@@ -5,8 +5,8 @@ import os
 import time
 import cv2
 
-from consultation.touch_screen import TouchScreen, GameObjects
-from consultation.screen import Colours
+from consultation.touch_screen import TouchScreen, GameObjects, GameButton
+from consultation.screen import Colours, BlitLocation
 from consultation.display_screen import DisplayScreen
 
 
@@ -37,10 +37,9 @@ class SpiralTest:
         self.theta_vals = None
 
         self.plot_data = None
-        self.turns = turns
+        self.spiral_turns = turns
         self.image_offset = (self.display_size - self.touch_size) / 2
         self.center_offset = self.display_size / 2
-        self.load_surface(size=touch_size, turns=turns)
 
         self.coord_idx = 0
 
@@ -57,10 +56,69 @@ class SpiralTest:
 
         self.output = None
 
+    def instruction_loop(self):
+        self.display_screen.state = 1
+        self.display_screen.instruction = None
+
+        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(150, 150), (100, 100))
+        start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+        self.touch_screen.sprites = GameObjects([start_button])
+        info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+        pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                     info_rect)
+
+        self.display_screen.add_multiline_text("Trace The Spiral!", rect=info_rect.scale_by(0.9, 0.9),
+                                               font_size=50)
+
+        self.display_screen.add_multiline_text(
+            rect=info_rect.scale_by(0.9, 0.9), text=
+            "Please trace the spiral, starting from the center and moving outwards",
+            center_vertical=True, font_size=40)
+
+
+        im_size = pg.Vector2(self.touch_screen.surface.get_size())*0.95
+        image_rect = pg.Rect((self.touch_screen.size - im_size)/2, im_size)
+        self.touch_screen.load_image("consultation/graphics/instructions/spiral_demo.png",
+                                     pos=image_rect.topleft, size=image_rect.size)
+        # text_rect = pg.Rect(image_rect.topleft)
+        self.touch_screen.add_multiline_text("Example", image_rect, center_horizontal=True, font_size=32)
+
+        self.parent.speak_text("Trace the spiral",
+                               display_screen=self.display_screen, touch_screen=self.touch_screen)
+
+        self.update_display()
+
+        wait = True
+        while wait:
+            for event in pg.event.get():
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if self.parent:
+                        pos = self.parent.get_relative_mose_pos()
+                    else:
+                        pos = pg.mouse.get_pos()
+
+                    selection = self.touch_screen.click_test(pos)
+                    if selection is not None:
+                        wait = False
+
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_w:
+                        if self.parent:
+                            self.parent.take_screenshot()
+                        else:
+                            img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
+                            img_array = cv2.transpose(img_array)
+                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                            cv2.imwrite("screenshots/wct.png", img_array)
+
+        self.touch_screen.kill_sprites()
+        self.touch_screen.refresh()
+
     def update_display(self):
         if self.parent:
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
 
+        print(self.touch_screen.sprites)
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
@@ -128,9 +186,9 @@ class SpiralTest:
         return pos
 
     def entry_sequence(self):
+        self.instruction_loop()
+        self.load_surface(size=self.touch_size, turns=self.spiral_turns)
         self.update_display()
-        if self.parent:
-            self.parent.speak_text("Please trace the spiral, starting from the center", visual=False)
 
     def exit_sequence(self):
         self.update_display()

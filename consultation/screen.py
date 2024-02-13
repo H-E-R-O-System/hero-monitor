@@ -52,7 +52,7 @@ class Fonts:
         self.custom = self.normal
 
     def update_custom(self, size):
-        self.custom = pg.font.Font("fonts/calibri-regular.ttf", size=size)
+        self.custom = pg.font.Font("consultation/fonts/calibri-regular.ttf", size=size)
 
 
 class Screen:
@@ -175,8 +175,9 @@ class Screen:
         if colour is None:
             colour = Colours.black
 
-        if font_size == "large":
-            self.font = self.fonts.large
+        if font_size:
+            self.fonts.update_custom(font_size)
+            self.font = self.fonts.custom
 
         ids = [0]
         line_width = 0
