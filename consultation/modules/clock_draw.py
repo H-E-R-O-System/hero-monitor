@@ -88,12 +88,14 @@ class ClockDraw:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
+            self.display_screen = DisplayScreen(self.display_size)
 
-        self.display_screen = DisplayScreen(self.display_size)
+
         self.touch_screen = TouchScreen(self.display_size)
 
         self.center_offset = self.display_size / 2
@@ -106,31 +108,78 @@ class ClockDraw:
             min_ang = time.minute/60 * 360
             hour_ang = (time.hour %12)/12 * 360 + min_ang / 12
 
-            if abs(min_ang - hour_ang) > 30:
+            if abs(min_ang - hour_ang) > 60:
                 valid_time = True
 
         self.time = time
         self.angles = (min_ang, hour_ang)
 
-        self.touch_screen.add_multiline_text(self.time.strftime("%H:%M"), pg.Rect((0, 10), self.display_size),
-                                             center_horizontal=True, base=True)
-
         self.clock_radius = 250
         self.clock_offset = (self.display_size - pg.Vector2(self.clock_radius * 2, self.clock_radius * 2)) / 2
-        pg.draw.circle(self.touch_screen.base_surface, Colours.black.value, self.center_offset, self.clock_radius,
-                       width=5)
 
-        self.hour_hand = ClockHand("hour", clock_radius=self.clock_radius, hand_radius=int(self.clock_radius * 0.7))
-        self.minute_hand = ClockHand("minute", clock_radius=self.clock_radius, hand_radius=int(self.clock_radius * 0.8))
-
-        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(200, 150), (150, 100))
-        submit_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="FINISHED", id=1)
-
-        self.touch_screen.sprites = GameObjects([self.minute_hand, self.hour_hand, submit_button])
+        self.minute_hand = ClockHand(id="minute", clock_radius=self.clock_radius,
+                                     hand_radius=int(self.clock_radius*0.9))
+        self.hour_hand = ClockHand(id="hour", clock_radius=self.clock_radius,
+                                     hand_radius=int(self.clock_radius * 0.7))
 
         self.hand_clicked = None
 
         self.running = False
+
+    def instruction_loop(self):
+        self.display_screen.state = 1
+        self.display_screen.instruction = None
+
+        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(150, 150), (100, 100))
+        start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+        self.touch_screen.sprites = GameObjects([start_button])
+
+        info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+        pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                     info_rect)
+
+        self.display_screen.add_multiline_text("Set the Time!", rect=info_rect.scale_by(0.9, 0.9),
+                                               font_size=50)
+
+        self.display_screen.add_multiline_text(
+            rect=info_rect.scale_by(0.9, 0.9), text=
+            "Please set the clock to the time shown in the screen. To do this, drag each clock hand around to the "
+            "position that you think it should be in. See the example below.",
+            center_vertical=True, font_size=40)
+
+
+        im_size = pg.Vector2(self.touch_screen.surface.get_size())*0.95
+        image_rect = pg.Rect((self.touch_screen.size - im_size)/2, im_size)
+        self.touch_screen.load_image("consultation/graphics/instructions/clock_example.png",
+                                     pos=image_rect.topleft, size=image_rect.size)
+
+        # self.parent.speak_text("Trace the spiral",
+        #                        display_screen=self.display_screen, touch_screen=self.touch_screen)
+
+        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+        pg.display.flip()
+
+        wait = True
+        while wait:
+            for event in pg.event.get():
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if self.parent:
+                        pos = self.parent.get_relative_mose_pos()
+                    else:
+                        pos = pg.mouse.get_pos()
+
+                    selection = self.touch_screen.click_test(pos)
+                    if selection is not None:
+                        wait = False
+
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_w:
+                        if self.parent:
+                            self.parent.take_screenshot()
+
+        self.touch_screen.kill_sprites()
+        self.touch_screen.refresh()
 
     def update_display(self):
         self.touch_screen.refresh()
@@ -145,13 +194,20 @@ class ClockDraw:
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
         self.running = True
-        self.load_clock()
+        self.instruction_loop()
+
+        pg.draw.circle(self.touch_screen.base_surface, Colours.black.value, self.center_offset, self.clock_radius,
+                       width=5)
+        self.touch_screen.add_multiline_text(self.time.strftime("%H:%M"), pg.Rect((0, 10), self.display_size),
+                                             center_horizontal=True, base=True)
+
+        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(200, 150), (150, 100))
+        submit_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="FINISHED", id=1)
+
+        self.touch_screen.sprites = GameObjects([self.minute_hand, self.hour_hand, submit_button])
+
         self.update_display()  # render graphics to main consult
         # add code below
-
-    def load_clock(self):
-        # Do something useful
-        self.touch_screen.add_surf(self.hour_hand.image, self.touch_screen.size / 2, location=BlitLocation.midBottom)
 
     def exit_sequence(self):
         # post-loop completion section
@@ -202,8 +258,8 @@ class ClockDraw:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_s:
-                        # do something with key press
-                        ...
+                        if self.parent:
+                            self.parent.take_screenshot("clock")
                     elif event.key == pg.K_ESCAPE:
                         self.running = False
 
@@ -211,8 +267,8 @@ class ClockDraw:
                     # do something with mouse click
                     pos = self.get_relative_mose_pos()
                     if self.touch_screen.click_test(pos):
-                        self.exit_sequence()
-                        # self.running = False
+                        # self.exit_sequence()
+                        self.running = False
                     else:
                         selection = self.touch_screen.click_test(pos - self.clock_offset)
                         if selection is not None:

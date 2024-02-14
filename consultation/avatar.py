@@ -22,7 +22,7 @@ class Avatar:
             scale = pg.Vector2(1, 1)
 
         self.mouth_sprites = [pg.image.load(f"consultation/graphics/sprites/mouths/mouth_{idx}.png")
-                              for idx in range(1, 12)]
+                              for idx in range(1, 13)]
 
         if scale.x != 1 or scale.y != 1:
             self.mouth_sprites = [pg.transform.scale_by(surface, scale) for surface in self.mouth_sprites]

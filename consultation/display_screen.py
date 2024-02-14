@@ -5,11 +5,14 @@ import os
 
 
 class DisplayScreen(Screen):
-    def __init__(self, size, info_height=0.2):
+    def __init__(self, size, info_height=0.2, avatar=None):
         super().__init__(size, colour=Colours.white)
         # make the base background
+        if avatar:
+            self.avatar = avatar
+        else:
+            self.avatar = Avatar(size=(256, 256 * 1.125))
 
-        self.avatar = Avatar(size=(256, 256 * 1.125))
         self.instruction = None
         self.speech_text = None
         self.speech_textbox = pg.Rect(0.44*self.size.x, 0.05*self.size.y, 0.5*self.size.x, 0.65*self.size.y)
