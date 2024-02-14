@@ -44,6 +44,9 @@ class GameObjects(pg.sprite.Group):
             elif obj.object_type == "card" or obj.object_type == "circle":
                 screen.add_surf(obj.image, pos=obj.rect.topleft, sprite=True)
 
+            elif obj.object_type == "clock_hand":
+                screen.add_surf(obj.image, screen.size / 2, location=BlitLocation.centre, sprite=True)
+
 
 class TouchScreen(Screen):
     def __init__(self, size, colour=Colours.white):

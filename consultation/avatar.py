@@ -9,7 +9,6 @@ import re
 class Avatar:
     def __init__(self, size=None):
         gender = ("male", "female")[random.randint(0, 1)]
-        print(gender)
         # self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
         self.image = pg.image.load(f"consultation/graphics/Male103.png")
 

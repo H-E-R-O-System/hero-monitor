@@ -244,8 +244,6 @@ class SpiralTest:
                     else:
                         angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
 
-                    print(angle)
-
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
                                                      np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
