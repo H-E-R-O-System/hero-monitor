@@ -47,6 +47,8 @@ if __name__ == '__main__':
     pg.init()
     pygame.camera.init()
 
+    print(pygame.camera.get_backends())
+
     camlist = pygame.camera.list_cameras()
     if camlist:
         cam = pygame.camera.Camera(camlist[0],(640,480))
