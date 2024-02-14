@@ -172,7 +172,7 @@ class ClockDraw:
             hour_angle = 5 * np.pi / 2 + np.arctan2(*np.flip(rel_pos_hour))
 
         print(f"actual min angle:{self.angles[0]}, actual hour angle: {self.angles[1]}")
-        print(f"actual min angle:{np.degrees(min_angle) % 360}, actual hour angle: {np.degrees(hour_angle) % 360}")
+        print(f"set min angle:{np.degrees(min_angle) % 360}, set hour angle: {np.degrees(hour_angle) % 360}")
 
         min_error_1 = self.angles[0] - np.degrees(min_angle) % 360
         hour_error_1 = self.angles[1] - np.degrees(hour_angle) % 360
