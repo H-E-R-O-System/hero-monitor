@@ -133,6 +133,12 @@ class Consultation:
 
     def speak_text(self, text, visual=True, display_screen=None, touch_screen=None):
 
+        if not display_screen:
+            display_screen = self.display_screen
+
+        if not touch_screen:
+            touch_screen = self.touch_screen
+
         text_index = text.lower()
 
         text_index = text_index.replace(" ", "0 ").replace(".", "0 ").replace(",", "0 ")
@@ -170,7 +176,6 @@ class Consultation:
             start = time.monotonic()
             while pg.mixer.music.get_busy():
                 if time.monotonic() - start > 0.15:
-                    print(mouth_ids[mouth_idx])
                     display_screen.avatar.mouth_idx = mouth_ids[mouth_idx]
                     self.update_display(display_screen=display_screen, touch_screen=touch_screen)
                     start = time.monotonic()
