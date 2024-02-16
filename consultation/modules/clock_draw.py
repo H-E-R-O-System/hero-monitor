@@ -95,7 +95,6 @@ class ClockDraw:
             self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
             self.display_screen = DisplayScreen(self.display_size)
 
-
         self.touch_screen = TouchScreen(self.display_size)
 
         self.center_offset = self.display_size / 2
