@@ -8,7 +8,7 @@ import cv2
 from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
-from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
+from consultation.spiral_data_graphing import DataAnalytics, FeatureEngineering
 
 
 class SpiralTest:
@@ -221,8 +221,8 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
-    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
