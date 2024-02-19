@@ -4,6 +4,7 @@ import os
 import datetime
 from random import randrange
 import timeit
+import time
 
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.display_screen import DisplayScreen
@@ -33,41 +34,60 @@ class ClockHand(pg.sprite.Sprite):
         self.hand_radius = hand_radius
         self.collide_region = None
         self.endpoint = None
+        self.set_angle = 0
         self.update_image((0, -1))
 
         line = geometry.LineString([(200, 200), (300, 200), (300, 300), (200, 300)])
         self.square = geometry.Polygon(line)
 
     def update_image(self, pos):
-        unit_vec = pg.Vector2(pos) / np.linalg.norm(pos)
-        angle_1 = 140
-        theta_1 = np.radians(angle_1)
 
-        rotMatrix_1 = np.array([[np.cos(theta_1), -np.sin(theta_1)], [np.sin(theta_1), np.cos(theta_1)]])
-        rotMatrix_2 = rotMatrix_1.transpose()
+        if np.pi / 2 + np.arctan2(*np.flip(pos)) > 0:
+            hand_angle = np.pi / 2 + np.arctan2(*np.flip(pos))
+        else:
+            hand_angle = 5 * np.pi / 2 + np.arctan2(*np.flip(pos))
 
-        direction = np.reshape(unit_vec, (2, 1))
+        hand_angle = np.degrees(hand_angle)
 
-        head_1, head_2 = np.matmul(rotMatrix_1, direction), np.matmul(rotMatrix_2, direction)
+        if abs(self.set_angle - hand_angle) > 1:
+            flag = True
+            self.set_angle = hand_angle
 
-        direction_vec = unit_vec * self.hand_radius + pg.Vector2(self.clock_radius, self.clock_radius)
-        head_1 = pg.Vector2(head_1[0, 0], head_1[1, 0]) * (self.hand_radius / 15) + direction_vec
-        head_2 = pg.Vector2(head_2[0, 0], head_2[1, 0]) * (self.hand_radius / 15) + direction_vec
+            unit_vec = pg.Vector2(pos) / np.linalg.norm(pos)
 
-        self.image = pg.Surface((self.clock_radius * 2, self.clock_radius * 2), pg.SRCALPHA)
-        points = [(self.clock_radius, self.clock_radius), direction_vec, head_1, direction_vec, head_2]
+            angle_1 = 140
+            theta_1 = np.radians(angle_1)
 
-        collide_points = [head_2 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40))),
-                          head_2, direction_vec, head_1,
-                          head_1 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40)))]
+            rotMatrix_1 = np.array([[np.cos(theta_1), -np.sin(theta_1)], [np.sin(theta_1), np.cos(theta_1)]])
+            rotMatrix_2 = rotMatrix_1.transpose()
 
-        pg.draw.lines(self.image, Colours.black.value, False, points, width=3)
+            direction = np.reshape(unit_vec, (2, 1))
 
-        line = geometry.LineString(collide_points)
-        self.collide_region = geometry.Polygon(line)
+            head_1, head_2 = np.matmul(rotMatrix_1, direction), np.matmul(rotMatrix_2, direction)
 
-        # self.image = arrow_surf
-        self.endpoint = pg.Vector2(int(direction_vec.x), int(direction_vec.y))
+            direction_vec = unit_vec * self.hand_radius + pg.Vector2(self.clock_radius, self.clock_radius)
+            head_1 = pg.Vector2(head_1[0, 0], head_1[1, 0]) * (self.hand_radius / 15) + direction_vec
+            head_2 = pg.Vector2(head_2[0, 0], head_2[1, 0]) * (self.hand_radius / 15) + direction_vec
+
+            self.image = pg.Surface((self.clock_radius * 2, self.clock_radius * 2), pg.SRCALPHA)
+            points = [(self.clock_radius, self.clock_radius), direction_vec, head_1, direction_vec, head_2]
+
+            collide_points = [head_2 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40))),
+                              head_2, direction_vec, head_1,
+                              head_1 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40)))]
+
+            pg.draw.lines(self.image, Colours.black.value, False, points, width=3)
+
+            # self.image = arrow_surf
+            self.endpoint = pg.Vector2(int(direction_vec.x), int(direction_vec.y))
+
+            line = geometry.LineString(collide_points)
+            self.collide_region = geometry.Polygon(line)
+
+        else:
+            flag = False
+
+        return flag
 
     def is_clicked(self, pos):
         point = geometry.Point(*pos)
@@ -274,11 +294,12 @@ class ClockDraw:
                     pos = self.get_relative_mose_pos()
 
                     if self.hand_clicked == "hour":
-                        self.hour_hand.update_image(pos - self.center_offset)
+                        update_flag = self.hour_hand.update_image(pos - self.center_offset)
                     else:
-                        self.minute_hand.update_image(pos - self.center_offset)
+                        update_flag = self.minute_hand.update_image(pos - self.center_offset)
 
-                    self.update_display()
+                    if update_flag:
+                        self.update_display()
 
                 elif event.type == pg.MOUSEBUTTONUP:
                     self.hand_clicked = None
@@ -291,28 +312,25 @@ class ClockDraw:
 
 
 def update_time():
-    SETUP_CODE = '''
-import pygame as pg
-from __main__ import ClockHand
+    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250*0.7)
 
-clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250*0.7)
-'''
+    test_count = 10000
+    start_time = time.perf_counter()
+    for count in range(test_count):
+        clock_hand.update_image(pg.Vector2(0, 10))
 
-    TEST_CODE = '''
-clock_hand.update_image(pg.Vector2(0, 100))
-    '''
-    # timeit.repeat statement
-    times = timeit.repeat(setup=SETUP_CODE,
-                          stmt=TEST_CODE,
-                          number=10000)
-
-    print('Avg update time: {}'.format(min(times)))
+    end_time = time.perf_counter()
+    total_time = end_time - start_time
+    print('Avg update time: {}ms'.format(1000 * total_time / test_count))
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    update_time()
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    # update_time()
+
     # Module Testing
-    # module_name = ClockDraw()
-    # module_name.loop()
-    # print("Module run successfully")
+    pg.init()
+    module_name = ClockDraw()
+    module_name.loop()
+    print("Module run successfully")

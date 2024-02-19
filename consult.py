@@ -281,7 +281,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False)
+    consult = Consultation(pi=False, scale=0.7)
     consult.loop()
 
     if consult.output is not None:

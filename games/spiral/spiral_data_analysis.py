@@ -330,7 +330,8 @@ class DataAnalytics:
 
 
 if __name__ == "__main__":
-    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
 
     data = FeatureEngineering()
     data.loop_SST('control')
