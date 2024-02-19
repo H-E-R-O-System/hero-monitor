@@ -5,13 +5,14 @@ import os
 import time
 import cv2
 
-from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.screen import Colours, BlitLocation
+from consultation.touch_screen import TouchScreen, GameObjects
+from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
+from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
 
 
 class SpiralTest:
-    def __init__(self, turns, size=(1024, 600), touch_size=(600, 600), parent=None):
+    def __init__(self, turns, size=(1024, 600), touch_size=(400, 400), parent=None):
         self.parent = parent
 
         if parent:
@@ -37,9 +38,10 @@ class SpiralTest:
         self.theta_vals = None
 
         self.plot_data = None
-        self.spiral_turns = turns
+        self.turns = turns
         self.image_offset = (self.display_size - self.touch_size) / 2
         self.center_offset = self.display_size / 2
+        self.load_surface(size=touch_size, turns=turns)
 
         self.coord_idx = 0
 
@@ -56,69 +58,10 @@ class SpiralTest:
 
         self.output = None
 
-    def instruction_loop(self):
-        self.display_screen.state = 1
-        self.display_screen.instruction = None
-
-        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(150, 150), (100, 100))
-        start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
-        self.touch_screen.sprites = GameObjects([start_button])
-        info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
-        pg.draw.rect(self.display_screen.surface, Colours.white.value,
-                     info_rect)
-
-        self.display_screen.add_multiline_text("Trace The Spiral!", rect=info_rect.scale_by(0.9, 0.9),
-                                               font_size=50)
-
-        self.display_screen.add_multiline_text(
-            rect=info_rect.scale_by(0.9, 0.9), text=
-            "Please trace the spiral, starting from the center and moving outwards",
-            center_vertical=True, font_size=40)
-
-
-        im_size = pg.Vector2(self.touch_screen.surface.get_size())*0.95
-        image_rect = pg.Rect((self.touch_screen.size - im_size)/2, im_size)
-        self.touch_screen.load_image("consultation/graphics/instructions/spiral_demo.png",
-                                     pos=image_rect.topleft, size=image_rect.size)
-        # text_rect = pg.Rect(image_rect.topleft)
-        self.touch_screen.add_multiline_text("Example", image_rect, center_horizontal=True, font_size=32)
-
-        self.parent.speak_text("Trace the spiral",
-                               display_screen=self.display_screen, touch_screen=self.touch_screen)
-
-        self.update_display()
-
-        wait = True
-        while wait:
-            for event in pg.event.get():
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    if self.parent:
-                        pos = self.parent.get_relative_mose_pos()
-                    else:
-                        pos = pg.mouse.get_pos()
-
-                    selection = self.touch_screen.click_test(pos)
-                    if selection is not None:
-                        wait = False
-
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
-                        if self.parent:
-                            self.parent.take_screenshot()
-                        else:
-                            img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
-                            img_array = cv2.transpose(img_array)
-                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-                            cv2.imwrite("screenshots/wct.png", img_array)
-
-        self.touch_screen.kill_sprites()
-        self.touch_screen.refresh()
-
     def update_display(self):
         if self.parent:
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
 
-        print(self.touch_screen.sprites)
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
@@ -136,9 +79,9 @@ class SpiralTest:
 
     def load_surface(self, size=(580, 580), turns=3, clockwise=True):
         # Create spiral of diameter 1, with midpoint at (0.5, 0.5)
-        n = 100  # Number of points to approximate spiral
+        n = 500  # Number of points to approximate spiral
         b = 0.5 / (2 * np.pi)  # Do not alter, ensures the scale is correct
-        theta = np.linspace(0, 2 * np.pi, n)  # Spiral parametrised by theta
+        theta =np.sqrt(np.linspace(0, (2 * np.pi)**2, n)) # Spiral parametrised by theta
         self.theta_vals = theta * turns
         x = (b * theta) * np.cos(turns * theta)  # x component of coordinate
         y = (b * theta) * np.sin(turns * theta)  # y component of coordinate
@@ -186,9 +129,9 @@ class SpiralTest:
         return pos
 
     def entry_sequence(self):
-        self.instruction_loop()
-        self.load_surface(size=self.touch_size, turns=self.spiral_turns)
         self.update_display()
+        if self.parent:
+            self.parent.speak_text("Please trace the spiral, starting from the center", visual=False)
 
     def exit_sequence(self):
         self.update_display()
@@ -209,8 +152,8 @@ class SpiralTest:
                                               axis=1)), axis=1)
 
         self.output = pd.DataFrame(data=data,
-                                   columns=["pixel_x", "pixel_y", "rel_pos_x", "rel_pos_y", "theta", "error",
-                                            "time"]), self.touch_size
+                                   columns=["Plot X", "Plot Y", "rel_pos_x", "rel_pos_y", "theta", "error",
+                                            "Time"]), self.touch_size
 
     def loop(self):
         self.entry_sequence()
@@ -244,6 +187,8 @@ class SpiralTest:
                     else:
                         angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
 
+                    print(angle)
+
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
                                                      np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
@@ -276,8 +221,8 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
-    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
+    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
@@ -286,16 +231,24 @@ if __name__ == "__main__":
     spiral_data, spiral_size = spiral_test.output
     # Spiral data is a pd dataframe that contains the coordinates
     # reconstructed image should be of size spiral_size
-    spiral_data.to_csv('spiral_data_user.csv', index=False)
+    file_path=r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral.txt'
+    spiral_data.to_csv(file_path, index=False)
     spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
 
     # reconstruct image
     spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
     spiral_image.fill(Colours.white.value)  # fill with white background
     # draw in lines between each point recorded
-    pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(), width=3)
+    pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["Plot X", "Plot Y"]].to_numpy(), width=3)
 
     img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
     img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
     img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
     cv2.imwrite("spiral.png", img_array)  # Save image
+    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+
+    data = FeatureEngineering()
+    data.user_data()
+    spiral = DataAnalytics()
+    spiral.user_classify()
+    spiral.error_graphs()
