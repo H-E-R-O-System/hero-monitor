@@ -476,18 +476,19 @@ class FaceCloud:
         plt.show()
 
 
-base_options = python.BaseOptions(model_asset_path='face_landmarker_v2_with_blendshapes.task')
-options = vision.FaceLandmarkerOptions(base_options=base_options, output_face_blendshapes=True,
-                                       output_facial_transformation_matrixes=True, num_faces=1, )
-detector = vision.FaceLandmarker.create_from_options(options)
+if __name__ == "__main__":
+    base_options = python.BaseOptions(model_asset_path='face_landmarker_v2_with_blendshapes.task')
+    options = vision.FaceLandmarkerOptions(base_options=base_options, output_face_blendshapes=True,
+                                           output_facial_transformation_matrixes=True, num_faces=1, )
+    detector = vision.FaceLandmarker.create_from_options(options)
 
-im_path = "sample_images/Ben_Face.png"
-# get image as RGB array
-img_array = cv2.cvtColor(cv2.imread(im_path), cv2.COLOR_BGR2RGB)
-# get image as mediapipe image
-img_mp = mp.Image(data=img_array, image_format=mp.ImageFormat.SRGB)
-face_landmarks, blend_data, _ = get_pipe_data(detector, img_mp)
+    im_path = "sample_images/ben-face.png"
+    # get image as RGB array
+    img_array = cv2.cvtColor(cv2.imread(im_path), cv2.COLOR_BGR2RGB)
+    # get image as mediapipe image
+    img_mp = mp.Image(data=img_array, image_format=mp.ImageFormat.SRGB)
+    face_landmarks, blend_data, _ = get_pipe_data(detector, img_mp)
 
-face = FaceCloud(face_landmarks)
-face.preprocess()
-face.detect_action_units()
+    face = FaceCloud(face_landmarks)
+    face.preprocess()
+    face.detect_action_units()

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import datetime
 from random import randrange
+import timeit
 
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.display_screen import DisplayScreen
@@ -40,37 +41,32 @@ class ClockHand(pg.sprite.Sprite):
     def update_image(self, pos):
         unit_vec = pg.Vector2(pos) / np.linalg.norm(pos)
         angle_1 = 140
-        angle_2 = -140
         theta_1 = np.radians(angle_1)
-        theta_2 = np.radians(angle_2)
 
         rotMatrix_1 = np.array([[np.cos(theta_1), -np.sin(theta_1)], [np.sin(theta_1), np.cos(theta_1)]])
-        rotMatrix_2 = np.array([[np.cos(theta_2), -np.sin(theta_2)], [np.sin(theta_2), np.cos(theta_2)]])
+        rotMatrix_2 = rotMatrix_1.transpose()
 
         direction = np.reshape(unit_vec, (2, 1))
 
-        head_1 = np.matmul(rotMatrix_1, direction)
-        head_2 = np.matmul(rotMatrix_2, direction)
+        head_1, head_2 = np.matmul(rotMatrix_1, direction), np.matmul(rotMatrix_2, direction)
 
         direction_vec = unit_vec * self.hand_radius + pg.Vector2(self.clock_radius, self.clock_radius)
         head_1 = pg.Vector2(head_1[0, 0], head_1[1, 0]) * (self.hand_radius / 15) + direction_vec
         head_2 = pg.Vector2(head_2[0, 0], head_2[1, 0]) * (self.hand_radius / 15) + direction_vec
 
-        arrow_surf = pg.Surface((self.clock_radius * 2, self.clock_radius * 2), pg.SRCALPHA)
+        self.image = pg.Surface((self.clock_radius * 2, self.clock_radius * 2), pg.SRCALPHA)
         points = [(self.clock_radius, self.clock_radius), direction_vec, head_1, direction_vec, head_2]
 
         collide_points = [head_2 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40))),
                           head_2, direction_vec, head_1,
                           head_1 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40)))]
 
-        pg.draw.lines(arrow_surf, Colours.black.value, False, points, width=3)
-
-        # pg.draw.lines(arrow_surf, Colours.blue.value, True, collide_points)
+        pg.draw.lines(self.image, Colours.black.value, False, points, width=3)
 
         line = geometry.LineString(collide_points)
         self.collide_region = geometry.Polygon(line)
 
-        self.image = arrow_surf
+        # self.image = arrow_surf
         self.endpoint = pg.Vector2(int(direction_vec.x), int(direction_vec.y))
 
     def is_clicked(self, pos):
@@ -102,10 +98,11 @@ class ClockDraw:
         valid_time = False
         start = datetime.datetime.now()
         time = start
+        min_ang, hour_ang = 0, 0
         while not valid_time:
             time = start + datetime.timedelta(minutes=randrange(60*24))
             min_ang = time.minute/60 * 360
-            hour_ang = (time.hour %12)/12 * 360 + min_ang / 12
+            hour_ang = (time.hour % 12)/12 * 360 + min_ang / 12
 
             if abs(min_ang - hour_ang) > 60:
                 valid_time = True
@@ -293,11 +290,29 @@ class ClockDraw:
         self.exit_sequence()
 
 
+def update_time():
+    SETUP_CODE = '''
+import pygame as pg
+from __main__ import ClockHand
+
+clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250*0.7)
+'''
+
+    TEST_CODE = '''
+clock_hand.update_image(pg.Vector2(0, 100))
+    '''
+    # timeit.repeat statement
+    times = timeit.repeat(setup=SETUP_CODE,
+                          stmt=TEST_CODE,
+                          number=10000)
+
+    print('Avg update time: {}'.format(min(times)))
+
+
 if __name__ == "__main__":
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-
-    pg.init()
+    update_time()
     # Module Testing
-    module_name = ClockDraw()
-    module_name.loop()
-    print("Module run successfully")
+    # module_name = ClockDraw()
+    # module_name.loop()
+    # print("Module run successfully")
