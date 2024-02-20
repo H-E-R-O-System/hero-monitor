@@ -8,7 +8,7 @@ def say_goodbye():
 
 print("start")
 
-button = Button(3)
+button = Button(2)
 button.when_pressed = say_hello
 button.when_released = say_goodbye
 pause()
