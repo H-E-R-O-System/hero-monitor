@@ -35,4 +35,4 @@ while True:
     for idx, line in enumerate(button_lines):
         button_state = line.get_value()
         if button_state == 0:
-            print(f"{button_dict.values()[idx]} Pressed")
+            print(f"{list(button_dict.values())[idx]} Pressed")
