@@ -32,7 +32,7 @@ button_line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
 
 while True:
    button_state = button_line.get_value()
-   if button_state == 1:
+   if button_state == 0:
        print("Pressed")
    # else:
    #     led_line.set_value(0)
