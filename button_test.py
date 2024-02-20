@@ -4,6 +4,9 @@ def say_hello():
     print("Hello!")
 def say_goodbye():
     print("Goodbye!")
+
+
+print("start")
 button = Button(3)
 button.when_pressed = say_hello
 button.when_released = say_goodbye
