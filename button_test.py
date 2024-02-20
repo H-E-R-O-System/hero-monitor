@@ -8,9 +8,11 @@ def say_goodbye():
 
 print("start")
 
-button = Button(2)
-button.when_pressed = say_hello
-button.when_released = say_goodbye
+buttons = [Button(id) for id in range(10)]
+for button in buttons:
+    button.when_pressed = say_hello
+    button.when_released = say_goodbye
+
 pause()
 
 # import sys
