@@ -32,7 +32,7 @@ for line in button_lines:
     line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
 
 while True:
-    for line in button_lines:
+    for idx, line in enumerate(button_lines):
         button_state = line.get_value()
         if button_state == 1:
-            print("Pressed")
+            print(f"{idx} Pressed")
