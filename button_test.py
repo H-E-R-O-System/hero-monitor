@@ -27,7 +27,7 @@ button_dict = {2: "Hi", 3: "Power", 5: "info", 7: "Home", 8: "Vol_don", 4: "Vol_
 
 chip = gpiod.Chip('gpiochip4')
 # led_line = chip.get_line(LED_PIN)
-button_lines = [chip.get_line(pin_num) for pin_num in range(1, 10)]
+button_lines = [chip.get_line(pin_num) for pin_num in range(5, 30)]
 # led_line.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
 for line in button_lines:
     line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
