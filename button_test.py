@@ -40,45 +40,44 @@ from time import sleep
 #             # print(f"{list(button_dict.values())[idx]} Pressed")
 
 
-# import gpiod
-# LED_PIN = 17
-# BUTTON_PIN = 27
-# chip = gpiod.Chip('gpiochip4')
-# led_line = chip.get_line(LED_PIN)
-# button_line = chip.get_line(BUTTON_PIN)
-# led_line.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
-# button_line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
-# try:
-#    while True:
-#        button_state = button_line.get_value()
-#        print(button_state)
-#        if button_state == 1:
-#            led_line.set_value(1)
-#            print("High")
-#        else:
-#            led_line.set_value(0)
-#            print("low")
-# finally:
-#    led_line.release()
-# button_line.release()
+import gpiod
+LED_PIN = 17
+BUTTON_PIN = 27
+chip = gpiod.Chip('gpiochip4')
+led_line = chip.get_line(LED_PIN)
+button_line = chip.get_line(BUTTON_PIN)
+led_line.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
+button_line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
+try:
+   while True:
+       button_state = button_line.get_value()
+       print(button_state)
+       if button_state == 1:
+           led_line.set_value(1)
+           print("High")
+       else:
+           led_line.set_value(0)
+           print("low")
+finally:
+   led_line.release()
+button_line.release()
 
 
-
-from gpiozero import Button
-from signal import pause
-
-def say_hello(button):
-    print(button.pin)
-
-def say_goodbye():
-    print("Goodbye!")
-
-button1 = Button(27)
-button2 = Button(13)
-
-button1.when_pressed = say_hello
-button1.when_released = say_goodbye
-button2.when_pressed = say_hello
-button2.when_released = say_goodbye
-
-pause()
+# from gpiozero import Button
+# from signal import pause
+#
+# def say_hello(button):
+#     print(button.pin)
+#
+# def say_goodbye():
+#     print("Goodbye!")
+#
+# button1 = Button(27)
+# button2 = Button(13)
+#
+# button1.when_pressed = say_hello
+# button1.when_released = say_goodbye
+# button2.when_pressed = say_hello
+# button2.when_released = say_goodbye
+#
+# pause()
