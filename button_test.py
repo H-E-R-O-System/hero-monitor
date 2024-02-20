@@ -34,5 +34,5 @@ for line in button_lines:
 while True:
     for line in button_lines:
         button_state = line.get_value()
-        if button_state == 0:
+        if button_state == 1:
             print("Pressed")
