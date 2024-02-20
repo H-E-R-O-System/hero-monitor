@@ -58,6 +58,7 @@ try:
                print("High")
            else:
                print("low")
+           current_state = not button_state
 finally:
    led_line.release()
 button_line.release()
