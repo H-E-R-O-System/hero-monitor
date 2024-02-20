@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 from time import sleep
 
-button_dict = {2: "Power", 3: "info", 4: "Home", 14: "Vol_don", 50: "Vol_up"}
+button_dict = {3: "Power", 5 "info", 7: "Home", 8: "Vol_don", 10: "Vol_up"}
 
 GPIO.setmode(GPIO.BCM)
 
