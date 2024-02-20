@@ -21,7 +21,8 @@ from time import sleep
 
 import gpiod
 
-button_dict = {2: "Hi", 3: "Power", 5: "info", 7: "Home", 8: "Vol_don", 10: "Vol_up"}
+# , 3: "Power", 5: "info", 7: "Home", 8: "Vol_don", 10: "Vol_up"
+button_dict = {2: "Hi", 3: "Power", 5: "info", 7: "Home", 8: "Vol_don", 4: "Vol_up"}
 # LED_PIN = 17
 
 chip = gpiod.Chip('gpiochip4')
@@ -34,5 +35,6 @@ for line in button_lines:
 while True:
     for idx, line in enumerate(button_lines):
         button_state = line.get_value()
-        if button_state == 0:
+        print(button_state)
+        if button_state == 1:
             print(f"{list(button_dict.values())[idx]} Pressed")
