@@ -48,16 +48,16 @@ led_line = chip.get_line(LED_PIN)
 button_line = chip.get_line(BUTTON_PIN)
 led_line.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
 button_line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
+
+current_state = False
 try:
    while True:
        button_state = button_line.get_value()
-       print(button_state)
-       if button_state == 1:
-           led_line.set_value(1)
-           print("High")
-       else:
-           led_line.set_value(0)
-           print("low")
+       if button_state != current_state:
+           if button_state == 1:
+               print("High")
+           else:
+               print("low")
 finally:
    led_line.release()
 button_line.release()
