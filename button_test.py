@@ -42,7 +42,7 @@ from time import sleep
 
 import gpiod
 LED_PIN = 17
-BUTTON_PIN = 27
+BUTTON_PIN = 13
 chip = gpiod.Chip('gpiochip4')
 led_line = chip.get_line(LED_PIN)
 button_line = chip.get_line(BUTTON_PIN)
@@ -56,7 +56,7 @@ try:
            print("High")
        else:
            led_line.set_value(0)
-           print("lo")
+           print("low")
 finally:
    led_line.release()
 button_line.release()
