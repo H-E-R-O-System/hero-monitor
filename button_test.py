@@ -2,10 +2,10 @@ import gpiod
 
 button_dict = {
     4: "Power",     # Pin number 7
-    17: "info",     # Pin number 11
-    27: "Home",     # Pin number 13
-    22: "Vol_don",  # Pin number 15
-    23: "Vol_up"    # Pin number 16
+    17: "Home",     # Pin number 11
+    27: "Vol Down",     # Pin number 13
+    22: "Info",  # Pin number 15
+    23: "Vol Up"    # Pin number 16
 }
 # LED_PIN = 17
 
