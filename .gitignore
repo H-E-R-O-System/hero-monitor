@@ -9,8 +9,8 @@ consultation/response_data/*.wav
 consultation/response_data/*.txt
 
 # local files for dataset manipulation
-affective_computing/create_training_data.ipynb
-affective_computing/create_affective_dataset.ipynb
+affective_computing/retired/create_training_data.ipynb
+affective_computing/retired/create_affective_dataset.ipynb
 affective_computing/data/
 
 screenshots

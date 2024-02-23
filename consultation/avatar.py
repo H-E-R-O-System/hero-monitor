@@ -1,9 +1,11 @@
-import time, random
+import os
+import random
+import re
+import time
 
 import pygame as pg
+
 from consultation.screen import Screen, Colours
-import os
-import re
 
 
 class Avatar:

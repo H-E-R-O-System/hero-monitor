@@ -1,9 +1,10 @@
 import sys
 import time
-import pygame as pg
+
 import numpy as np
-from scipy.io import savemat
+import pygame as pg
 from Screen import Screen, BlitLocation
+from scipy.io import savemat
 
 pg.init()
 

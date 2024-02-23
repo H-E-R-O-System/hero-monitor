@@ -1,32 +1,31 @@
 # import packages
 import datetime
+import os
 import os.path
+import re
+import shutil
+import string
+import time
+from datetime import date
 
 import cv2
 import gtts
-import os
-import string
-import shutil
-import time
-import re
-from datetime import date
-
 import numpy as np
 import pandas as pd
 import pygame as pg
 
-from consultation.avatar import Avatar
-from consultation.display_screen import DisplayScreen
 # import consultation modules
-from consultation.modules.perceived_stress_score import PSS
-from consultation.modules.spiral_test import SpiralTest
-from consultation.modules.wisconsin_card_test import CardGame
-from consultation.modules.visual_attention_test import VisualAttentionTest
-from consultation.modules.shape_searcher import ShapeSearcher
 from consultation.modules.clock_draw import ClockDraw
+from consultation.modules.perceived_stress_score import PSS
+from consultation.modules.shape_searcher import ShapeSearcher
+from consultation.modules.spiral_test import SpiralTest
+from consultation.modules.visual_attention_test import VisualAttentionTest
+from consultation.modules.wisconsin_card_test import CardGame
 
 # import graphics helpers
 from consultation.screen import Colours, Fonts
+from consultation.avatar import Avatar
+from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 

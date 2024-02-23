@@ -1,14 +1,15 @@
-import numpy as np
-import pygame as pg
-import pandas as pd
 import os
 import time
-import cv2
 
-from consultation.touch_screen import TouchScreen, GameObjects
-from consultation.screen import Colours
+import cv2
+import numpy as np
+import pandas as pd
+import pygame as pg
+
 from consultation.display_screen import DisplayScreen
+from consultation.screen import Colours
 from consultation.spiral_data_graphing import DataAnalytics, FeatureEngineering
+from consultation.touch_screen import TouchScreen, GameObjects
 
 
 class SpiralTest:

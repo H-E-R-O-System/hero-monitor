@@ -1,14 +1,14 @@
-import numpy as np
-import pygame as pg
-import time
-import pandas as pd
 import os
-import gtts
 import time
-import matplotlib.pyplot as plt
 
-from consultation.screen import Screen, Colours, BlitLocation
+import gtts
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pygame as pg
+
 from consultation.display_screen import DisplayScreen
+from consultation.screen import Screen, Colours, BlitLocation
 
 
 class SpiralTest:

@@ -1,5 +1,3 @@
-from enum import Enum
-import pygame as pg
 from games.wisconsin_card_sorting_test.models import *
 
 rules = ['colour', 'shape', 'shape_count']

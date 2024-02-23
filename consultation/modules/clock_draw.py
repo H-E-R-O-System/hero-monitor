@@ -1,16 +1,15 @@
-import pygame as pg
-import numpy as np
-import os
 import datetime
-from random import randrange
-import timeit
+import os
 import time
+from random import randrange
 
-from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.display_screen import DisplayScreen
-from consultation.screen import Colours, BlitLocation
-
+import numpy as np
+import pygame as pg
 from shapely import geometry
+
+from consultation.display_screen import DisplayScreen
+from consultation.screen import Colours
+from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 hour_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
 minute_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]

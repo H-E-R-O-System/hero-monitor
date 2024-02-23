@@ -1,11 +1,12 @@
-import os
-
-import random
 import math
+import os
+import random
+
 import pygame as pg
-from consultation.touch_screen import TouchScreen, GameObjects
+
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, Fonts
+from consultation.touch_screen import TouchScreen, GameObjects
 
 
 class AttentionCharacter(pg.sprite.Sprite):
