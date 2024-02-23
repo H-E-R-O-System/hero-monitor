@@ -24,6 +24,7 @@ from consultation.modules.wisconsin_card_test import CardGame
 from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.shape_searcher import ShapeSearcher
 from consultation.modules.clock_draw import ClockDraw
+from consultation.modules.keyboard import LoginScreen
 
 # import graphics helpers
 from consultation.screen import Colours, Fonts
@@ -90,10 +91,11 @@ class Consultation:
             "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "WCT": CardGame(max_turns=8, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
-            "Clock": ClockDraw(parent=self)
+            "Clock": ClockDraw(parent=self),
+            "Login": LoginScreen(parent=self)
         }
 
-        self.module_order = ["WCT", "Shapes", "PSS", "Spiral", "VAT",]
+        self.module_order = ["Login", "WCT", "Shapes", "PSS", "Spiral", "VAT",]
 
         self.module_idx = 0
 
