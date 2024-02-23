@@ -92,7 +92,7 @@ class Consultation:
             "Clock": ClockDraw(parent=self)
         }
 
-        self.module_order = ["Clock", "Spiral", "WCT", "Shapes", "PSS", "Spiral", "VAT",]
+        self.module_order = ["WCT", "Shapes", "PSS", "Spiral", "VAT",]
 
         self.module_idx = 0
 
