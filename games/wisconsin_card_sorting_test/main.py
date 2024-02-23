@@ -1,14 +1,11 @@
+import math
+import os
 import time
 
-import pygame as pg
-from games.wisconsin_card_sorting_test.models import *
-from games.wisconsin_card_sorting_test.engine import *
-import os
-
-from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.display_screen import DisplayScreen
-from consultation.screen import Colours, BlitLocation
-import math
+from consultation.screen import BlitLocation
+from consultation.touch_screen import TouchScreen, GameObjects
+from games.wisconsin_card_sorting_test.engine import *
 
 
 class CardGame:

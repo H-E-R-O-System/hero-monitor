@@ -1,16 +1,17 @@
 import os
 import time
-import pygame as pg
-import math
-import pyaudio
-from consultation.screen import Screen, BlitLocation, Fonts, Colours
-from consultation.avatar import Avatar
-from scipy.io.wavfile import write, read
-import wave
-from consultation.display_screen import DisplayScreen
 import warnings
+import wave
+
 import gtts
+import pyaudio
+import pygame as pg
 import speech_recognition as sr
+from scipy.io.wavfile import read
+
+from consultation.avatar import Avatar
+from consultation.display_screen import DisplayScreen
+from consultation.screen import Fonts
 
 
 class User:

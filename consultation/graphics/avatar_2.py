@@ -1,11 +1,11 @@
-import time, random
+import os
+import random
+import re
+import time
 
 import pygame as pg
-from math import floor
-from sprite_set import SpriteSet
+
 from consultation.screen import Screen, Colours
-import os
-import re
 
 
 class AvatarV2:

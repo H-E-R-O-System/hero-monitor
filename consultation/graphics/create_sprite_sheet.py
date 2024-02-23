@@ -1,7 +1,6 @@
 import math
 import os
 
-import pandas as pd
 import pygame as pg
 
 

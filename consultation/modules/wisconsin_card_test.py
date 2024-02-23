@@ -1,14 +1,14 @@
-import time
-
-import pygame as pg
+import math
 import os
 import random
+import time
 
-from consultation.touch_screen import GameObjects, TouchScreen, GameButton
+import cv2
+import pygame as pg
+
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
-import math
-import cv2
+from consultation.touch_screen import GameObjects, TouchScreen, GameButton
 
 colours = ['red', 'blue', 'green', 'yellow']
 shapes = ['square', 'circle', 'triangle', 'diamond']

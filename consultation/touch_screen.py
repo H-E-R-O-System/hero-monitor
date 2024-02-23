@@ -1,5 +1,6 @@
-from consultation.screen import Screen, BlitLocation, Colours
 import pygame as pg
+
+from consultation.screen import Screen, BlitLocation, Colours
 
 
 class GameButton(pg.sprite.Sprite):

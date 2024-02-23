@@ -1,5 +1,7 @@
 import random
+
 import pygame as pg
+
 from consultation.screen import Colours
 
 colours = ['red', 'blue', 'green', 'yellow']

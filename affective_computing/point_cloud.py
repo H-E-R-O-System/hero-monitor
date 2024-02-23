@@ -1,17 +1,18 @@
-import math
-
-import open3d as o3d
 import copy
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy
-from landmark_ids import *
+import math
 from enum import Enum
+
 import cv2
+import matplotlib.pyplot as plt
 import mediapipe as mp
+import numpy as np
+import open3d as o3d
+import scipy
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+
 from get_pipe_data import get_pipe_data
+from landmark_ids import *
 
 
 def create_pc_from_point_array(x, y, z):
@@ -161,11 +162,12 @@ class FaceCloud:
         self.points[:, 2] *= (2 / (x_width + y_width))
         self.key_points = KeyPoints(self.points)
 
-    def preprocess(self):
+    def preprocess(self, scale=False, demo=False):
         self.centre_nose_tip()
-        self.align_face()
+        self.align_face(demo)
         self.centre_nose_tip()
-        # self.scale_face()
+        if scale:
+            self.scale_face()
 
     def align_face(self, demo=False):
         # align to yz axis
@@ -176,6 +178,27 @@ class FaceCloud:
 
         self.points = np.asarray(face_pc.points)
         self.update_points()
+
+        # add face points
+        if demo:
+            fig = plt.figure()
+            ax = fig.add_subplot(projection='3d')
+
+            ax.scatter(self.points[:, 0], self.points[:, 1], self.points[:, 2], marker="*", s=5)
+            ax.scatter(self.key_points.sym_line[:, 0], self.key_points.sym_line[:, 1], self.key_points.sym_line[:, 2],
+                       marker="+", color=[0, 1, 0], s=20)
+            # add YZ plane
+            ax.plot_surface(*axis_plane_v, alpha=0.2, color=[0, 1, 0])
+            # ax.plot_surface(*point_plane_v, alpha=0.2, color=[1, 0, 0])
+
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_zlabel('Z')
+
+            # XY view
+            ax.view_init(*ViewAngle.XY.value)
+
+            plt.show()
 
         # align to yz axis
         tform, axis_plane_h, point_plane = align_points_to_axis_plane(self.key_points.y_plane, "xy")

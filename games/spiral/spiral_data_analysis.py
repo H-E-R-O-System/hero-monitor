@@ -1,11 +1,10 @@
-import os
 import glob
-import pandas as pd
-import numpy as np
+import os
+
 import matplotlib.pyplot as plt
-import time
+import numpy as np
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, confusion_matrix
 
 
 class FeatureEngineering:

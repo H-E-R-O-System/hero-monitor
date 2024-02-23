@@ -1,10 +1,12 @@
 import time
-import pygame as pg
-import numpy as np
-from screen import Screen, BlitLocation
-import spiral_graph
-import pandas as pd
+
 import
+import numpy as np
+import pandas as pd
+import pygame as pg
+
+import spiral_graph
+from screen import Screen, BlitLocation
 
 pg.init()
 

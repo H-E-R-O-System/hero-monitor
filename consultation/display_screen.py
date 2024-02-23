@@ -1,7 +1,9 @@
-import pygame as pg
-from consultation.screen import Screen, BlitLocation, Colours, Fonts
-from consultation.avatar import Avatar
 import os
+
+import pygame as pg
+
+from consultation.avatar import Avatar
+from consultation.screen import Screen, BlitLocation, Colours
 
 
 class DisplayScreen(Screen):

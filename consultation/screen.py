@@ -2,8 +2,6 @@ import math
 from enum import Enum
 
 import pygame as pg
-import numpy as np
-import pandas as pd
 
 
 class Colours(Enum):

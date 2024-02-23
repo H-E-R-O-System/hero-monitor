@@ -1,10 +1,12 @@
-import pygame as pg
-import time
 import os
+import time
+
 import gtts
+import pygame as pg
+
+from consultation.display_screen import DisplayScreen
 from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.display_screen import DisplayScreen
 
 
 class PSS:

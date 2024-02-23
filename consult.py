@@ -1,33 +1,31 @@
 # import packages
 import datetime
+import os
 import os.path
+import re
+import shutil
+import string
+import time
+from datetime import date
 
 import cv2
 import gtts
-import os
-import string
-import shutil
-import time
-import re
-from datetime import date
-
 import numpy as np
 import pandas as pd
 import pygame as pg
 
-from consultation.avatar import Avatar
-from consultation.display_screen import DisplayScreen
 # import consultation modules
-from consultation.modules.perceived_stress_score import PSS
-from consultation.modules.spiral_test import SpiralTest
-from consultation.modules.wisconsin_card_test import CardGame
-from consultation.modules.visual_attention_test import VisualAttentionTest
-from consultation.modules.shape_searcher import ShapeSearcher
 from consultation.modules.clock_draw import ClockDraw
-from consultation.modules.keyboard import LoginScreen
+from consultation.modules.perceived_stress_score import PSS
+from consultation.modules.shape_searcher import ShapeSearcher
+from consultation.modules.spiral_test import SpiralTest
+from consultation.modules.visual_attention_test import VisualAttentionTest
+from consultation.modules.wisconsin_card_test import CardGame
 
 # import graphics helpers
 from consultation.screen import Colours, Fonts
+from consultation.avatar import Avatar
+from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 
@@ -91,11 +89,10 @@ class Consultation:
             "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "WCT": CardGame(max_turns=8, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
-            "Clock": ClockDraw(parent=self),
-            "Login": LoginScreen(parent=self)
+            "Clock": ClockDraw(parent=self)
         }
 
-        self.module_order = ["Login", "WCT", "Shapes", "PSS", "Spiral", "VAT",]
+        self.module_order = ["WCT", "Shapes", "PSS", "Spiral", "VAT",]
 
         self.module_idx = 0
 

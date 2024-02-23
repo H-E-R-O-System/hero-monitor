@@ -1,12 +1,13 @@
+import os
 import time
 
-import pygame as pg
-import os
-from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.display_screen import DisplayScreen
-from consultation.screen import Colours
 import numpy as np
 import pandas as pd
+import pygame as pg
+
+from consultation.display_screen import DisplayScreen
+from consultation.screen import Colours
+from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 rocket = [(4, 0), (8, 4), (5, 8), (4, 5), (3, 8), (0, 4)]
 lightning_1 = [(5, 0), (5, 3), (8, 3), (3, 8), (3, 5), (0, 5)]
