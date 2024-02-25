@@ -119,14 +119,16 @@ class Screen:
         else:
             self.surface.blit(image, imageRect.topleft)
 
-    def add_image(self, image, pos=pg.Vector2(0, 0), fill=False, scale=None, location=BlitLocation.topLeft, base=False):
+    def add_image(self, image, pos=pg.Vector2(0, 0), fill=False, scale=None, size=None, location=BlitLocation.topLeft, base=False):
 
         if base:
             surf = self.base_surface
         else:
             surf = self.surface
 
-        if scale:
+        if size:
+            image = pg.transform.scale(image, size)
+        elif scale:
             image = pg.transform.scale(image, (image.get_size()[0] * scale.x, image.get_size()[1] * scale.y))
         elif fill:
             image = pg.transform.scale(image, self.size)
@@ -170,7 +172,7 @@ class Screen:
             self.surface.blit(text_surf, blitPos)
 
     def add_multiline_text(self, text, rect, location=BlitLocation.topLeft, center_horizontal=False, center_vertical=False,
-                           colour=None, bg_colour=None, font_size=None, base=False):
+                           colour=None, bg_colour=None, font_size=None, border_width=2, base=False):
         rect: pg.Rect
 
         if colour is None:
@@ -188,7 +190,7 @@ class Screen:
                 line_width = 0
             else:
                 width = self.font.size(word + " ")[0]
-                if line_width + self.font.size(word)[0] > rect.width:
+                if line_width + self.font.size(word)[0] > rect.width - border_width*2:
                     ids.append(idx)
                     line_width = width
                 else:
@@ -213,13 +215,13 @@ class Screen:
         if center_vertical:
             y_offset = (rect.h - total_height) / 2
         else:
-            y_offset = 0
+            y_offset = border_width
 
         for idx, surf in enumerate(text_surfs):
             if center_horizontal:
                 text_surf.blit(surf, ((rect.width - surf.get_width())/2, y_offset + idx * (surf.get_height() + gap)))
             else:
-                text_surf.blit(surf, (0, y_offset + idx*(surf.get_height() + gap)))
+                text_surf.blit(surf, (border_width, y_offset + idx*(surf.get_height() + gap)))
 
         blitPos = rect.topleft
         size = rect.size

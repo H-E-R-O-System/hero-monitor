@@ -24,10 +24,12 @@ class LoginScreen:
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
             self.all_user_data = parent.all_user_data
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
+            self.display_screen = DisplayScreen(self.display_size)
 
             if os.path.exists("data/user_data.csv"):
                 self.all_user_data = pd.read_csv("data/user_data.csv")
@@ -35,16 +37,13 @@ class LoginScreen:
             else:
                 self.all_user_data = None
 
-        self.display_screen = DisplayScreen(self.display_size)
-        self.display_screen.avatar = self.parent.avatar
-
         self.info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
         pg.draw.rect(self.display_screen.base_surface, Colours.white.value, self.info_rect)
 
         self.display_screen.state = 1
-        self.display_screen.add_multiline_text("Please enter your login details",
-                                               rect=self.info_rect.scale_by(0.9, 0.9),
-                                               font_size=40, base=True)
+        # self.display_screen.add_multiline_text("Please enter your login details",
+        #                                        rect=self.info_rect.scale_by(0.9, 0.9),
+        #                                        font_size=40, base=True)
 
         self.touch_screen = TouchScreen(self.display_size)
 
@@ -55,7 +54,6 @@ class LoginScreen:
         password_button = GameButton(
             position=pg.Vector2(0.75 * self.display_size.x, 0.1 * self.display_size.y) - top_size / 2,
             size=top_size, id="password", text="password")
-
         delete_size = pg.Vector2(160, 80)
         delete_button = GameButton(
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.65 * self.display_size.y),
@@ -64,10 +62,10 @@ class LoginScreen:
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.82 * self.display_size.y),
             size=delete_size, id="enter", text="enter")
 
-        self.user_string = ["j", "o", "h", "n", "d", "o", "e",]
-        self.pass_string = ["p", "a", "s", "s"]
-        # self.user_string = []
-        # self.pass_string = []
+        # self.user_string = ["j", "o", "h", "n", "d", "o", "e",]
+        # self.pass_string = ["p", "a", "s", "s"]
+        self.user_string = []
+        self.pass_string = []
         # Additional class properties
         letters_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
         letters_2 = ["a", "s", "d", "f", "g", "h", "j", "k", "l"]
@@ -104,22 +102,38 @@ class LoginScreen:
         self.keys[-2].colour = Colours.lightGrey.value  # grey out password
         self.running = False
 
-        self.display_screen.instruction = "Please type your details"
-
     def update_display(self):
         self.display_screen.refresh()
-        user_rect = self.info_rect.scale_by(0.9, 0.9)
+
+        user_rect = self.info_rect.scale_by(0.9, 0.8)
+        user_rect = pg.Rect(user_rect.topleft+ pg.Vector2(0, 50), (user_rect.w, 80))
+        pass_rect = pg.Rect(user_rect.topleft + pg.Vector2(0, 150), user_rect.size)
+        # pg.draw.rect(self.display_screen.surface, color=Colours.hero_blue.value, rect=user_rect)
+        if self.active_string == "user":
+            user_text = Colours.white
+            user_bg = Colours.hero_blue
+            pass_text = Colours.hero_blue
+            pass_bg = Colours.white
+        else:
+            user_text = Colours.hero_blue
+            user_bg = Colours.white
+            pass_text = Colours.white
+            pass_bg = Colours.hero_blue
+
         self.display_screen.add_multiline_text(
             rect=user_rect, text=f'Username: {"".join(self.user_string)}',
-            center_vertical=True)
+            center_vertical=True, font_size=60, colour=user_text, bg_colour=user_bg,
+            border_width=10)
         self.display_screen.add_multiline_text(
-            rect=pg.Rect(user_rect.topleft + pg.Vector2(0, 100), user_rect.size),
-            text=f'Password: {"".join(["*" for _ in self.pass_string])}',
-            center_vertical=True)
+            rect=pass_rect, text=f'Password: {"".join(["*" for _ in self.pass_string])}',
+            center_vertical=True, font_size=60, colour=pass_text, bg_colour=pass_bg,
+            border_width=10)
 
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
+
+        # print(self.display_screen.instruction)
 
     def check_credentials(self):
         username, password = "".join(self.user_string), "".join(self.pass_string)
@@ -145,6 +159,7 @@ class LoginScreen:
             self.parent.speak_text("Please enter your login details to continue",
                                    visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
 
+        self.display_screen.instruction = "Please enter your details"
         self.touch_screen.sprites = GameObjects(self.keys)
         self.update_display()
         # add code below
@@ -175,33 +190,41 @@ class LoginScreen:
                     if button_id is not None:
                         if button_id == "username":
                             self.active_string = "user"
-                            self.keys[-1].colour = Colours.darkGrey.value  # grey out password
+                            self.keys[-1].colour = Colours.hero_blue.value  # grey out password
                             self.keys[-2].colour = Colours.lightGrey.value
                         elif button_id == "password":
                             self.active_string = "pass"
                             self.keys[-1].colour = Colours.lightGrey.value  # grey out password
-                            self.keys[-2].colour = Colours.darkGrey.value
-                        elif button_id == "delete":
-                            if self.active_string == "user" and self.user_string:
-                                del self.user_string[-1]
-                            elif self.active_string == "pass" and self.pass_string:
-                                del self.pass_string[-1]
-                        elif button_id == "enter":
-                            if self.check_credentials():
-                                self.running = False
-                            else:
-                                if self.parent:
-                                    self.parent.speak_text(
-                                        "I dont recognise that user, please check your details again",
-                                        visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
-
-                                self.pass_string = []
+                            self.keys[-2].colour = Colours.hero_blue.value
 
                         else:
-                            if self.active_string == "user":
-                                self.user_string.append(button_id)
-                            elif self.active_string == "pass":
-                                self.pass_string.append(button_id)
+                            button = self.touch_screen.get_object(button_id)
+                            button.colour = Colours.lightGrey.value
+                            self.update_display()
+
+                            if button_id == "delete":
+                                if self.active_string == "user" and self.user_string:
+                                    del self.user_string[-1]
+                                elif self.active_string == "pass" and self.pass_string:
+                                    del self.pass_string[-1]
+                            elif button_id == "enter":
+                                if self.check_credentials():
+                                    self.running = False
+                                else:
+                                    if self.parent:
+                                        self.parent.speak_text(
+                                            "I dont recognise that user, please check your details again",
+                                            visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
+
+                                    self.pass_string = []
+                            else:
+                                if self.active_string == "user":
+                                    self.user_string.append(button_id)
+                                elif self.active_string == "pass":
+                                    self.pass_string.append(button_id)
+
+                            time.sleep(0.1)
+                            button.colour = Colours.hero_blue.value
 
                         self.update_display()
 

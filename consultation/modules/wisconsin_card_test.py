@@ -5,6 +5,7 @@ import time
 
 import cv2
 import pygame as pg
+import numpy as np
 
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
@@ -16,31 +17,25 @@ rules = ['colour', 'shape', 'shape_count']
 
 
 class Card(pg.sprite.Sprite):
-    def __init__(self, deck, size, colour=None, shape=None, shape_count=None, quiz_card=False):
+    def __init__(self, rule, value, size, id, colour=None, shape=None, shape_count=None, quiz_card=False):
         super().__init__()
         self.object_type = "card"
         self.size = pg.Vector2(size)
         self.rect = pg.Rect((0, 0), self.size)
         self.shape = shape
+        self.colour_name = colour
         self.shape_count = shape_count
         self.quiz_card = quiz_card
+        self.id = id
+
+        self.colour = Colours[colour]
 
         # if the attribute that is the current rule has been given, this card is set as 'correct':
-        if (deck.rule == 'colour' and colour) or (deck.rule == 'shape' and shape) or (
-                deck.rule == 'shape_count' and shape_count):
+        if (rule == 'colour' and colour == value) or (rule == 'shape' and shape == value) or (
+           rule == 'shape_count' and shape_count == value):
             self.correct = True
         else:
             self.correct = False
-
-        # making sure that each card represents maximum and minimum of 1 quiz card attribute
-        if colour:
-            self.colour = Colours[colour]
-        else:
-            self.colour = Colours[random.choice(list(set(colours) - {deck.quiz_colour}))]
-        if not shape:
-            self.shape = random.choice(list(set(shapes) - {deck.quiz_shape}))
-        if not shape_count:
-            self.shape_count = random.choice(list({1, 2, 3} - {deck.quiz_shape_count}))
 
         self.image = self.render_image()
 
@@ -80,7 +75,7 @@ class Card(pg.sprite.Sprite):
             return False
 
     def click_return(self):
-        return self.correct
+        return self.correct, self.id
 
 
 class Deck:
@@ -89,13 +84,28 @@ class Deck:
         self.quiz_shape = random.choice(shapes)
         self.quiz_colour = random.choice(colours)
         self.quiz_shape_count = random.randint(1, 3)
-        self.quiz_card = Card(deck=self, size=card_size, shape=self.quiz_shape,
-                              colour=self.quiz_colour, shape_count=self.quiz_shape_count, quiz_card=True)
+
+        if rule == "shape":
+            quiz_val = self.quiz_shape
+        elif rule == "colour":
+            quiz_val = self.quiz_colour
+        else:
+            quiz_val = self.quiz_shape_count
 
         self.cards = []
-        self.cards.append(Card(deck=self, size=card_size, shape=self.quiz_shape))
-        self.cards.append(Card(deck=self, size=card_size, colour=self.quiz_colour))
-        self.cards.append(Card(deck=self, size=card_size, shape_count=self.quiz_shape_count))
+        card_colours = np.random.permutation([colour for colour in colours if colour != self.quiz_colour])
+        card_shapes = np.random.permutation([shape for shape in shapes if shape != self.quiz_shape])
+        shape_counts = np.random.permutation([count for count in range(1, 4) if count != self.quiz_shape_count])
+
+        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id = 0, colour=self.quiz_colour,
+                               shape=card_shapes[0], shape_count=shape_counts[0]))
+        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id = 1, colour=card_colours[0],
+                               shape=self.quiz_shape, shape_count=shape_counts[1]))
+        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id = 2, colour=card_colours[1],
+                               shape=card_shapes[1], shape_count=self.quiz_shape_count))
+
+        self.quiz_card = Card(rule=rule, value=quiz_val, size=card_size, id=3, shape=self.quiz_shape,
+                              colour=self.quiz_colour, shape_count=self.quiz_shape_count, quiz_card=True)
 
         self.all_cards = [*self.cards.copy(), self.quiz_card]
 
@@ -109,7 +119,6 @@ class Deck:
 class CardGameEngine:
     def __init__(self, quiz_coord, option_coords, card_size=(164, 214)):
         self.rule = random.choice(rules)
-        print(f"Game rule: {self.rule}")
         self.score = 0
         self.turns = 0
         self.card_size = card_size
@@ -141,17 +150,17 @@ class CardGame:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = None
 
-        self.display_screen = DisplayScreen(self.display_size)
+            self.display_screen = DisplayScreen(self.display_size)
+
         self.display_screen.instruction = "Match the card!"
         self.touch_screen = TouchScreen(self.display_size, colour=Colours.white.value)
-
-        if parent:
-            self.display_screen.avatar = parent.display_screen.avatar
 
         self.running = True
 
@@ -192,9 +201,6 @@ class CardGame:
             "question",
             center_vertical=True)
 
-        self.parent.speak_text("Match the card",
-                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
-
         question_rect = pg.Rect(0.05 * self.display_size.x, 0.05 * self.display_size.y, 0.4 * self.display_size.x,
                                 0.9 * self.display_size.y)
         answer_rect = pg.Rect((0.55 * self.display_size.x, 0.05 * self.display_size.y), question_rect.size)
@@ -217,6 +223,10 @@ class CardGame:
             center_horizontal=True, center_vertical=True, bg_colour=Colours.lightGrey)
 
         self.update_displays()
+
+        self.parent.speak_text("Match the card",
+                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
+
         wait = True
         while wait:
             for event in pg.event.get():
@@ -247,16 +257,32 @@ class CardGame:
 
         self.update_displays()
 
-    def display_message(self, answer):
-        self.touch_screen.refresh()
-        self.touch_screen.kill_sprites()
+    def display_message(self, answer, card_id):
+        card = self.touch_screen.get_object(card_id)
+        card: Card
+
+        self.display_screen.refresh()
+        self.display_screen.instruction = None
         if answer:
-            self.touch_screen.add_text("Correct!", pos=self.display_size / 2, location=BlitLocation.centre)
+            self.display_screen.speech_text = "Correct"
+            if self.parent:
+                pg.draw.rect(card.image, Colours.green.value, card.image.get_rect(), width=10)
+                self.parent.speak_text("Correct", display_screen=self.display_screen, touch_screen=self.touch_screen)
+            # self.touch_screen.add_text("Correct!", pos=self.display_size / 2, location=BlitLocation.centre)
         else:
-            self.touch_screen.add_text("Incorrect!", pos=self.display_size / 2, location=BlitLocation.centre)
+            self.display_screen.speech_text = "Incorrect"
+            if self.parent:
+                pg.draw.rect(card.image, Colours.red.value, card.image.get_rect(), width=10)
+                self.parent.speak_text("Incorrect", display_screen=self.display_screen, touch_screen=self.touch_screen)
+            # self.touch_screen.add_text("Incorrect!", pos=self.display_size / 2, location=BlitLocation.centre)
 
         self.update_displays()
-        time.sleep(1)
+        self.touch_screen.kill_sprites()
+        time.sleep(0.5)
+        self.display_screen.speech_text = None
+        self.display_screen.instruction = "Select the card you think matches"
+        self.display_screen.refresh()
+        # self.display_screen.state = 0
 
     def update_displays(self):
         if self.parent:
@@ -270,23 +296,21 @@ class CardGame:
 
         self.render_game()
         self.display_screen.instruction = "Match the card!"
-        if self.parent:
-            self.parent.speak_text("Please match the card",
-                                   display_screen=self.display_screen, touch_screen=self.touch_screen)
 
-        # self.display_screen.state = 0
+        self.display_screen.state = 0
+        self.display_screen.refresh()
         self.render_game()
 
     def exit_sequence(self):
-        self.touch_screen.refresh()
-        self.touch_screen.kill_sprites()
-        self.touch_screen.add_text("Game Completed!", pos=self.display_size / 2, location=BlitLocation.centre)
-        self.touch_screen.add_text('Score: ' + str(self.engine.score),
-                                   pos=(self.display_size / 2) + pg.Vector2(0, 50),
-                                   location=BlitLocation.centre)
-        self.update_displays()
-        time.sleep(1)
-        self.running = False
+        # self.touch_screen.refresh()
+        # self.touch_screen.kill_sprites()
+        # self.touch_screen.add_text("Game Completed!", pos=self.display_size / 2, location=BlitLocation.centre)
+        # self.touch_screen.add_text('Score: ' + str(self.engine.score),
+        #                            pos=(self.display_size / 2) + pg.Vector2(0, 50),
+        #                            location=BlitLocation.centre)
+        # self.update_displays()
+        # time.sleep(1)
+        ...
 
     def loop(self):
         self.entry_sequence()
@@ -301,9 +325,14 @@ class CardGame:
                     else:
                         pos = pg.mouse.get_pos()
 
-                    selection = self.touch_screen.click_test(pos)
+                    output = self.touch_screen.click_test(pos)
+                    if output is not None:
+                        selection, card_id = output
+                    else:
+                        selection, card_id = None, None
+
                     if selection is not None:
-                        self.display_message(selection)
+                        self.display_message(selection, card_id)
 
                         if selection:
                             self.engine.score += 1

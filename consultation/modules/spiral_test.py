@@ -20,12 +20,15 @@ class SpiralTest:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = None
 
-        self.display_screen = DisplayScreen(self.display_size)
+            self.display_screen = DisplayScreen(self.display_size)
+
         self.display_screen.instruction = "Start in the center"
 
         self.touch_size = touch_size
@@ -132,12 +135,17 @@ class SpiralTest:
     def entry_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text("Please trace the spiral, starting from the center", visual=False)
+            self.parent.speak_text(
+                "Please trace the spiral, starting from the center", visual=True,
+                display_screen=self.display_screen, touch_screen=self.touch_screen)
 
     def exit_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text("Thank you for completing the spiral test", visual=False)
+            self.parent.speak_text(
+                "Thank you for completing the spiral test", visual=True,
+                display_screen=self.display_screen, touch_screen=self.touch_screen)
+            print("Exit")
 
         pixel_positions = [self.mouse_positions[idx, 0:2] - self.image_offset for idx in
                            range(len(self.mouse_positions))]

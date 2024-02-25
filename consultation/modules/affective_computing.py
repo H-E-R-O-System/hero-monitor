@@ -1,9 +1,14 @@
 import pygame as pg
+import pygame.camera
 from consultation.touch_screen import TouchScreen, GameButton, GameObjects
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
 import os
 import cv2
+import time
+import wave
+import pyaudio
+
 
 class AffectiveModule:
     def __init__(self, size=(1024, 600), parent=None):
@@ -12,29 +17,48 @@ class AffectiveModule:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+
         else:
             self.display_size = pg.Vector2(size)
             self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
 
             self.top_screen = self.window.subsurface(((0, 0), self.display_size))
             self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
+            self.display_screen = DisplayScreen(self.display_size)
 
-        self.display_screen = DisplayScreen(self.display_size)
         self.touch_screen = TouchScreen(self.display_size)
 
-        self.display_screen.speech_text = "Hello"
+        self.display_screen.speech_text = "Have you noticed anything this past week?"
 
         button_size = pg.Vector2(self.display_size.x*0.9, self.display_size.y*0.15)
-        self.main_button = GameButton(pg.Vector2(0.5*self.display_size.x, 0.85*self.display_size.y) - button_size / 2, button_size, id=1, text="Finished", colour=Colours.hero_blue)
+        self.main_button = GameButton(pg.Vector2(0.5*self.display_size.x, 0.85*self.display_size.y) - button_size / 2,
+                                      button_size, id=1, text="Finished", colour=Colours.hero_blue)
         self.touch_screen.sprites = GameObjects([self.main_button])
 
         self.display_screen.instruction = "I'm listening ..."
 
         # Additional class properties
-        self.listening = True
+        self.listening = False
         self.thing2 = None
 
         self.running = False
+
+        try:
+            pygame.camera.init()
+            self.face_cam = pygame.camera.Camera(size=(1280, 720))
+            self.face_cam.start()
+            self.cam_size = self.face_cam.get_size()
+
+            self.pyaud = pyaudio.PyAudio()
+            device_info = self.pyaud.get_default_input_device_info()
+            # print(device_info)
+            self.audio_rate = int(device_info["defaultSampleRate"])
+        except ValueError:
+            self.face_cam = None
+            self.cam_size = None
+            self.pyaud = None
+            self.audio_rate = None
 
     def update_display(self):
         self.touch_screen.refresh()
@@ -56,9 +80,64 @@ class AffectiveModule:
         self.update_display()  # render graphics to main consult
         # add code below
 
-    def do_something(self, ):
-        # Do something useful
-        ...
+    def question_loop(self, ):
+        self.listening = True
+        self.update_display()
+
+        chunk = 1024
+
+        stream = self.pyaud.open(
+            format=pyaudio.paInt16, channels=1, rate=self.audio_rate, input=True, frames_per_buffer=chunk)
+
+        image_size = (1280, 720)
+        cap = cv2.VideoCapture(0)
+        cap.set(3, image_size[0])
+        cap.set(4, image_size[1])
+
+        # fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        out = cv2.VideoWriter('affective_video.mp4', -1, -1, image_size)
+
+        frames = []
+
+        start = time.monotonic()
+        # t1 = start
+        t2 = time.monotonic()
+        while t2 - start < 10:
+            data = stream.read(chunk, exception_on_overflow=False)
+            # data is a raw bytes object
+            frames.append(data)
+
+            ret, frame = cap.read()
+            out.write(frame)
+
+            t2 = time.monotonic()
+            # if t2 - t1 > 0.5:
+                # Capture frame-by-frame
+
+
+                # every 0.5s take photo
+                # image_surf = self.face_cam.get_image()
+                # img_array = pg.surfarray.pixels3d(image_surf)
+                # video.write(img_array)
+                # self.display_screen.add_image(image_surf, pos=pg.Vector2(100, 100), size=self.display_screen.size*0.9)
+
+                # self.update_display()
+                # t1 = time.monotonic()
+
+        # stream.stop_stream()
+        # stream.close()
+
+        cap.release()
+        out.release()
+
+        wf = wave.open("affective_audio.wav", 'wb')
+        wf.setnchannels(1)
+        wf.setsampwidth(self.pyaud.get_sample_size(pyaudio.paInt16))
+        wf.setframerate(self.audio_rate)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+
+        print("question complete")
 
     def exit_sequence(self):
         # post-loop completion section
@@ -94,7 +173,7 @@ class AffectiveModule:
                     button_id = self.touch_screen.click_test(pos)
                     if button_id is not None:
                         if button_id:
-                            self.listening = not self.listening
+                            self.question_loop()
 
                         self.update_display()
                     ...

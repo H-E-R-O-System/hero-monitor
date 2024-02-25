@@ -31,12 +31,14 @@ class AttentionCharacter(pg.sprite.Sprite):
 
 
 class VisualAttentionTest:
-    def __init__(self, size=(1024, 600), touch_size=(400, 400), parent=None):
+    def __init__(self, size=(1024, 600), grid_size=(400, 400), parent=None):
         self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
 
         else:
             self.display_size = pg.Vector2(size)
@@ -44,30 +46,29 @@ class VisualAttentionTest:
             self.top_screen = None  # can set to None if not required
             self.fonts = Fonts()
 
-        self.display_screen = DisplayScreen(self.display_size)
-        if self.parent:
-            self.display_screen.avatar = parent.display_screen.avatar
+            self.display_screen = DisplayScreen(self.display_size)
+
         self.display_screen.instruction = "Find the odd letter!"
 
-        self.touch_screen = TouchScreen(touch_size)
-        self.touch_size = pg.Vector2(touch_size)
-        self.touch_offset = (self.display_size - self.touch_size) / 2
+        self.touch_screen = TouchScreen(self.display_size)
+        self.grid_size = pg.Vector2(grid_size)
+        self.grid_offset = (self.display_size - self.grid_size) / 2
 
         # Additional class properties
         self.clock = pg.time.Clock()
-        self.grid_size = pg.Vector2(4, 4)  # Specified as (col, row)
-        self.grid_count = int(self.grid_size.x * self.grid_size.y)
+        self.grid_shape = pg.Vector2(4, 4)  # Specified as (col, row)
+        self.grid_count = int(self.grid_shape.x * self.grid_shape.y)
 
-        card_width, h_gap = math.pow(self.grid_size.x + 1, -1), math.pow(self.grid_size.x + 1, -2)
-        card_height, v_gap = math.pow(self.grid_size.y + 1, -1), math.pow(self.grid_size.y + 1, -2)
+        card_width, h_gap = math.pow(self.grid_shape.x + 1, -1), math.pow(self.grid_shape.x + 1, -2)
+        card_height, v_gap = math.pow(self.grid_shape.y + 1, -1), math.pow(self.grid_shape.y + 1, -2)
 
         self.grid_positions = [
-            (((idx % self.grid_size.x) * card_width + ((idx % self.grid_size.x) + 1) * h_gap) * self.touch_size.x,
-             (math.floor(idx / self.grid_size.y) * card_height + (
-                         math.floor(idx / self.grid_size.y) + 1) * v_gap) * self.touch_size.y)
+            (((idx % self.grid_shape.x) * card_width + ((idx % self.grid_shape.x) + 1) * h_gap) * self.grid_size.x,
+             (math.floor(idx / self.grid_shape.y) * card_height + (
+                     math.floor(idx / self.grid_shape.y) + 1) * v_gap) * self.grid_size.y)
             for idx in range(self.grid_count)]
 
-        self.cell_size = pg.Vector2(card_width * self.touch_size.x, card_height * self.touch_size.y)
+        self.cell_size = pg.Vector2(card_width * self.grid_size.x, card_height * self.grid_size.y)
 
         self.max_rounds = 20
 
@@ -80,11 +81,7 @@ class VisualAttentionTest:
         self.odd_letter = None
         self.characters = []
 
-        self.select_letters()
-        self.update_grid()
-
         # initialise module
-        self.update_display()
         self.running = True
 
     def select_letters(self):
@@ -142,13 +139,17 @@ class VisualAttentionTest:
         if self.parent:
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
 
-        self.bottom_screen.blit(self.touch_screen.get_surface(), self.touch_offset)
+        self.bottom_screen.blit(self.touch_screen.get_surface(), self.grid_offset)
         pg.display.flip()
 
     def entry_sequence(self):
-        self.update_display()
         if self.parent:
-            self.parent.speak_text("Select the odd letter!", visual=False)
+            self.parent.speak_text("Find the odd letter!", display_screen=self.display_screen,
+                                   touch_screen=self.touch_screen)
+
+        self.select_letters()
+        self.update_grid()
+
         self.running = True
 
     def exit_sequence(self):
@@ -176,9 +177,9 @@ class VisualAttentionTest:
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     # do something with mouse click
                     if self.parent:
-                        pos = pg.Vector2(self.parent.get_relative_mose_pos()) - self.touch_offset
+                        pos = pg.Vector2(self.parent.get_relative_mose_pos()) - self.grid_offset
                     else:
-                        pos = pg.Vector2(pg.mouse.get_pos()) - self.touch_offset
+                        pos = pg.Vector2(pg.mouse.get_pos()) - self.grid_offset
                     selection = self.touch_screen.click_test(pos)
                     if selection is not None:
                         if selection:

@@ -57,13 +57,15 @@ class ShapeSearcher:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
 
-        self.display_screen = DisplayScreen(self.display_size)
-        self.display_screen = DisplayScreen(self.display_size)
+            self.display_screen = DisplayScreen(self.display_size)
+
         self.display_screen.instruction = None
         if parent:
             self.display_screen.avatar = parent.display_screen.avatar

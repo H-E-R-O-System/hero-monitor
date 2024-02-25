@@ -21,7 +21,7 @@ class PSS:
         self.bottom_screen: pg.Surface = parent.bottom_screen
 
         self.touch_screen = TouchScreen(self.top_screen.get_size())
-        self.display_screen = DisplayScreen(self.bottom_screen.get_size(), info_height=0.2)
+        self.display_screen = DisplayScreen(self.bottom_screen.get_size(), avatar=parent.avatar)
         self.display_screen.avatar = parent.display_screen.avatar
         count = 5
 
@@ -32,8 +32,7 @@ class PSS:
         for idx in range(count):
             width = (self.display_size.x - (count + 1) * gap) / count
             position = gap + idx * ((self.display_size.x - (count + 1) * gap) / count + gap)
-            button = GameButton(pg.Vector2(position, self.display_size.y/2), pg.Vector2(width, 50), idx, text=str(idx),
-                                label=labels[idx])
+            button = GameButton(pg.Vector2(position, self.display_size.y/2), pg.Vector2(width, 50), idx, text=labels[idx],)
             self.likert_buttons.append(button)
 
         if parent:
@@ -87,7 +86,7 @@ class PSS:
         self.update_display()
 
         if self.parent:
-            self.parent.speak_text(self.questions[self.question_idx].text, visual=True,
+            self.parent.speak_text(self.questions[self.question_idx].text.replace("In the last month", ""), visual=True,
                                    display_screen=self.display_screen,
                                    touch_screen=self.touch_screen)
 

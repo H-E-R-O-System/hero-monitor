@@ -12,7 +12,7 @@ class GameButton(pg.sprite.Sprite):
         if colour:
             self.colour = colour.value
         else:
-            self.colour = Colours.darkGrey.value
+            self.colour = Colours.hero_blue.value
         self.text = text
         self.label = label
 
@@ -72,4 +72,9 @@ class TouchScreen(Screen):
         display_surf.blit(self.sprite_surface, (0, 0))
 
         return display_surf
+
+    def get_object(self, object_id):
+        for game_object in self.sprites:
+            if game_object.id == object_id:
+                return game_object
 

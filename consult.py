@@ -22,12 +22,14 @@ from consultation.modules.spiral_test import SpiralTest
 from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.wisconsin_card_test import CardGame
 from consultation.modules.login_screen import LoginScreen
+from consultation.modules.affective_computing import AffectiveModule
 
 # import graphics helpers
 from consultation.screen import Colours, Fonts
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
+
 
 
 class User:
@@ -46,7 +48,7 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1, pi=True, authenticate=True):
+    def __init__(self, user=None, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True):
 
         self.authenticate_user = authenticate
         self.user = None
@@ -75,12 +77,10 @@ class Consultation:
 
         self.fonts = Fonts()
         self.display_screen = DisplayScreen(self.top_screen.get_size())
-        self.display_screen.instruction = "Click the button to start"
         self.touch_screen = TouchScreen(self.bottom_screen.get_size())
         button_size = pg.Vector2(300, 200)
         self.quit_button = GameButton((10, 10), pg.Vector2(70, 50), id=2, text="QUIT", colour=Colours.red)
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
-        self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
 
         self.avatar = Avatar(size=(self.display_size.y * 0.7, self.display_size.y * 0.7))
         # self.avatar = Avatar(scale=pg.Vector2(3, 3))
@@ -90,14 +90,15 @@ class Consultation:
         self.modules = {
             "Shapes": ShapeSearcher(max_turns=10, parent=self),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
-            "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
-            "WCT": CardGame(max_turns=8, parent=self),
+            "VAT": VisualAttentionTest(grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
+            "WCT": CardGame(parent=self, max_turns=8,),
             "PSS": PSS(self, question_count=self.pss_question_count),
             "Clock": ClockDraw(parent=self),
-            "Login": LoginScreen(parent=self, user_data=self.all_user_data)
+            "Login": LoginScreen(parent=self, user_data=self.all_user_data),
+            "Affective": AffectiveModule(parent=self)
         }
 
-        self.module_order = ["Spiral", "VAT", "PSS", "WCT", "Shapes", ]
+        self.module_order = ["VAT", "WCT", "Spiral", "PSS", "Shapes", ]
 
         self.module_idx = 0
 
@@ -105,9 +106,10 @@ class Consultation:
 
         self.running = True
 
+        self.seamless = seamless
         self.id = self.generate_unique_id()
 
-        self.update_display()
+        # self.update_display()
         pg.event.pump()
 
     def generate_unique_id(self):
@@ -128,9 +130,6 @@ class Consultation:
             display_screen = self.display_screen
         if touch_screen is None:
             touch_screen = self.touch_screen
-
-        # touch_screen.refresh()
-        # display_screen.refresh()
 
         self.top_screen.blit(display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(touch_screen.get_surface(), (0, 0))
@@ -177,8 +176,8 @@ class Consultation:
 
         mouth_idx = 0
         if visual:
+            temp_instruction = display_screen.instruction
             display_screen.instruction = None
-
             # Keep in idle loop while speaking
             start = time.monotonic()
             while pg.mixer.music.get_busy():
@@ -190,6 +189,7 @@ class Consultation:
 
             display_screen.avatar.mouth_idx = 0
 
+            display_screen.instruction = temp_instruction
             self.update_display(display_screen=display_screen, touch_screen=touch_screen)
 
     def get_relative_mose_pos(self):
@@ -205,11 +205,15 @@ class Consultation:
         cv2.imwrite(f"screenshots/{filename}.png", img_array)
 
     def entry_sequence(self):
-        self.update_display()
         if self.authenticate_user:
             self.user = self.modules["Login"].loop()
 
             self.speak_text(f"Welcome back {self.user.name}")
+
+        if not self.seamless:
+            self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
+
+            self.display_screen.instruction = "Click the button to start"
             self.update_display()
 
     def exit_sequence(self):
@@ -251,41 +255,46 @@ class Consultation:
     def loop(self, infinite=False):
         self.entry_sequence()
         while self.running:
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
+            if self.seamless:
+                for module in self.module_order:
+                    self.modules[module].loop()
+                    self.update_display()
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            self.running = False
+
+                        elif event.key == pg.K_s:
+                            self.take_screenshot()
+
+                    elif event.type == pg.MOUSEBUTTONDOWN:
+                        button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
+                        if button_id == 1:
+                            self.touch_screen.kill_sprites()
+                            self.update_display()
+                            module = self.modules[self.module_order[self.module_idx]]
+                            module.running = True
+                            print("Entering Module Loop")
+                            module.loop()
+                            print("Exiting Module Loop")
+                            self.display_screen.instruction = "Click the button to start"
+                            self.update_display()
+                            if infinite:
+                                self.module_idx = (self.module_idx + 1) % len(self.modules)
+                            else:
+                                self.module_idx += 1
+                                if self.module_idx == len(self.modules):
+                                    self.running = False
+
+                            self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
+                            self.update_display()
+
+                        elif button_id == 2:
+                            self.running = False
+
+                    elif event.type == pg.QUIT:
                         self.running = False
-
-                    elif event.key == pg.K_s:
-                        self.take_screenshot()
-
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
-                    if button_id == 1:
-                        self.touch_screen.kill_sprites()
-                        self.update_display()
-                        module = self.modules[self.module_order[self.module_idx]]
-                        module.running = True
-                        print("Entering Module Loop")
-                        module.loop()
-                        print("Exiting Module Loop")
-                        self.display_screen.instruction = "Click the button to start"
-                        self.update_display()
-                        if infinite:
-                            self.module_idx = (self.module_idx + 1) % len(self.modules)
-                        else:
-                            self.module_idx += 1
-                            if self.module_idx == len(self.modules):
-                                self.running = False
-
-                        self.touch_screen.sprites = GameObjects([self.quit_button, self.main_button])
-                        self.update_display()
-
-                    elif button_id == 2:
-                        self.running = False
-
-                elif event.type == pg.QUIT:
-                    self.running = False
 
         self.exit_sequence()
 
@@ -293,7 +302,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False, authenticate=True)
+    consult = Consultation(pi=False, authenticate=False, seamless=True)
     consult.loop()
 
     if consult.output is not None:
