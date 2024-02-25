@@ -97,7 +97,7 @@ class Consultation:
             "Login": LoginScreen(parent=self, user_data=self.all_user_data)
         }
 
-        self.module_order = ["PSS", "WCT", "Shapes", "PSS", "Spiral", "VAT",]
+        self.module_order = ["Spiral", "VAT", "PSS", "WCT", "Shapes", ]
 
         self.module_idx = 0
 
@@ -293,7 +293,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False, authenticate=False)
+    consult = Consultation(pi=False, authenticate=True)
     consult.loop()
 
     if consult.output is not None:

@@ -17,6 +17,8 @@ class Colours(Enum):
     shadow = pg.Color(180, 180, 180)
     blue = pg.Color(67, 113, 181)
     yellow = pg.Color(252, 198, 3)
+    hero_blue = pg.Color("#274251")
+    light_blue = pg.Color("#4f86a5")
 
 
 class BlitLocation(Enum):

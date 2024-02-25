@@ -184,9 +184,6 @@ class CardGame:
         self.display_screen.add_multiline_text("Match The Card!", rect=info_rect.scale_by(0.9, 0.9),
                                                font_size=50)
 
-        self.parent.speak_text("Match the card",
-                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
-
         self.display_screen.add_multiline_text(
             rect=info_rect.scale_by(0.9, 0.9), text=
             "Match the top card to one of the three below it. There is one rule which determines if the the card is a "
@@ -194,6 +191,9 @@ class CardGame:
             " cards with the same colour match. You must first work out the rule, and then use this to answer each "
             "question",
             center_vertical=True)
+
+        self.parent.speak_text("Match the card",
+                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         question_rect = pg.Rect(0.05 * self.display_size.x, 0.05 * self.display_size.y, 0.4 * self.display_size.x,
                                 0.9 * self.display_size.y)

@@ -64,10 +64,10 @@ class LoginScreen:
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.82 * self.display_size.y),
             size=delete_size, id="enter", text="enter")
 
-        # self.user_string = ["j", "o", "h", "n", "d", "o", "e",]
-        # self.pass_string = ["p", "a", "s", "s"]
-        self.user_string = []
-        self.pass_string = []
+        self.user_string = ["j", "o", "h", "n", "d", "o", "e",]
+        self.pass_string = ["p", "a", "s", "s"]
+        # self.user_string = []
+        # self.pass_string = []
         # Additional class properties
         letters_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
         letters_2 = ["a", "s", "d", "f", "g", "h", "j", "k", "l"]
@@ -103,6 +103,8 @@ class LoginScreen:
         self.user = None
         self.keys[-2].colour = Colours.lightGrey.value  # grey out password
         self.running = False
+
+        self.display_screen.instruction = "Please type your details"
 
     def update_display(self):
         self.display_screen.refresh()

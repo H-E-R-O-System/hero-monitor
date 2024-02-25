@@ -1,9 +1,9 @@
 import pygame as pg
-from consultation.touch_screen import TouchScreen
+from consultation.touch_screen import TouchScreen, GameButton, GameObjects
 from consultation.display_screen import DisplayScreen
-from consultation.screen import Colours
+from consultation.screen import Colours, BlitLocation
 import os
-
+import cv2
 
 class AffectiveModule:
     def __init__(self, size=(1024, 600), parent=None):
@@ -22,13 +22,28 @@ class AffectiveModule:
         self.display_screen = DisplayScreen(self.display_size)
         self.touch_screen = TouchScreen(self.display_size)
 
+        self.display_screen.speech_text = "Hello"
+
+        button_size = pg.Vector2(self.display_size.x*0.9, self.display_size.y*0.15)
+        self.main_button = GameButton(pg.Vector2(0.5*self.display_size.x, 0.85*self.display_size.y) - button_size / 2, button_size, id=1, text="Finished", colour=Colours.hero_blue)
+        self.touch_screen.sprites = GameObjects([self.main_button])
+
+        self.display_screen.instruction = "I'm listening ..."
+
         # Additional class properties
-        self.thing1 = None
+        self.listening = True
         self.thing2 = None
 
         self.running = False
 
     def update_display(self):
+        self.touch_screen.refresh()
+
+        if self.listening:
+            self.touch_screen.load_image("consultation/graphics/listening.png", size=pg.Vector2(300, 300),
+                                         pos=pg.Vector2(self.display_size.x*0.5, self.display_size.y*0.4),
+                                         location=BlitLocation.centre)
+
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
@@ -58,14 +73,30 @@ class AffectiveModule:
             for event in pg.event.get():
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_s:
-                        # do something with key press
+                        if self.parent:
+                            self.parent.take_screenshot()
+                        else:
+                            img_array = pg.surfarray.array3d(self.window)
+                            img_array = cv2.transpose(img_array)
+                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                            cv2.imwrite("screenshots/affective.png", img_array)
                         ...
                     elif event.key == pg.K_ESCAPE:
                         self.running = False
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     # do something with mouse click
-                    mouse_pos = pg.mouse.get_pos()
+                    if self.parent:
+                        pos = self.parent.get_relative_mose_pos()
+                    else:
+                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+
+                    button_id = self.touch_screen.click_test(pos)
+                    if button_id is not None:
+                        if button_id:
+                            self.listening = not self.listening
+
+                        self.update_display()
                     ...
 
                 elif event.type == pg.QUIT:
