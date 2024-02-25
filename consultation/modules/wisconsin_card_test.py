@@ -184,6 +184,9 @@ class CardGame:
         self.display_screen.add_multiline_text("Match The Card!", rect=info_rect.scale_by(0.9, 0.9),
                                                font_size=50)
 
+        self.parent.speak_text("Match the card",
+                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
+
         self.display_screen.add_multiline_text(
             rect=info_rect.scale_by(0.9, 0.9), text=
             "Match the top card to one of the three below it. There is one rule which determines if the the card is a "

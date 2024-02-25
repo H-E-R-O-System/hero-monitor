@@ -8,6 +8,7 @@ import pygame as pg
 from consultation.touch_screen import TouchScreen
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours
+import os
 
 class ModuleName:
     def __init__(self, size=(1024, 600), parent=None):
@@ -18,8 +19,10 @@ class ModuleName:
             self.top_screen = parent.top_screen
         else:
             self.display_size = pg.Vector2(size)
-            self.bottom_screen = pg.display.set_mode(self.display_size)
-            self.top_screen = pg.display.set_mode(self.display_size) # can set to None if not required
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
 
         self.display_screen = DisplayScreen(self.display_size)
         self.touch_screen = TouchScreen(self.display_size)
@@ -79,6 +82,8 @@ class ModuleName:
 
 
 if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    
     pg.init()
     # Module Testing
     module_name = ModuleName()

@@ -2,6 +2,7 @@ import math
 from enum import Enum
 
 import pygame as pg
+import pygame.freetype
 
 
 class Colours(Enum):

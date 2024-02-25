@@ -21,6 +21,7 @@ from consultation.modules.shape_searcher import ShapeSearcher
 from consultation.modules.spiral_test import SpiralTest
 from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.wisconsin_card_test import CardGame
+from consultation.modules.login_screen import LoginScreen
 
 # import graphics helpers
 from consultation.screen import Colours, Fonts
@@ -45,19 +46,22 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1, pi=True):
+    def __init__(self, user=None, enable_speech=True, scale=1, pi=True, authenticate=True):
 
-        if user:
-            self.user = user
-        else:
-            # create demo user
-            self.user = User("Demo", 65, 0)
+        self.authenticate_user = authenticate
+        self.user = None
 
         self.config = ConsultConfig(speech=enable_speech)
         if not os.path.isdir("consultation/question_audio_tmp"):
             os.mkdir("consultation/question_audio_tmp")
 
         self.display_size = pg.Vector2(1024, 600) * scale
+
+        if os.path.exists("data/user_data.csv"):
+            self.all_user_data = pd.read_csv("data/user_data.csv")
+            self.all_user_data = self.all_user_data.set_index("Username")
+        else:
+            self.all_user_data = None
 
         # load all attributes which utilise any pygame surfaces!
 
@@ -89,10 +93,11 @@ class Consultation:
             "VAT": VisualAttentionTest(touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "WCT": CardGame(max_turns=8, parent=self),
             "PSS": PSS(self, question_count=self.pss_question_count),
-            "Clock": ClockDraw(parent=self)
+            "Clock": ClockDraw(parent=self),
+            "Login": LoginScreen(parent=self, user_data=self.all_user_data)
         }
 
-        self.module_order = ["WCT", "Shapes", "PSS", "Spiral", "VAT",]
+        self.module_order = ["PSS", "WCT", "Shapes", "PSS", "Spiral", "VAT",]
 
         self.module_idx = 0
 
@@ -103,6 +108,7 @@ class Consultation:
         self.id = self.generate_unique_id()
 
         self.update_display()
+        pg.event.pump()
 
     def generate_unique_id(self):
         letters = pd.Series(list(string.ascii_lowercase))[np.random.permutation(26)][:10].values
@@ -139,6 +145,8 @@ class Consultation:
             touch_screen = self.touch_screen
 
         text_index = text.lower()
+
+        text_index = text_index.replace("?", "").replace("!", "")
 
         text_index = text_index.replace(" ", "0 ").replace(".", "0 ").replace(",", "0 ")
         rep_1 = {"th": "11 ", "sh": "9 ", "ch": "9 ", "ee": "3 "}
@@ -197,7 +205,12 @@ class Consultation:
         cv2.imwrite(f"screenshots/{filename}.png", img_array)
 
     def entry_sequence(self):
-        ...
+        self.update_display()
+        if self.authenticate_user:
+            self.user = self.modules["Login"].loop()
+
+            self.speak_text(f"Welcome back {self.user.name}")
+            self.update_display()
 
     def exit_sequence(self):
         self.speak_text("The consultation is now complete. Thank you for your time")
@@ -280,7 +293,7 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False, scale=0.7)
+    consult = Consultation(pi=False, authenticate=False)
     consult.loop()
 
     if consult.output is not None:

@@ -86,25 +86,30 @@ class PSS:
 
         self.update_display()
 
-        if self.question_idx < len(self.questions):
-            question_audio_file = f'consultation/question_audio_tmp/pss/question_{str(self.question_idx)}.mp3'
-        else:
-            question_audio_file = f'consultation/question_audio_tmp/pss/exit.mp3'
+        if self.parent:
+            self.parent.speak_text(self.questions[self.question_idx].text, visual=True,
+                                   display_screen=self.display_screen,
+                                   touch_screen=self.touch_screen)
 
-        pg.mixer.music.load(question_audio_file)
-        pg.mixer.music.play()
-
-        # Keep in idle loop while speaking
-        self.display_screen.avatar.state = 1
-        start = time.monotonic()
-        while pg.mixer.music.get_busy():
-            if time.monotonic() - start > 0.15:
-                # self.display_screen.update(question=question)
-                self.update_display()
-                self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
-                start = time.monotonic()
-
-        self.display_screen.avatar.state = 0
+        # if self.question_idx < len(self.questions):
+        #     question_audio_file = f'consultation/question_audio_tmp/pss/question_{str(self.question_idx)}.mp3'
+        # else:
+        #     question_audio_file = f'consultation/question_audio_tmp/pss/exit.mp3'
+        #
+        # pg.mixer.music.load(question_audio_file)
+        # pg.mixer.music.play()
+        #
+        # # Keep in idle loop while speaking
+        # self.display_screen.avatar.state = 1
+        # start = time.monotonic()
+        # while pg.mixer.music.get_busy():
+        #     if time.monotonic() - start > 0.15:
+        #         # self.display_screen.update(question=question)
+        #         self.update_display()
+        #         self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
+        #         start = time.monotonic()
+        #
+        # self.display_screen.avatar.state = 0
 
         if question:
             self.display_screen.instruction = "Select an option below"

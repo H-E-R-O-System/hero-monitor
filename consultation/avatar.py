@@ -9,7 +9,7 @@ from consultation.screen import Screen, Colours
 
 
 class Avatar:
-    def __init__(self, size=None):
+    def __init__(self, size=pg.Vector2(420, 420)):
         gender = ("male", "female")[random.randint(0, 1)]
         # self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
         self.image = pg.image.load(f"consultation/graphics/Male103.png")

@@ -13,7 +13,7 @@ class DisplayScreen(Screen):
         if avatar:
             self.avatar = avatar
         else:
-            self.avatar = Avatar(size=(256, 256 * 1.125))
+            self.avatar = Avatar()
 
         self.instruction = None
         self.speech_text = None
