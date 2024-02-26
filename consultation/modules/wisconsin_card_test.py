@@ -143,7 +143,7 @@ class CardGameEngine:
 
 class CardGame:
 
-    def __init__(self, size=(1024, 600), max_turns=10, parent=None):
+    def __init__(self, size=(1024, 600), max_turns=10, parent=None, auto_run=False):
         self.parent = parent
 
         if parent is not None:
@@ -178,6 +178,7 @@ class CardGame:
                                      card_size=(self.display_size.x / 4, self.display_size.y / 3))
 
         self.max_turns = max_turns
+        self.auto_run = auto_run
 
     def instruction_loop(self):
         self.display_screen.state = 1
@@ -292,7 +293,8 @@ class CardGame:
         pg.display.flip()
 
     def entry_sequence(self):
-        self.instruction_loop()
+        if not self.auto_run:
+            self.instruction_loop()
 
         self.render_game()
         self.display_screen.instruction = "Match the card!"
@@ -315,44 +317,62 @@ class CardGame:
     def loop(self):
         self.entry_sequence()
         while self.running:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
+            if self.auto_run:
+                card_idx = random.randint(0, 2)
+                card = self.touch_screen.get_object(card_idx)
+                selection, card_id = card.correct, card.id
+
+                self.display_message(selection, card_id)
+
+                if selection:
+                    self.engine.score += 1
+
+                self.engine.turns += 1
+                if self.engine.turns == self.max_turns:
                     self.running = False
+                else:
+                    self.engine.deal()
+                    self.render_game()
 
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    if self.parent:
-                        pos = self.parent.get_relative_mose_pos()
-                    else:
-                        pos = pg.mouse.get_pos()
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        self.running = False
 
-                    output = self.touch_screen.click_test(pos)
-                    if output is not None:
-                        selection, card_id = output
-                    else:
-                        selection, card_id = None, None
-
-                    if selection is not None:
-                        self.display_message(selection, card_id)
-
-                        if selection:
-                            self.engine.score += 1
-
-                        self.engine.turns += 1
-                        if self.engine.turns == self.max_turns:
-                            self.running = False
-                        else:
-                            self.engine.deal()
-                            self.render_game()
-
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    elif event.type == pg.MOUSEBUTTONDOWN:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            pos = self.parent.get_relative_mose_pos()
                         else:
-                            img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
-                            img_array = cv2.transpose(img_array)
-                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-                            cv2.imwrite("screenshots/wct.png", img_array)
+                            pos = pg.mouse.get_pos()
+
+                        output = self.touch_screen.click_test(pos)
+                        if output is not None:
+                            selection, card_id = output
+                        else:
+                            selection, card_id = None, None
+
+                        if selection is not None:
+                            self.display_message(selection, card_id)
+
+                            if selection:
+                                self.engine.score += 1
+
+                            self.engine.turns += 1
+                            if self.engine.turns == self.max_turns:
+                                self.running = False
+                            else:
+                                self.engine.deal()
+                                self.render_game()
+
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_w:
+                            if self.parent:
+                                self.parent.take_screenshot()
+                            else:
+                                img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
+                                img_array = cv2.transpose(img_array)
+                                img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                                cv2.imwrite("screenshots/wct.png", img_array)
 
         self.exit_sequence()
 

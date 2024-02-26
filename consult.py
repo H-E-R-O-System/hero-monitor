@@ -48,7 +48,8 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True):
+    def __init__(self, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True,
+                 username=None, password=None, date=None):
 
         self.authenticate_user = authenticate
         self.user = None
@@ -87,18 +88,20 @@ class Consultation:
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = 2
+
+        auto_run = True
         self.modules = {
             "Shapes": ShapeSearcher(max_turns=10, parent=self),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "VAT": VisualAttentionTest(grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
-            "WCT": CardGame(parent=self, max_turns=8,),
-            "PSS": PSS(self, question_count=self.pss_question_count),
+            "WCT": CardGame(parent=self, max_turns=8, auto_run=auto_run,),
+            "PSS": PSS(self, question_count=self.pss_question_count, auto_run=auto_run),
             "Clock": ClockDraw(parent=self),
-            "Login": LoginScreen(parent=self, user_data=self.all_user_data),
+            "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
             "Affective": AffectiveModule(parent=self)
         }
 
-        self.module_order = ["VAT", "WCT", "Spiral", "PSS", "Shapes", ]
+        self.module_order = ["WCT", "PSS", ]
 
         self.module_idx = 0
 
@@ -108,6 +111,10 @@ class Consultation:
 
         self.seamless = seamless
         self.id = self.generate_unique_id()
+        if date:
+            self.date = date
+        else:
+            self.date = date.today()
 
         # self.update_display()
         pg.event.pump()
@@ -208,6 +215,8 @@ class Consultation:
         if self.authenticate_user:
             self.user = self.modules["Login"].loop()
 
+            print(self.user.id)
+
             self.speak_text(f"Welcome back {self.user.name}")
 
         if not self.seamless:
@@ -230,23 +239,33 @@ class Consultation:
         WCT_score = self.modules["WCT"].engine.score
 
         # Spiral Test Handling
-        spiral_data, spiral_size = self.modules["Spiral"].output
-        spiral_data.to_csv('spiraldata.csv', index=False)
+        try:
+            spiral_data, spiral_size = self.modules["Spiral"].output
+            spiral_data.to_csv('spiraldata.csv', index=False)
 
-        spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
-        spiral_image.fill(Colours.white.value)  # fill with white background
-        # draw in lines between each point recorded
-        pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(), width=3)
+            spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
+            spiral_image.fill(Colours.white.value)  # fill with white background
+            # draw in lines between each point recorded
+            pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(),
+                          width=3)
 
-        img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
-        img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
-        img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
-        cv2.imwrite("consultation/response_data/spiral.png", img_array)  # Save image
+            img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
+            img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
+            cv2.imwrite("consultation/response_data/spiral.png", img_array)  # Save image
+
+        except TypeError:
+            pass
+
+        if self.user is None:
+            user_id = None
+        else:
+            user_id = self.user.id
 
         self.output = {
             "Consult_ID": self.id,
-            "User_ID": self.user.id,
-            "Date": date.today(),
+            "User_ID": user_id,
+            "Date": self.date,
             "PSS_Score": np.sum(pss_answers),
             "Wisconsin_Card_Score": WCT_score}
 
@@ -259,6 +278,8 @@ class Consultation:
                 for module in self.module_order:
                     self.modules[module].loop()
                     self.update_display()
+
+                self.running = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
@@ -302,17 +323,27 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False, authenticate=False, seamless=True)
+
+    run_params = {"pi": False, "authentictae": True,
+                  "seamless": True, "scale": 0.7,
+                  "username": "benhoskings", "password": "pass"}
+
+    consult = Consultation(
+        pi=False, authenticate=True, seamless=True, scale=0.7, username="johndoe", password="pass"
+    )
     consult.loop()
 
     if consult.output is not None:
-        consult_record = pd.read_csv(
-            "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
-            delimiter="\t", index_col=0)
-        consult_record.loc[consult.id] = consult.output
+        consult_output = pd.DataFrame(consult.output, index=[0])
+        if consult.user:
+            if not os.path.isdir(f"data/consult_records/user_{consult.user.id}"):
+                os.mkdir(f"data/consult_records/user_{consult.user.id}")
 
-        consult_record.to_csv(
-            "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
-            sep="\t")
+            save_path = f"data/consult_records/user_{consult.user.id}/consult_{consult.id}.tsv"
+        else:
+            # only the case when no authenticate user is set to false
+            save_path = f"data/consult_records/guest/consult_{consult.id}.tsv"
+
+        consult_output.to_csv(save_path, sep="\t",index=False)
 
         # print(consult_record.head())

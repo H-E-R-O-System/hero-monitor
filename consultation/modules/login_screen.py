@@ -17,7 +17,7 @@ class User:
 
 
 class LoginScreen:
-    def __init__(self, size=(1024, 600), parent=None, user_data=None):
+    def __init__(self, size=(1024, 600), parent=None, username=None, password=None, auto_run=False):
         self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
@@ -62,10 +62,6 @@ class LoginScreen:
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.82 * self.display_size.y),
             size=delete_size, id="enter", text="enter")
 
-        # self.user_string = ["j", "o", "h", "n", "d", "o", "e",]
-        # self.pass_string = ["p", "a", "s", "s"]
-        self.user_string = []
-        self.pass_string = []
         # Additional class properties
         letters_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
         letters_2 = ["a", "s", "d", "f", "g", "h", "j", "k", "l"]
@@ -101,6 +97,15 @@ class LoginScreen:
         self.user = None
         self.keys[-2].colour = Colours.lightGrey.value  # grey out password
         self.running = False
+
+        if username and password:
+            self.user_string = list(username)
+            self.pass_string = list(password)
+        else:
+            self.user_string = []
+            self.pass_string = []
+
+        self.auto_run = auto_run
 
     def update_display(self):
         self.display_screen.refresh()
@@ -150,6 +155,7 @@ class LoginScreen:
         # pre-loop initialisation section
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
+
         self.running = True
         self.update_display()  # render graphics to main consult
 
@@ -164,11 +170,16 @@ class LoginScreen:
         self.update_display()
         # add code below
 
+        if self.user_string and self.pass_string and self.auto_run:
+            if self.check_credentials():
+                self.running = False
+
     def exit_sequence(self):
         # post-loop completion section
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
+        self.running = False
         username, password = "".join(self.user_string), "".join(self.pass_string)
         user_data = self.all_user_data.loc[username]
         return User(name=user_data["FirstName"], age=21, id=user_data["UserID"])
