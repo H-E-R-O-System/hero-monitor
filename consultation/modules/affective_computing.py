@@ -40,7 +40,6 @@ class AffectiveModule:
 
         # Additional class properties
         self.listening = False
-        self.thing2 = None
 
         self.running = False
 
@@ -94,9 +93,8 @@ class AffectiveModule:
         cap.set(3, image_size[0])
         cap.set(4, image_size[1])
 
-        # fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-        out = cv2.VideoWriter('affective_video.mp4', -1, -1, image_size)
-
+        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        out = cv2.VideoWriter('affective_video.mp4', fourcc, 20, image_size)
         frames = []
 
         start = time.monotonic()
@@ -111,21 +109,9 @@ class AffectiveModule:
             out.write(frame)
 
             t2 = time.monotonic()
-            # if t2 - t1 > 0.5:
-                # Capture frame-by-frame
 
-
-                # every 0.5s take photo
-                # image_surf = self.face_cam.get_image()
-                # img_array = pg.surfarray.pixels3d(image_surf)
-                # video.write(img_array)
-                # self.display_screen.add_image(image_surf, pos=pg.Vector2(100, 100), size=self.display_screen.size*0.9)
-
-                # self.update_display()
-                # t1 = time.monotonic()
-
-        # stream.stop_stream()
-        # stream.close()
+        stream.stop_stream()
+        stream.close()
 
         cap.release()
         out.release()
