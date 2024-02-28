@@ -231,7 +231,7 @@ class SpiralTest:
 
 if __name__ == "__main__":
     # os.chdir("/home/pi/hero-monitor")
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
