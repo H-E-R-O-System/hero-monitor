@@ -22,3 +22,4 @@ gTTS~=2.4.0
 SpeechRecognition
 pandas~=2.1.3
 openpyxl
+pymongo

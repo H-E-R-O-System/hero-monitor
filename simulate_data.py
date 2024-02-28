@@ -1,8 +1,11 @@
 import pygame as pg
 import pandas as pd
 from consult import Consultation
-import os
 import datetime
+from db_access import DBClient
+
+db = DBClient()
+db.clear_all()
 
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
 pg.init()
