@@ -102,8 +102,9 @@ class Consultation:
             "PSS": PSS(self, question_count=self.pss_question_count, auto_run=auto_run),
             "Clock": ClockDraw(parent=self),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
-            "Affective": AffectiveModule(parent=self)
         }
+
+        # "Affective": AffectiveModule(parent=self)
 
         self.module_order = ["VAT", "WCT", "PSS", ]
 
