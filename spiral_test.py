@@ -238,7 +238,7 @@ if __name__ == "__main__":
     # Spiral data is a pd dataframe that contains the coordinates
     # reconstructed image should be of size spiral_size
     # file_path=r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral.txt'
-    file_path = "/home/pi/downloads"
+    file_path = "/home/pi/Downloads"
     spiral_data.to_csv(file_path, index=False)
     # spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
 
