@@ -1,12 +1,13 @@
 # import packages
 import datetime
+import json
 import os
 import os.path
 import re
 import shutil
 import string
 import time
-from datetime import date
+from datetime import date, datetime
 
 import cv2
 import gtts
@@ -25,10 +26,12 @@ from consultation.modules.login_screen import LoginScreen
 from consultation.modules.affective_computing import AffectiveModule
 
 # import graphics helpers
+from consultation.utils import take_screenshot
 from consultation.screen import Colours, Fonts
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
+from json import loads, dumps
 
 
 
@@ -48,7 +51,9 @@ class ConsultConfig:
 
 
 class Consultation:
-    def __init__(self, user=None, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True):
+    def __init__(self, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True,
+                 username=None, password=None, consult_date=None, auto_run=False, wct_turns=8,
+                 pss_questions=3):
 
         self.authenticate_user = authenticate
         self.user = None
@@ -86,19 +91,22 @@ class Consultation:
         # self.avatar = Avatar(scale=pg.Vector2(3, 3))
         self.display_screen.avatar = self.avatar
 
-        self.pss_question_count = 2
+        self.pss_question_count = pss_questions
+
+        self.auto_run = auto_run
         self.modules = {
             "Shapes": ShapeSearcher(max_turns=10, parent=self),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
-            "VAT": VisualAttentionTest(grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
-            "WCT": CardGame(parent=self, max_turns=8,),
-            "PSS": PSS(self, question_count=self.pss_question_count),
+            "VAT": VisualAttentionTest(parent=self, grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), auto_run=auto_run),
+            "WCT": CardGame(parent=self, max_turns=wct_turns, auto_run=auto_run,),
+            "PSS": PSS(self, question_count=self.pss_question_count, auto_run=auto_run),
             "Clock": ClockDraw(parent=self),
-            "Login": LoginScreen(parent=self, user_data=self.all_user_data),
-            "Affective": AffectiveModule(parent=self)
+            "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
         }
 
-        self.module_order = ["VAT", "WCT", "Spiral", "PSS", "Shapes", ]
+        # "Affective": AffectiveModule(parent=self)
+
+        self.module_order = ["VAT", "WCT", "PSS", ]
 
         self.module_idx = 0
 
@@ -108,6 +116,10 @@ class Consultation:
 
         self.seamless = seamless
         self.id = self.generate_unique_id()
+        if consult_date:
+            self.date = consult_date
+        else:
+            self.date = date.today()
 
         # self.update_display()
         pg.event.pump()
@@ -136,6 +148,8 @@ class Consultation:
         pg.display.flip()
 
     def speak_text(self, text, visual=True, display_screen=None, touch_screen=None):
+        if self.auto_run:
+            return
 
         if not display_screen:
             display_screen = self.display_screen
@@ -226,31 +240,67 @@ class Consultation:
             pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
             pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
+        pss_answers = {"answers": pss_answers}
         # Wisconsin Card Test consult_record handling
-        WCT_score = self.modules["WCT"].engine.score
+        wct_answers = {"answers": self.modules["WCT"].engine.answers, "change_ids": self.modules["WCT"].engine.new_rule_ids}
+        # Visual attention test
+        vat_answers = {"answers": self.modules["VAT"].answers, "times": self.modules["VAT"].answer_times}
 
         # Spiral Test Handling
-        spiral_data, spiral_size = self.modules["Spiral"].output
-        spiral_data.to_csv('spiraldata.csv', index=False)
+        try:
+            spiral_data, spiral_size = self.modules["Spiral"].output
+            spiral_data.to_csv('spiraldata.csv', index=False)
 
-        spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
-        spiral_image.fill(Colours.white.value)  # fill with white background
-        # draw in lines between each point recorded
-        pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(), width=3)
+            spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
+            spiral_image.fill(Colours.white.value)  # fill with white background
+            # draw in lines between each point recorded
+            pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(),
+                          width=3)
 
-        img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
-        img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
-        img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
-        cv2.imwrite("consultation/response_data/spiral.png", img_array)  # Save image
+            img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
+            img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
+            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
+            cv2.imwrite("consultation/response_data/spiral.png", img_array)  # Save image
+
+        except TypeError:
+            pass
+
+        if self.user is None:
+            user_id = None
+        else:
+            user_id = self.user.id
 
         self.output = {
-            "Consult_ID": self.id,
-            "User_ID": self.user.id,
-            "Date": date.today(),
-            "PSS_Score": np.sum(pss_answers),
-            "Wisconsin_Card_Score": WCT_score}
+            "consult_id": self.id,
+            "user_id": user_id,
+            "date": self.date,
+            "pss_data": pss_answers,
+            "wct_data": wct_answers,
+            "vat_data": vat_answers
+        }
+
+        # base_path = "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/hero_data"
+        base_path = "/Users/benhoskings/Documents/RStudio/hero_dashbaord/web_application/data"
+
+        if self.user:
+            if not os.path.isdir(f"data/consult_records/user_{self.user.id}"):
+                os.mkdir(f"data/consult_records/user_{self.user.id}")
+
+            if not os.path.isdir(f"{base_path}/consult_records/user_{self.user.id}"):
+                os.mkdir(f"{base_path}/consult_records/user_{self.user.id}")
+
+            save_path_local = f"data/consult_records/user_{self.user.id}/consult_{self.id}.json"
+            save_path_global = f"{base_path}/consult_records/user_{self.user.id}/consult_{self.id}.json"
+
+            with open(save_path_local, "w") as write_file:
+                json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+
+            with open(save_path_global, "w") as write_file:
+                json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
 
         shutil.rmtree("consultation/question_audio_tmp")
+
+        print(f"successfully completed consult {self.id}")
 
     def loop(self, infinite=False):
         self.entry_sequence()
@@ -259,6 +309,8 @@ class Consultation:
                 for module in self.module_order:
                     self.modules[module].loop()
                     self.update_display()
+
+                self.running = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
@@ -266,7 +318,7 @@ class Consultation:
                             self.running = False
 
                         elif event.key == pg.K_s:
-                            self.take_screenshot()
+                            take_screenshot(self.window)
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
                         button_id = self.touch_screen.click_test(self.get_relative_mose_pos())
@@ -275,9 +327,7 @@ class Consultation:
                             self.update_display()
                             module = self.modules[self.module_order[self.module_idx]]
                             module.running = True
-                            print("Entering Module Loop")
                             module.loop()
-                            print("Exiting Module Loop")
                             self.display_screen.instruction = "Click the button to start"
                             self.update_display()
                             if infinite:
@@ -299,20 +349,26 @@ class Consultation:
         self.exit_sequence()
 
 
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+
+        return super(NpEncoder, self).default(obj)
+        # return str(obj)
+
+
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
-    consult = Consultation(pi=False, authenticate=False, seamless=True)
+
+    consult = Consultation(
+        pi=False, authenticate=True, seamless=True, auto_run=False, username="benhoskings", password="pass"
+    )
     consult.loop()
-
-    if consult.output is not None:
-        consult_record = pd.read_csv(
-            "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
-            delimiter="\t", index_col=0)
-        consult_record.loc[consult.id] = consult.output
-
-        consult_record.to_csv(
-            "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/Documents/Engineering/Year 4/HERO/Data/consultation_record.tsv",
-            sep="\t")
-
-        # print(consult_record.head())

@@ -228,7 +228,7 @@ class SpiralTest:
 
 if __name__ == "__main__":
     # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
-    os.chdir('/home/pi/Downloads')
+    # os.chdir('/home/pi/Downloads')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
@@ -238,8 +238,8 @@ if __name__ == "__main__":
     # Spiral data is a pd dataframe that contains the coordinates
     # reconstructed image should be of size spiral_size
     # file_path=r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral.txt'
-    file_path = "/home/pi/downloads"
-    spiral_data.to_csv(file_path, index=False)
+    file_path = "/home/pi/Downloads/spiral_data_ref.txt"
+    spiral_data.to_csv(file_path, index=False, sep=";")
     # spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
 
     # # reconstruct image

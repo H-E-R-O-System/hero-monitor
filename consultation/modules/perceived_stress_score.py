@@ -3,6 +3,7 @@ import time
 
 import gtts
 import pygame as pg
+from random import randint
 
 from consultation.display_screen import DisplayScreen
 from consultation.questions import Question, pss_questions
@@ -10,7 +11,7 @@ from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 
 class PSS:
-    def __init__(self, parent, question_count=10):
+    def __init__(self, parent, question_count=10, auto_run=False):
         self.parent = parent
         if not os.path.isdir("consultation/question_audio_tmp/pss"):
             os.mkdir("consultation/question_audio_tmp/pss")
@@ -50,6 +51,7 @@ class PSS:
 
         self.running = True
         self.awaiting_response = False
+        self.auto_run = auto_run
 
     def preload_audio(self):
         exit_text = "Thank you for completing the PSS survey"
@@ -90,26 +92,6 @@ class PSS:
                                    display_screen=self.display_screen,
                                    touch_screen=self.touch_screen)
 
-        # if self.question_idx < len(self.questions):
-        #     question_audio_file = f'consultation/question_audio_tmp/pss/question_{str(self.question_idx)}.mp3'
-        # else:
-        #     question_audio_file = f'consultation/question_audio_tmp/pss/exit.mp3'
-        #
-        # pg.mixer.music.load(question_audio_file)
-        # pg.mixer.music.play()
-        #
-        # # Keep in idle loop while speaking
-        # self.display_screen.avatar.state = 1
-        # start = time.monotonic()
-        # while pg.mixer.music.get_busy():
-        #     if time.monotonic() - start > 0.15:
-        #         # self.display_screen.update(question=question)
-        #         self.update_display()
-        #         self.display_screen.avatar.speak_state = (self.display_screen.avatar.speak_state + 1) % 2
-        #         start = time.monotonic()
-        #
-        # self.display_screen.avatar.state = 0
-
         if question:
             self.display_screen.instruction = "Select an option below"
         # self.display_screen.update(question=question)
@@ -129,31 +111,49 @@ class PSS:
                 self.ask_question()
                 self.awaiting_response = True
 
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_ESCAPE:
-                        self.running = False
+            elif self.awaiting_response and self.auto_run:
+                # select random button within button range
+                button_idx = randint(0, len(self.touch_screen.sprites)-1)
+                button_id = self.touch_screen.sprites.sprites()[button_idx].id
 
-                    elif event.key == pg.K_w:
-                        self.parent.take_screenshot("pss")
+                self.answers.append(int(button_id))
 
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    button_id = self.touch_screen.click_test(self.parent.get_relative_mose_pos())
-                    if button_id is not None and self.awaiting_response:
-                        self.answers.append(int(button_id))
-                        if infinite:
-                            self.question_idx = (self.question_idx + 1) % len(self.questions)
-                        else:
-                            self.question_idx += 1
+                if infinite:
+                    self.question_idx = (self.question_idx + 1) % len(self.questions)
+                else:
+                    self.question_idx += 1
 
-                        self.update_display()
-                        self.awaiting_response = False
+                self.update_display()
+                self.awaiting_response = False
 
-                        if self.question_idx == len(self.questions):
-                            print("stop")
+                if self.question_idx == len(self.questions):
+                    self.running = False
+
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
                             self.running = False
 
-                elif event.type == pg.QUIT:
-                    self.running = False
+                        elif event.key == pg.K_w:
+                            self.parent.take_screenshot("pss")
+
+                    elif event.type == pg.MOUSEBUTTONDOWN:
+                        button_id = self.touch_screen.click_test(self.parent.get_relative_mose_pos())
+                        if button_id is not None and self.awaiting_response:
+                            self.answers.append(int(button_id))
+                            if infinite:
+                                self.question_idx = (self.question_idx + 1) % len(self.questions)
+                            else:
+                                self.question_idx += 1
+
+                            self.update_display()
+                            self.awaiting_response = False
+
+                            if self.question_idx == len(self.questions):
+                                self.running = False
+
+                    elif event.type == pg.QUIT:
+                        self.running = False
 
         self.exit_sequence()

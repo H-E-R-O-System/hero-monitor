@@ -1,6 +1,7 @@
 import time
 
 import pygame as pg
+from consultation.utils import take_screenshot
 from consultation.screen import Screen, Fonts, Colours
 from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
@@ -17,7 +18,7 @@ class User:
 
 
 class LoginScreen:
-    def __init__(self, size=(1024, 600), parent=None, user_data=None):
+    def __init__(self, size=(1024, 600), parent=None, username=None, password=None, auto_run=False):
         self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
@@ -25,10 +26,13 @@ class LoginScreen:
             self.top_screen = parent.top_screen
             self.all_user_data = parent.all_user_data
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+
         else:
             self.display_size = pg.Vector2(size)
-            self.bottom_screen = pg.display.set_mode(self.display_size)
-            self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
 
             if os.path.exists("data/user_data.csv"):
@@ -62,10 +66,6 @@ class LoginScreen:
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.82 * self.display_size.y),
             size=delete_size, id="enter", text="enter")
 
-        # self.user_string = ["j", "o", "h", "n", "d", "o", "e",]
-        # self.pass_string = ["p", "a", "s", "s"]
-        self.user_string = []
-        self.pass_string = []
         # Additional class properties
         letters_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
         letters_2 = ["a", "s", "d", "f", "g", "h", "j", "k", "l"]
@@ -101,6 +101,15 @@ class LoginScreen:
         self.user = None
         self.keys[-2].colour = Colours.lightGrey.value  # grey out password
         self.running = False
+
+        if username and password:
+            self.user_string = list(username)
+            self.pass_string = list(password)
+        else:
+            self.user_string = []
+            self.pass_string = []
+
+        self.auto_run = auto_run
 
     def update_display(self):
         self.display_screen.refresh()
@@ -150,6 +159,7 @@ class LoginScreen:
         # pre-loop initialisation section
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
+
         self.running = True
         self.update_display()  # render graphics to main consult
 
@@ -164,11 +174,16 @@ class LoginScreen:
         self.update_display()
         # add code below
 
+        if self.user_string and self.pass_string and self.auto_run:
+            if self.check_credentials():
+                self.running = False
+
     def exit_sequence(self):
         # post-loop completion section
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
+        self.running = False
         username, password = "".join(self.user_string), "".join(self.pass_string)
         user_data = self.all_user_data.loc[username]
         return User(name=user_data["FirstName"], age=21, id=user_data["UserID"])
@@ -180,13 +195,18 @@ class LoginScreen:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_s:
                         # do something with key press
-                        ...
+                        if self.parent:
+                            take_screenshot(self.parent.window)
+                        else:
+                            take_screenshot(self.window, "login_screen")
+
                     elif event.key == pg.K_ESCAPE:
                         self.running = False
 
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     # do something with mouse click
-                    button_id = self.touch_screen.click_test(self.parent.get_relative_mose_pos())
+                    mouse_pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+                    button_id = self.touch_screen.click_test(mouse_pos)
                     if button_id is not None:
                         if button_id == "username":
                             self.active_string = "user"
@@ -237,8 +257,10 @@ class LoginScreen:
 
 
 if __name__ == "__main__":
+
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     pg.init()
     # Module Testing
-    module_name = LoginScreen()
-    module_name.loop()
+    login_screen = LoginScreen()
+    login_screen.loop()
     print("Module run successfully")

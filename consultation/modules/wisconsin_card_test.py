@@ -10,6 +10,7 @@ import numpy as np
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
 from consultation.touch_screen import GameObjects, TouchScreen, GameButton
+from consultation.utils import take_screenshot
 
 colours = ['red', 'blue', 'green', 'yellow']
 shapes = ['square', 'circle', 'triangle', 'diamond']
@@ -121,10 +122,13 @@ class CardGameEngine:
         self.rule = random.choice(rules)
         self.score = 0
         self.turns = 0
+        self.rule_turns = 0
         self.card_size = card_size
         self.quiz_coord = quiz_coord
         self.option_coords = option_coords
         self.deck = None
+        self.new_rule_ids = []
+        self.answers = []
 
         self.deal()
 
@@ -140,10 +144,18 @@ class CardGameEngine:
                 card.rect.topleft = self.option_coords[idx]
         self.deck.update()
 
+    def check_update(self):
+        if self.rule_turns > 4:
+            if random.randint(1, 10) <= 6:
+                self.rule = random.choice([rule for rule in rules if rule != self.rule])
+                # print(f"new rule: {self.rule}")
+                self.rule_turns = 0
+                self.new_rule_ids.append(self.turns)
+
 
 class CardGame:
 
-    def __init__(self, size=(1024, 600), max_turns=10, parent=None):
+    def __init__(self, size=(1024, 600), max_turns=10, parent=None, auto_run=False):
         self.parent = parent
 
         if parent is not None:
@@ -154,15 +166,16 @@ class CardGame:
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
-            self.bottom_screen = pg.display.set_mode(self.display_size)
-            self.top_screen = None
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
 
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
 
         self.display_screen.instruction = "Match the card!"
         self.touch_screen = TouchScreen(self.display_size, colour=Colours.white.value)
 
-        self.running = True
+        self.running = False
 
         # Card positioning in the display_screen. The positions specify the center of the card.
         option_count = 3
@@ -178,6 +191,7 @@ class CardGame:
                                      card_size=(self.display_size.x / 4, self.display_size.y / 3))
 
         self.max_turns = max_turns
+        self.auto_run = auto_run
 
     def instruction_loop(self):
         self.display_screen.state = 1
@@ -195,10 +209,10 @@ class CardGame:
 
         self.display_screen.add_multiline_text(
             rect=info_rect.scale_by(0.9, 0.9), text=
-            "Match the top card to one of the three below it. There is one rule which determines if the the card is a "
-            "match. This could be color, shape or number of shapes. An example is shown below, where the 'Rule' is that"
-            " cards with the same colour match. You must first work out the rule, and then use this to answer each "
-            "question",
+            "n this game you must match the cards based on the pictures on the cards to the 3 cards at the bottom of"
+            " the screen. Each card has a different colour, number and shape. There is a rule for matching the cards "
+            "but I cannot tell you what the rule is but I can tell you if you are correct. Finally the rule will "
+            "change during the game and you will have to figure out the new rule.",
             center_vertical=True)
 
         question_rect = pg.Rect(0.05 * self.display_size.x, 0.05 * self.display_size.y, 0.4 * self.display_size.x,
@@ -223,9 +237,9 @@ class CardGame:
             center_horizontal=True, center_vertical=True, bg_colour=Colours.lightGrey)
 
         self.update_displays()
-
-        self.parent.speak_text("Match the card",
-                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
+        if self.parent:
+            self.parent.speak_text("Match the card", visual=True,
+                                   display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         wait = True
         while wait:
@@ -234,7 +248,7 @@ class CardGame:
                     if self.parent:
                         pos = self.parent.get_relative_mose_pos()
                     else:
-                        pos = pg.mouse.get_pos()
+                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
                     selection = self.touch_screen.click_test(pos)
                     if selection is not None:
@@ -258,6 +272,9 @@ class CardGame:
         self.update_displays()
 
     def display_message(self, answer, card_id):
+        if self.auto_run:
+            return
+
         card = self.touch_screen.get_object(card_id)
         card: Card
 
@@ -265,34 +282,52 @@ class CardGame:
         self.display_screen.instruction = None
         if answer:
             self.display_screen.speech_text = "Correct"
-            if self.parent:
-                pg.draw.rect(card.image, Colours.green.value, card.image.get_rect(), width=10)
-                self.parent.speak_text("Correct", display_screen=self.display_screen, touch_screen=self.touch_screen)
-            # self.touch_screen.add_text("Correct!", pos=self.display_size / 2, location=BlitLocation.centre)
+            pg.draw.rect(card.image, Colours.green.value, card.image.get_rect(), width=10)
         else:
             self.display_screen.speech_text = "Incorrect"
-            if self.parent:
-                pg.draw.rect(card.image, Colours.red.value, card.image.get_rect(), width=10)
-                self.parent.speak_text("Incorrect", display_screen=self.display_screen, touch_screen=self.touch_screen)
-            # self.touch_screen.add_text("Incorrect!", pos=self.display_size / 2, location=BlitLocation.centre)
+            pg.draw.rect(card.image, Colours.red.value, card.image.get_rect(), width=10)
+
+        if self.parent:
+            self.parent.speak_text(
+                self.display_screen.speech_text, display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         self.update_displays()
+
         self.touch_screen.kill_sprites()
         time.sleep(0.5)
+
         self.display_screen.speech_text = None
         self.display_screen.instruction = "Select the card you think matches"
         self.display_screen.refresh()
         # self.display_screen.state = 0
 
     def update_displays(self):
-        if self.parent:
-            self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
 
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
+    def process_selection(self, selection, card_id):
+        self.display_message(selection, card_id)
+
+        if selection:
+            self.engine.score += 1
+
+        self.engine.rule_turns += 1
+        self.engine.turns += 1
+
+        self.engine.answers.append(selection)
+
+        if self.engine.turns == self.max_turns:
+            self.running = False
+        else:
+            self.engine.check_update()
+            self.engine.deal()
+            self.render_game()
+
     def entry_sequence(self):
-        self.instruction_loop()
+        if not self.auto_run:
+            self.instruction_loop()
 
         self.render_game()
         self.display_screen.instruction = "Match the card!"
@@ -301,58 +336,49 @@ class CardGame:
         self.display_screen.refresh()
         self.render_game()
 
+        self.running = True
+
     def exit_sequence(self):
-        # self.touch_screen.refresh()
-        # self.touch_screen.kill_sprites()
-        # self.touch_screen.add_text("Game Completed!", pos=self.display_size / 2, location=BlitLocation.centre)
-        # self.touch_screen.add_text('Score: ' + str(self.engine.score),
-        #                            pos=(self.display_size / 2) + pg.Vector2(0, 50),
-        #                            location=BlitLocation.centre)
-        # self.update_displays()
-        # time.sleep(1)
         ...
+        # return [self.engine.answers, self.engine.new_rule_ids]
 
     def loop(self):
         self.entry_sequence()
         while self.running:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    self.running = False
+            if self.auto_run:
+                card_idx = random.randint(0, 2)
+                card = self.touch_screen.get_object(card_idx)
+                selection, card_id = card.correct, card.id
+                self.process_selection(selection, card_id)
 
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    if self.parent:
-                        pos = self.parent.get_relative_mose_pos()
-                    else:
-                        pos = pg.mouse.get_pos()
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        self.running = False
 
-                    output = self.touch_screen.click_test(pos)
-                    if output is not None:
-                        selection, card_id = output
-                    else:
-                        selection, card_id = None, None
+                    elif event.type == pg.KEYDOWN:
+                        if event.key == pg.K_s:
+                            if self.parent:
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "wisconsin_card_test")
 
-                    if selection is not None:
-                        self.display_message(selection, card_id)
-
-                        if selection:
-                            self.engine.score += 1
-
-                        self.engine.turns += 1
-                        if self.engine.turns == self.max_turns:
-                            self.running = False
-                        else:
-                            self.engine.deal()
-                            self.render_game()
-
-                elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    elif event.type == pg.MOUSEBUTTONDOWN:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            pos = self.parent.get_relative_mose_pos()
                         else:
-                            img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
-                            img_array = cv2.transpose(img_array)
-                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-                            cv2.imwrite("screenshots/wct.png", img_array)
+                            pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+
+                        output = self.touch_screen.click_test(pos)
+                        if output is not None:
+                            selection, card_id = output
+                        else:
+                            selection, card_id = None, None
+
+                        if selection is not None:
+                            self.process_selection(selection, card_id)
+
+
 
         self.exit_sequence()
 
@@ -360,6 +386,7 @@ class CardGame:
 if __name__ == "__main__":
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     pg.init()
-    card_game = CardGame(max_turns=3, size=(0.4 * 1024, 0.9 * 600))
+    pg.event.pump()
+    card_game = CardGame(max_turns=20, auto_run=False)
     card_game.loop()
     print("Card game ran successfully")

@@ -57,18 +57,17 @@ class ShapeSearcher:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
-
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+
         else:
             self.display_size = pg.Vector2(size)
-            self.bottom_screen = pg.display.set_mode(self.display_size)
-            self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
 
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
 
         self.display_screen.instruction = None
-        if parent:
-            self.display_screen.avatar = parent.display_screen.avatar
 
         self.touch_screen = TouchScreen(self.display_size)
         self.button_size = pg.Vector2(120, 100)
@@ -92,9 +91,60 @@ class ShapeSearcher:
         # initialise module
         self.running = False
 
+    def instruction_loop(self):
+        self.display_screen.state = 1
+        self.display_screen.instruction = None
+
+        button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
+        start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+        self.touch_screen.sprites = GameObjects([start_button])
+        info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+        pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                     info_rect)
+
+        self.display_screen.add_multiline_text("Match the Shapes!", rect=info_rect.scale_by(0.9, 0.9),
+                                               font_size=50)
+
+        self.display_screen.add_multiline_text(
+            rect=info_rect.scale_by(0.9, 0.9), text=
+            "You will now have to try and remember a set of shapes. You will be shown two or three shapes, "
+            "which will then disappear. After a short amount of time, a new screen with shapes will appear. "
+            "Your task is to identify if the two sets of shapes are the same or different. Sets are considered the same "
+            "if each shape and colour matches. The positions on the screenwill not be the same!",
+            center_vertical=True)
+
+        self.update_display()
+
+        self.parent.speak_text("Match the card",
+                               visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
+
+        self.update_display()
+        wait = True
+        while wait:
+            for event in pg.event.get():
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    if self.parent:
+                        pos = self.parent.get_relative_mose_pos()
+                    else:
+                        pos = pg.mouse.get_pos()
+
+                    selection = self.touch_screen.click_test(pos)
+                    if selection is not None:
+                        wait = False
+
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_w:
+                        if self.parent:
+                            self.parent.take_screenshot()
+                        else:
+                            img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
+                            img_array = cv2.transpose(img_array)
+                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+                            cv2.imwrite("screenshots/wct.png", img_array)
+
     def update_display(self):
         if self.parent:
-            self.display_screen.refresh()
+            # self.display_screen.refresh()
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
@@ -105,6 +155,8 @@ class ShapeSearcher:
         # what the users are expected to do (e.g. game rules, aim, etc.)
 
         # only OPTIONAL and can leave blank
+        self.instruction_loop()
+
         if self.question_type == "perception":
             self.perception_question()
         elif self.question_type == "speed":

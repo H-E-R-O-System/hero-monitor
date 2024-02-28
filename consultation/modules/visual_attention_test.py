@@ -1,12 +1,15 @@
 import math
 import os
 import random
+import time
 
 import pygame as pg
 
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, Fonts
 from consultation.touch_screen import TouchScreen, GameObjects
+
+from consultation.utils import take_screenshot
 
 
 class AttentionCharacter(pg.sprite.Sprite):
@@ -31,7 +34,7 @@ class AttentionCharacter(pg.sprite.Sprite):
 
 
 class VisualAttentionTest:
-    def __init__(self, size=(1024, 600), grid_size=(400, 400), parent=None):
+    def __init__(self, parent=None, size=(1024, 600), grid_size=(400, 400), auto_run=False):
         self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
@@ -42,11 +45,13 @@ class VisualAttentionTest:
 
         else:
             self.display_size = pg.Vector2(size)
-            self.bottom_screen = pg.display.set_mode(self.display_size)
-            self.top_screen = None  # can set to None if not required
-            self.fonts = Fonts()
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
 
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
+
+            self.fonts = Fonts()
 
         self.display_screen.instruction = "Find the odd letter!"
 
@@ -75,14 +80,19 @@ class VisualAttentionTest:
         self.score, self.total_time, self.rounds_played, self.correct_answers = 0, 0, 0, 0
         self.difficulty = 'easy'
 
-        self.time_start = 0
+        self.start_time = None
 
         self.common_letter = None
         self.odd_letter = None
+        self.odd_idx = None
         self.characters = []
+
+        self.answers = []
+        self.answer_times = []
 
         # initialise module
         self.running = True
+        self.auto_run = auto_run
 
     def select_letters(self):
         letters_easy = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -114,11 +124,11 @@ class VisualAttentionTest:
         grid_oddness = [0 for _ in range(self.grid_count)]
         grid_letters = [font.render(self.common_letter, False, Colours.black.value) for _ in range(self.grid_count)]
 
-        odd_idx = random.randint(0, self.grid_count - 1)
-        grid_oddness[odd_idx] = 1
-        grid_letters[odd_idx] = font.render(self.odd_letter, False, Colours.black.value)
+        self.odd_idx = random.randint(0, self.grid_count - 1)
+        grid_oddness[self.odd_idx] = 1
+        grid_letters[self.odd_idx] = font.render(self.odd_letter, False, Colours.black.value)
 
-        self.characters = [AttentionCharacter(self.cell_size, letter, pos=pos, odd=odd) for letter, pos, odd in
+        self.characters = [AttentionCharacter(self.cell_size, letter, pos=pos + self.grid_offset, odd=odd) for letter, pos, odd in
                            zip(grid_letters, self.grid_positions, grid_oddness)]
 
         self.touch_screen.sprites = GameObjects(self.characters)
@@ -136,10 +146,8 @@ class VisualAttentionTest:
         pg.display.flip()
 
     def update_display(self):
-        if self.parent:
-            self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
-
-        self.bottom_screen.blit(self.touch_screen.get_surface(), self.grid_offset)
+        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
     def entry_sequence(self):
@@ -149,73 +157,93 @@ class VisualAttentionTest:
 
         self.select_letters()
         self.update_grid()
+        self.update_display()
 
         self.running = True
+        self.start_time = time.monotonic()
 
     def exit_sequence(self):
         # post-loop completion section
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
-        ...
+
+        if self.auto_run:
+            self.answer_times = [random.gauss(mu=1, sigma=0.1) for _ in range(len(self.answers))]
+
+    def process_selection(self, selection):
+
+        if selection:
+            self.score += 1
+            self.correct_answers += 1
+
+        current_time = time.monotonic()
+        self.answers.append(selection)
+        self.answer_times.append(current_time - self.start_time)
+
+        self.start_time = current_time
+
+        # increase difficulty
+        if self.correct_answers == 5:
+            self.correct_answers = 0
+            if self.difficulty == 'easy':
+                self.difficulty = 'medium'
+            elif self.difficulty == 'medium':
+                self.difficulty = 'hard'
+
+        self.rounds_played += 1
+        if self.rounds_played == self.max_rounds:
+            self.running = False
+        else:
+            self.select_letters()
+            self.update_grid()
 
     def loop(self):
         self.entry_sequence()
         while self.running:
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_s:
-                        # do something with key press
-                        ...
-                    elif event.key == pg.K_ESCAPE:
-                        self.running = False
+            if self.auto_run:
+                # set 90% accuracy
+                selection = random.randint(1, 10) > 1
+                self.process_selection(selection)
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_s:
+                            # do something with key press
+                            if self.parent:
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "visual_attention_test")
 
-                    elif event.key == pg.K_w:
-                        if self.parent:
-                            self.parent.take_screenshot()
-
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    # do something with mouse click
-                    if self.parent:
-                        pos = pg.Vector2(self.parent.get_relative_mose_pos()) - self.grid_offset
-                    else:
-                        pos = pg.Vector2(pg.mouse.get_pos()) - self.grid_offset
-                    selection = self.touch_screen.click_test(pos)
-                    if selection is not None:
-                        if selection:
-                            self.score += 1
-                            self.correct_answers += 1
-                            time_taken = pg.time.get_ticks() - self.time_start
-                            self.total_time += time_taken
-
-                        # increase difficulty
-                        if self.correct_answers == 5:
-                            self.correct_answers = 0
-                            if self.difficulty == 'easy':
-                                self.difficulty = 'medium'
-                            elif self.difficulty == 'medium':
-                                self.difficulty = 'hard'
-
-                        self.rounds_played += 1
-                        if self.rounds_played == self.max_rounds:
+                        elif event.key == pg.K_ESCAPE:
                             self.running = False
-                        else:
-                            self.select_letters()
-                            self.update_grid()
-                            self.time_start = pg.time.get_ticks()
 
-                elif event.type == pg.QUIT:
-                    # break the running loop
-                    self.running = False
+                    elif event.type == pg.MOUSEBUTTONDOWN:
+                        # do something with mouse click
+                        if self.parent:
+                            pos = pg.Vector2(self.parent.get_relative_mose_pos())
+                        else:
+                            pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+
+                        selection = self.touch_screen.click_test(pos)
+                        if selection is not None:
+                            self.process_selection(selection)
+
+                    elif event.type == pg.QUIT:
+                        # break the running loop
+                        self.running = False
 
         self.exit_sequence()
 
 
 if __name__ == "__main__":
     pg.init()
+    pg.event.pump()
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     # Module Testing
 
-    module_name = VisualAttentionTest(touch_size=(400, 400))
+    module_name = VisualAttentionTest(auto_run=False)
     module_name.loop()
     print("Module run successfully")
+
+    print(module_name.answers, module_name.answer_times)
