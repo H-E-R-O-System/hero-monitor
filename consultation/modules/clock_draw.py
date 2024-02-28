@@ -1,5 +1,7 @@
 import datetime
+import math
 import os
+import random
 import time
 from random import randrange
 
@@ -141,6 +143,8 @@ class ClockDraw:
         self.running = False
         self.auto_run = auto_run
 
+        self.angle_errors = None
+
     def instruction_loop(self):
         if self.auto_run:
             return
@@ -182,11 +186,7 @@ class ClockDraw:
         while wait:
             for event in pg.event.get():
                 if event.type == pg.MOUSEBUTTONDOWN:
-                    if self.parent:
-                        pos = self.parent.get_relative_mose_pos()
-                    else:
-                        pos = pg.mouse.get_pos()
-
+                    pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
                     selection = self.touch_screen.click_test(pos)
                     if selection is not None:
                         wait = False
@@ -230,6 +230,14 @@ class ClockDraw:
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
+        threshold = 20
+        if self.auto_run:
+            if np.linalg.norm(self.angle_errors) <= threshold:
+                print("Pass")
+            else:
+                print("Fail")
+            return
+
         rel_pos_min = self.minute_hand.endpoint - pg.Vector2(self.clock_radius, self.clock_radius)
 
         if np.pi/2 + np.arctan2(*np.flip(rel_pos_min)) > 0:
@@ -246,34 +254,29 @@ class ClockDraw:
         print(f"actual min angle:{self.angles[0]}, actual hour angle: {self.angles[1]}")
         print(f"set min angle:{np.degrees(min_angle) % 360}, set hour angle: {np.degrees(hour_angle) % 360}")
 
-        min_error_1 = self.angles[0] - np.degrees(min_angle) % 360
-        hour_error_1 = self.angles[1] - np.degrees(hour_angle) % 360
+        min_error_1 = abs(self.angles[0] - np.degrees(min_angle) % 360)
+        hour_error_1 = abs(self.angles[1] - np.degrees(hour_angle) % 360)
 
-        min_error_2 = self.angles[1] - np.degrees(min_angle) % 360
-        hour_error_2 = self.angles[0] - np.degrees(hour_angle) % 360
+        min_error_2 = abs(self.angles[1] - np.degrees(min_angle) % 360)
+        hour_error_2 = abs(self.angles[0] - np.degrees(hour_angle) % 360)
 
-        threshold = 20
+        self.angle_errors = [min(min_error_1, min_error_2), min(hour_error_1, hour_error_2)]
 
-        if (np.linalg.norm([min_error_1, hour_error_1]) <= threshold or
-                np.linalg.norm([min_error_2, hour_error_2]) <= threshold):
+        if np.linalg.norm(self.angle_errors) <= threshold:
             print("Pass")
         else:
             print("Fail")
-
-    def get_relative_mose_pos(self):
-        if self.parent:
-            pos = pg.Vector2(self.parent.get_relative_mose_pos())
-        else:
-            pos = pg.Vector2(pg.mouse.get_pos())
-
-        return pos
 
     def loop(self):
         self.entry_sequence()
         while self.running:
             if self.auto_run:
-                self.hour_hand.update_image(pos - self.center_offset)
-                self.hour_hand.update_image(pos - self.center_offset)
+                threshold_val = 20
+
+                pass_angle = (math.sqrt(2) * threshold_val) / 2
+                self.angle_errors = [random.gauss(mu=pass_angle*0.7, sigma=4), random.gauss(mu=pass_angle*0.7, sigma=4)]
+                self.running = False
+
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
@@ -285,7 +288,7 @@ class ClockDraw:
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
                         # do something with mouse click
-                        pos = self.get_relative_mose_pos()
+                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
                         if self.touch_screen.click_test(pos):
                             # self.exit_sequence()
                             self.running = False
@@ -295,7 +298,7 @@ class ClockDraw:
                                 self.hand_clicked = selection
 
                     elif event.type == pg.MOUSEMOTION and self.hand_clicked is not None:
-                        pos = self.get_relative_mose_pos()
+                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
                         if self.hand_clicked == "hour":
                             update_flag = self.hour_hand.update_image(pos - self.center_offset)
@@ -335,6 +338,6 @@ if __name__ == "__main__":
 
     # Module Testing
     pg.init()
-    clock_draw = ClockDraw()
+    clock_draw = ClockDraw(auto_run=True)
     clock_draw.loop()
     print("Module run successfully")

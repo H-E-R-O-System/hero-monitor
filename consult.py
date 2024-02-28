@@ -15,6 +15,8 @@ import numpy as np
 import pandas as pd
 import pygame as pg
 
+from consultation.config import client
+
 # import consultation modules
 from consultation.modules.clock_draw import ClockDraw
 from consultation.modules.perceived_stress_score import PSS
@@ -100,13 +102,13 @@ class Consultation:
             "VAT": VisualAttentionTest(parent=self, grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), auto_run=auto_run),
             "WCT": CardGame(parent=self, max_turns=wct_turns, auto_run=auto_run,),
             "PSS": PSS(self, question_count=self.pss_question_count, auto_run=auto_run),
-            "Clock": ClockDraw(parent=self),
+            "Clock": ClockDraw(parent=self, auto_run=self.auto_run),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
         }
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["VAT", "WCT", "PSS", ]
+        self.module_order = ["VAT", "WCT", "PSS", "Clock"]
 
         self.module_idx = 0
 
@@ -240,12 +242,15 @@ class Consultation:
             pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
             pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
 
-        pss_answers = {"answers": pss_answers}
+
+
+        pss_answers = {"answers": pss_answers.tolist()}
         # Wisconsin Card Test consult_record handling
         wct_answers = {"answers": self.modules["WCT"].engine.answers, "change_ids": self.modules["WCT"].engine.new_rule_ids}
         # Visual attention test
         vat_answers = {"answers": self.modules["VAT"].answers, "times": self.modules["VAT"].answer_times}
 
+        clock_data = {"angle_errors": self.modules["Clock"].angle_errors}
         # Spiral Test Handling
         try:
             spiral_data, spiral_size = self.modules["Spiral"].output
@@ -270,33 +275,59 @@ class Consultation:
         else:
             user_id = self.user.id
 
+        # "consult_data": {
+        #     "pss": {
+        #         "answers": [2, 4, 1, 1, 1, 2, 3, 0, 2]
+        #     },
+        #     "wct": {
+        #         "answers": [False, False, False, False, False, True, False, True, False, False, False, True, False,
+        #                     False, False, False, False, True, False, False, False, True, False, True, False, True, True,
+        #                     False, True, True], "change_ids": [5, 12, 18, 23, 28]
+        #     },
+        #     "vat": {
+        #         "answers": [True, True, True, True, True, True, True, True, True, True, True, True, False, True, True,
+        #                     True, False, True, True, True],
+        #         "times": [3.249995643272996e-06, 1.0855352920043515, 0.993170249988907, 0.9657484159979504,
+        #                   1.0510747090011137, 1.1216245000105118, 0.8606732909975108, 0.9954385419987375,
+        #                   1.072387666994473, 1.13113916599832, 1.0880492090072948, 0.9347829159960384,
+        #                   1.0505073749955045, 0.9540435000089929, 0.9279510839987779, 1.0650419159937883,
+        #                   1.0506032920093276, 0.9512055829982273, 0.9305694999929983, 1.0252792500104988]
+        #     }
+        # }
+
+
         self.output = {
             "consult_id": self.id,
-            "user_id": user_id,
-            "date": self.date,
-            "pss_data": pss_answers,
-            "wct_data": wct_answers,
-            "vat_data": vat_answers
+            "user_id": int(user_id),
+            "consult_time": self.date.strftime("%Y-%m-%d"),
+            "consult_data": {
+                "pss": pss_answers,
+                "wct": wct_answers,
+                "vat": vat_answers,
+                # "clock_data": clock_data
+            }
         }
 
+        records.insert_one(self.output)
+
         # base_path = "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/hero_data"
-        base_path = "/Users/benhoskings/Documents/RStudio/hero_dashbaord/web_application/data"
-
-        if self.user:
-            if not os.path.isdir(f"data/consult_records/user_{self.user.id}"):
-                os.mkdir(f"data/consult_records/user_{self.user.id}")
-
-            if not os.path.isdir(f"{base_path}/consult_records/user_{self.user.id}"):
-                os.mkdir(f"{base_path}/consult_records/user_{self.user.id}")
-
-            save_path_local = f"data/consult_records/user_{self.user.id}/consult_{self.id}.json"
-            save_path_global = f"{base_path}/consult_records/user_{self.user.id}/consult_{self.id}.json"
-
-            with open(save_path_local, "w") as write_file:
-                json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
-
-            with open(save_path_global, "w") as write_file:
-                json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+        # base_path = "/Users/benhoskings/Documents/RStudio/hero_dashbaord/web_application/data"
+        #
+        # if self.user:
+        #     if not os.path.isdir(f"data/consult_records/user_{self.user.id}"):
+        #         os.mkdir(f"data/consult_records/user_{self.user.id}")
+        #
+        #     if not os.path.isdir(f"{base_path}/consult_records/user_{self.user.id}"):
+        #         os.mkdir(f"{base_path}/consult_records/user_{self.user.id}")
+        #
+        #     save_path_local = f"data/consult_records/user_{self.user.id}/consult_{self.id}.json"
+        #     save_path_global = f"{base_path}/consult_records/user_{self.user.id}/consult_{self.id}.json"
+        #
+        #     with open(save_path_local, "w") as write_file:
+        #         json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+        #
+        #     with open(save_path_global, "w") as write_file:
+        #         json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
 
         shutil.rmtree("consultation/question_audio_tmp")
 
@@ -368,7 +399,10 @@ if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
 
+    db = client.get_database('hero_data')
+    records = db.user_records
+
     consult = Consultation(
-        pi=False, authenticate=True, seamless=True, auto_run=False, username="benhoskings", password="pass"
+        pi=False, authenticate=True, seamless=True, auto_run=True, username="benhoskings", password="pass"
     )
     consult.loop()

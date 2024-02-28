@@ -1,6 +1,6 @@
 # Set up for the Raspberry Pi 5
 >[!important]
-> Make sure that you have read the [README.md](README.md) file before reading this file
+> Make sure that you have read the [README.md](../README.md) file before reading this file
 ## Initial setup
 ### Raspberry Pi Imager
 Install Raspberry Pi OS using [Raspberry Pi Imager](https://www.raspberrypi.com/software/). Put the SD card you'll use with your Raspberry Pi into the reader and run Raspberry Pi Imager.
@@ -125,7 +125,7 @@ Install PortAudio
 
 sudo apt-get install libasound-dev
 
-Next the [required packages](requirements.txt) can be installed using the following commmand `pip3 install numpy scipy...`
+Next the [required packages](../requirements.txt) can be installed using the following commmand `pip3 install numpy scipy...`
 
 For simplicity the following command can be run while on the workspace:
 

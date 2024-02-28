@@ -98,11 +98,11 @@ class Deck:
         card_shapes = np.random.permutation([shape for shape in shapes if shape != self.quiz_shape])
         shape_counts = np.random.permutation([count for count in range(1, 4) if count != self.quiz_shape_count])
 
-        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id = 0, colour=self.quiz_colour,
+        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id =0, colour=self.quiz_colour,
                                shape=card_shapes[0], shape_count=shape_counts[0]))
-        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id = 1, colour=card_colours[0],
+        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id =1, colour=card_colours[0],
                                shape=self.quiz_shape, shape_count=shape_counts[1]))
-        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id = 2, colour=card_colours[1],
+        self.cards.append(Card(rule=rule, value=quiz_val, size=card_size, id=2, colour=card_colours[1],
                                shape=card_shapes[1], shape_count=self.quiz_shape_count))
 
         self.quiz_card = Card(rule=rule, value=quiz_val, size=card_size, id=3, shape=self.quiz_shape,
