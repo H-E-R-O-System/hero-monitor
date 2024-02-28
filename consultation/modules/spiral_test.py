@@ -1,3 +1,6 @@
+import numpy as np
+import pygame as pg
+import pandas as pd
 import os
 import time
 
@@ -6,10 +9,10 @@ import numpy as np
 import pandas as pd
 import pygame as pg
 
-from consultation.display_screen import DisplayScreen
-from consultation.screen import Colours
-from consultation.spiral_data_graphing import DataAnalytics, FeatureEngineering
 from consultation.touch_screen import TouchScreen, GameObjects
+from consultation.screen import Colours
+from consultation.display_screen import DisplayScreen
+from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
 
 
 class SpiralTest:
@@ -20,15 +23,12 @@ class SpiralTest:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
-
-            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
             self.bottom_screen = pg.display.set_mode(self.display_size)
             self.top_screen = None
 
-            self.display_screen = DisplayScreen(self.display_size)
-
+        self.display_screen = DisplayScreen(self.display_size)
         self.display_screen.instruction = "Start in the center"
 
         self.touch_size = touch_size
@@ -85,7 +85,7 @@ class SpiralTest:
         # Create spiral of diameter 1, with midpoint at (0.5, 0.5)
         n = 500  # Number of points to approximate spiral
         b = 0.5 / (2 * np.pi)  # Do not alter, ensures the scale is correct
-        theta =np.sqrt(np.linspace(0, (2 * np.pi)**2, n)) # Spiral parametrised by theta
+        theta =np.sqrt(np.linspace(0, (2 *np.pi)**2, n)) # Spiral parametrised by theta
         self.theta_vals = theta * turns
         x = (b * theta) * np.cos(turns * theta)  # x component of coordinate
         y = (b * theta) * np.sin(turns * theta)  # y component of coordinate
@@ -95,8 +95,8 @@ class SpiralTest:
         points = np.array([points[:, 0] * size[0], (points[:, 1]) * size[1]]).transpose()  # Scale to size of surface
 
         # Apply additional options
-        if not clockwise:
-            points[:, 1] = (size[1] - points[:, 1])
+        # if not clockwise:
+        #     points[:, 1] = (size[1] - points[:, 1])
 
         center_points = points - pg.Vector2(size)/2
 
@@ -135,17 +135,12 @@ class SpiralTest:
     def entry_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text(
-                "Please trace the spiral, starting from the center", visual=True,
-                display_screen=self.display_screen, touch_screen=self.touch_screen)
+            self.parent.speak_text("Please trace the spiral, starting from the center", visual=False)
 
     def exit_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text(
-                "Thank you for completing the spiral test", visual=True,
-                display_screen=self.display_screen, touch_screen=self.touch_screen)
-            print("Exit")
+            self.parent.speak_text("Thank you for completing the spiral test", visual=False)
 
         pixel_positions = [self.mouse_positions[idx, 0:2] - self.image_offset for idx in
                            range(len(self.mouse_positions))]
@@ -185,27 +180,29 @@ class SpiralTest:
                 elif event.type == pg.MOUSEMOTION and self.mouse_down:
                     pos = self.get_relative_mose_pos()
                     rel_pos = pos - self.center_offset
+                    true_pos=[self.center_offset[0]+rel_pos[0], self.center_offset[1]-rel_pos[1]]
 
                     if rel_pos[0] > 0 and self.prev_pos[0] > 0 and self.prev_pos[1] >= 0 > rel_pos[1]:
                         self.turns -= 1  # anit-clockwise crossing of positive x-axis
-                    elif rel_pos[0] > 0 > self.prev_pos[0] and self.prev_pos[1] <= 0 < rel_pos[1]:
+                    elif rel_pos[0] > 0 and self.prev_pos[0] > self.prev_pos[1] <= 0 < rel_pos[1]:
                         self.turns += 1  # clockwise crossing of positive x-axis
+                        # print(self.turns)
 
                     if np.arctan2(*np.flip(pos - self.center_offset)) > 0:
                         angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * self.turns
                     else:
                         angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
 
-                    # print(angle)
-
                     idx, _, _ = self.get_closest_coord_2(np.array(pos))
                     self.mouse_positions = np.append(self.mouse_positions,
-                                                     np.expand_dims([*pos, time.perf_counter(), angle], axis=0), axis=0)
+                                                     np.expand_dims([*true_pos, time.perf_counter(), angle], axis=0), axis=0)
 
-                    if idx - self.coord_idx == 1:
-                        pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
-                                     self.target_coords[self.coord_idx, :], self.target_coords[idx, :], width=3)
-                        self.coord_idx += 1
+                    if idx - self.coord_idx <10 :
+                        for i in range(idx-self.coord_idx):
+                            pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
+                                         self.target_coords[self.coord_idx, :], self.target_coords[idx, :], width=3)
+                            self.coord_idx += 1
+                            idx+=1
 
                         if self.coord_idx == len(self.target_coords) - 1:
                             self.spiral_finished = True
@@ -230,9 +227,8 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    # os.chdir("/home/pi/hero-monitor")
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
-    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
+    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir('/home/pi/Downloads')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
@@ -241,24 +237,28 @@ if __name__ == "__main__":
     spiral_data, spiral_size = spiral_test.output
     # Spiral data is a pd dataframe that contains the coordinates
     # reconstructed image should be of size spiral_size
-    file_path=r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral.txt'
+    # file_path=r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral.txt'
     spiral_data.to_csv(file_path, index=False)
-    spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
+    # spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
 
-    # reconstruct image
-    spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
-    spiral_image.fill(Colours.white.value)  # fill with white background
-    # draw in lines between each point recorded
-    pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["Plot X", "Plot Y"]].to_numpy(), width=3)
+    # # reconstruct image
+    # spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
+    # spiral_image.fill(Colours.white.value)  # fill with white background
+    # # draw in lines between each point recorded
+    # pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["Plot X", "Plot Y"]].to_numpy(), width=3)
 
-    img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
-    img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
-    img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
-    cv2.imwrite("spiral.png", img_array)  # Save image
-    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+    # img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
+    # img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
+    # img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
+    # cv2.imwrite("spiral.png", img_array)  # Save image
+    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
 
-    data = FeatureEngineering()
-    data.user_data()
-    spiral = DataAnalytics()
-    spiral.user_classify()
-    spiral.error_graphs()
+    # data = FeatureEngineering()
+    # user_data = data.user_data()
+    # spiral = DataAnalytics()
+    # spiral.get_prob_rf(user_data, 'user_data')
+    # # p_user=spiral.user_classify('RF', 'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/selected_user_spiral_errors.txt')
+    # spiral.error_graphs()
+
+
+
