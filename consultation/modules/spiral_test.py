@@ -224,7 +224,7 @@ class SpiralTest:
 
 if __name__ == "__main__":
     # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
-    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
+    os.chdir('/home/pi/Downloads')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
 
     pg.init()
@@ -235,26 +235,26 @@ if __name__ == "__main__":
     # reconstructed image should be of size spiral_size
     file_path=r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral.txt'
     spiral_data.to_csv(file_path, index=False)
-    spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
+    # spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
 
-    # reconstruct image
-    spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
-    spiral_image.fill(Colours.white.value)  # fill with white background
-    # draw in lines between each point recorded
-    pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["Plot X", "Plot Y"]].to_numpy(), width=3)
+    # # reconstruct image
+    # spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
+    # spiral_image.fill(Colours.white.value)  # fill with white background
+    # # draw in lines between each point recorded
+    # pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["Plot X", "Plot Y"]].to_numpy(), width=3)
 
-    img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
-    img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
-    img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
-    cv2.imwrite("spiral.png", img_array)  # Save image
-    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+    # img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
+    # img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
+    # img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
+    # cv2.imwrite("spiral.png", img_array)  # Save image
+    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
 
-    data = FeatureEngineering()
-    user_data = data.user_data()
-    spiral = DataAnalytics()
-    spiral.get_prob_rf(user_data, 'user_data')
-    # p_user=spiral.user_classify('RF', 'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/selected_user_spiral_errors.txt')
-    spiral.error_graphs()
+    # data = FeatureEngineering()
+    # user_data = data.user_data()
+    # spiral = DataAnalytics()
+    # spiral.get_prob_rf(user_data, 'user_data')
+    # # p_user=spiral.user_classify('RF', 'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/selected_user_spiral_errors.txt')
+    # spiral.error_graphs()
 
 
 
