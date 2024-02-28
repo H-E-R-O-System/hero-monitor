@@ -36,9 +36,6 @@ class ClockHand(pg.sprite.Sprite):
         self.set_angle = 0
         self.update_image((0, -1))
 
-        line = geometry.LineString([(200, 200), (300, 200), (300, 300), (200, 300)])
-        self.square = geometry.Polygon(line)
-
     def update_image(self, pos):
 
         if np.pi / 2 + np.arctan2(*np.flip(pos)) > 0:
@@ -97,7 +94,7 @@ class ClockHand(pg.sprite.Sprite):
 
 
 class ClockDraw:
-    def __init__(self, size=(1024, 600), parent=None):
+    def __init__(self, size=(1024, 600), parent=None, auto_run=False):
         self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
@@ -106,8 +103,10 @@ class ClockDraw:
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
         else:
             self.display_size = pg.Vector2(size)
-            self.bottom_screen = pg.display.set_mode(self.display_size)
-            self.top_screen = pg.display.set_mode(self.display_size)  # can set to None if not required
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
 
         self.touch_screen = TouchScreen(self.display_size)
@@ -140,8 +139,12 @@ class ClockDraw:
         self.hand_clicked = None
 
         self.running = False
+        self.auto_run = auto_run
 
     def instruction_loop(self):
+        if self.auto_run:
+            return
+
         self.display_screen.state = 1
         self.display_screen.instruction = None
 
@@ -198,8 +201,6 @@ class ClockDraw:
 
     def update_display(self):
         self.touch_screen.refresh()
-        # self.touch_screen.sprites = GameObjects([self.hour_hand, self.minute_hand])
-
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
@@ -270,42 +271,46 @@ class ClockDraw:
     def loop(self):
         self.entry_sequence()
         while self.running:
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_s:
-                        if self.parent:
-                            self.parent.take_screenshot("clock")
-                    elif event.key == pg.K_ESCAPE:
+            if self.auto_run:
+                self.hour_hand.update_image(pos - self.center_offset)
+                self.hour_hand.update_image(pos - self.center_offset)
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_s:
+                            if self.parent:
+                                self.parent.take_screenshot("clock")
+                        elif event.key == pg.K_ESCAPE:
+                            self.running = False
+
+                    elif event.type == pg.MOUSEBUTTONDOWN:
+                        # do something with mouse click
+                        pos = self.get_relative_mose_pos()
+                        if self.touch_screen.click_test(pos):
+                            # self.exit_sequence()
+                            self.running = False
+                        else:
+                            selection = self.touch_screen.click_test(pos - self.clock_offset)
+                            if selection is not None:
+                                self.hand_clicked = selection
+
+                    elif event.type == pg.MOUSEMOTION and self.hand_clicked is not None:
+                        pos = self.get_relative_mose_pos()
+
+                        if self.hand_clicked == "hour":
+                            update_flag = self.hour_hand.update_image(pos - self.center_offset)
+                        else:
+                            update_flag = self.minute_hand.update_image(pos - self.center_offset)
+
+                        if update_flag:
+                            self.update_display()
+
+                    elif event.type == pg.MOUSEBUTTONUP:
+                        self.hand_clicked = None
+
+                    elif event.type == pg.QUIT:
+                        # break the running loop
                         self.running = False
-
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    # do something with mouse click
-                    pos = self.get_relative_mose_pos()
-                    if self.touch_screen.click_test(pos):
-                        # self.exit_sequence()
-                        self.running = False
-                    else:
-                        selection = self.touch_screen.click_test(pos - self.clock_offset)
-                        if selection is not None:
-                            self.hand_clicked = selection
-
-                elif event.type == pg.MOUSEMOTION and self.hand_clicked is not None:
-                    pos = self.get_relative_mose_pos()
-
-                    if self.hand_clicked == "hour":
-                        update_flag = self.hour_hand.update_image(pos - self.center_offset)
-                    else:
-                        update_flag = self.minute_hand.update_image(pos - self.center_offset)
-
-                    if update_flag:
-                        self.update_display()
-
-                elif event.type == pg.MOUSEBUTTONUP:
-                    self.hand_clicked = None
-
-                elif event.type == pg.QUIT:
-                    # break the running loop
-                    self.running = False
 
         self.exit_sequence()
 
@@ -324,12 +329,12 @@ def update_time():
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # update_time()
 
     # Module Testing
     pg.init()
-    module_name = ClockDraw()
-    module_name.loop()
+    clock_draw = ClockDraw()
+    clock_draw.loop()
     print("Module run successfully")

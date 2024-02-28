@@ -275,7 +275,7 @@ class Consultation:
             "date": self.date,
             "pss_data": pss_answers,
             "wct_data": wct_answers,
-            "VAT_Answers": vat_answers
+            "vat_data": vat_answers
         }
 
         # base_path = "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/hero_data"

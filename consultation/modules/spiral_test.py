@@ -12,7 +12,7 @@ import pygame as pg
 from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
-from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
+# from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
 
 
 class SpiralTest:

@@ -272,6 +272,9 @@ class CardGame:
         self.update_displays()
 
     def display_message(self, answer, card_id):
+        if self.auto_run:
+            return
+
         card = self.touch_screen.get_object(card_id)
         card: Card
 
@@ -289,11 +292,6 @@ class CardGame:
                 self.display_screen.speech_text, display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         self.update_displays()
-
-        if self.parent:
-            take_screenshot(self.parent.window)
-        else:
-            take_screenshot(self.window, "wisconsin_card_test")
 
         self.touch_screen.kill_sprites()
         time.sleep(0.5)

@@ -167,7 +167,9 @@ class VisualAttentionTest:
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
-        ...
+
+        if self.auto_run:
+            self.answer_times = [random.gauss(mu=1, sigma=0.1) for _ in range(len(self.answers))]
 
     def process_selection(self, selection):
 
@@ -203,7 +205,6 @@ class VisualAttentionTest:
                 # set 90% accuracy
                 selection = random.randint(1, 10) > 1
                 self.process_selection(selection)
-                time.sleep(random.gauss(mu=1, sigma=0.1))
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
