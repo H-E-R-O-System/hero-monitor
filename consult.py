@@ -17,6 +17,8 @@ import pygame as pg
 
 from consultation.config import client
 
+from db_access import DBClient
+
 # import consultation modules
 from consultation.modules.clock_draw import ClockDraw
 from consultation.modules.perceived_stress_score import PSS
@@ -55,7 +57,7 @@ class ConsultConfig:
 class Consultation:
     def __init__(self, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True,
                  username=None, password=None, consult_date=None, auto_run=False, wct_turns=8,
-                 pss_questions=3):
+                 pss_questions=3, db_client=None):
 
         self.authenticate_user = authenticate
         self.user = None
@@ -123,13 +125,18 @@ class Consultation:
         else:
             self.date = date.today()
 
+        if db_client is None:
+            self.db_client = DBClient()
+        else:
+            self.db_client = db_client
+
         # self.update_display()
         pg.event.pump()
 
     def generate_unique_id(self):
         letters = pd.Series(list(string.ascii_lowercase))[np.random.permutation(26)][:10].values
         numbers = np.random.permutation(10)[:5]
-        num_pos = np.sort(np.random.permutation(15)[:5])
+        num_pos = np.sort(np.random.permutation(range(1, 15))[:5])
         for idx, num in zip(num_pos, numbers):
             letters = np.insert(letters, idx, num)
 
@@ -275,27 +282,6 @@ class Consultation:
         else:
             user_id = self.user.id
 
-        # "consult_data": {
-        #     "pss": {
-        #         "answers": [2, 4, 1, 1, 1, 2, 3, 0, 2]
-        #     },
-        #     "wct": {
-        #         "answers": [False, False, False, False, False, True, False, True, False, False, False, True, False,
-        #                     False, False, False, False, True, False, False, False, True, False, True, False, True, True,
-        #                     False, True, True], "change_ids": [5, 12, 18, 23, 28]
-        #     },
-        #     "vat": {
-        #         "answers": [True, True, True, True, True, True, True, True, True, True, True, True, False, True, True,
-        #                     True, False, True, True, True],
-        #         "times": [3.249995643272996e-06, 1.0855352920043515, 0.993170249988907, 0.9657484159979504,
-        #                   1.0510747090011137, 1.1216245000105118, 0.8606732909975108, 0.9954385419987375,
-        #                   1.072387666994473, 1.13113916599832, 1.0880492090072948, 0.9347829159960384,
-        #                   1.0505073749955045, 0.9540435000089929, 0.9279510839987779, 1.0650419159937883,
-        #                   1.0506032920093276, 0.9512055829982273, 0.9305694999929983, 1.0252792500104988]
-        #     }
-        # }
-
-
         self.output = {
             "consult_id": self.id,
             "user_id": int(user_id),
@@ -304,11 +290,14 @@ class Consultation:
                 "pss": pss_answers,
                 "wct": wct_answers,
                 "vat": vat_answers,
-                # "clock_data": clock_data
+                "clock": clock_data
             }
         }
 
-        records.insert_one(self.output)
+        self.db_client: DBClient
+        self.db_client.upload_consult(self.output)
+
+        # records.insert_one(self.output)
 
         # base_path = "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/hero_data"
         # base_path = "/Users/benhoskings/Documents/RStudio/hero_dashbaord/web_application/data"

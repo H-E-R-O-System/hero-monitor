@@ -232,10 +232,6 @@ class ClockDraw:
         # only OPTIONAL and can leave blank
         threshold = 20
         if self.auto_run:
-            if np.linalg.norm(self.angle_errors) <= threshold:
-                print("Pass")
-            else:
-                print("Fail")
             return
 
         rel_pos_min = self.minute_hand.endpoint - pg.Vector2(self.clock_radius, self.clock_radius)
