@@ -57,7 +57,7 @@ class ConsultConfig:
 class Consultation:
     def __init__(self, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True,
                  username=None, password=None, consult_date=None, auto_run=False, wct_turns=8,
-                 pss_questions=3, db_client=None):
+                 pss_questions=10, db_client=None):
 
         self.authenticate_user = authenticate
         self.user = None
@@ -99,18 +99,18 @@ class Consultation:
 
         self.auto_run = auto_run
         self.modules = {
-            "Shapes": ShapeSearcher(max_turns=10, parent=self),
+            "Shapes": ShapeSearcher(parent=self, auto_run=auto_run),
             "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
             "VAT": VisualAttentionTest(parent=self, grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), auto_run=auto_run),
             "WCT": CardGame(parent=self, max_turns=wct_turns, auto_run=auto_run,),
-            "PSS": PSS(self, question_count=self.pss_question_count, auto_run=auto_run),
+            "PSS": PSS(parent=self, question_count=self.pss_question_count, auto_run=auto_run, preload_audio=False),
             "Clock": ClockDraw(parent=self, auto_run=self.auto_run),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
         }
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["VAT", "WCT", "PSS", "Clock"]
+        self.module_order = ["PSS", "Shapes", "VAT", "WCT", "Clock"]
 
         self.module_idx = 0
 
@@ -131,7 +131,7 @@ class Consultation:
             self.db_client = db_client
 
         # self.update_display()
-        pg.event.pump()
+        # pg.event.pump()
 
     def generate_unique_id(self):
         letters = pd.Series(list(string.ascii_lowercase))[np.random.permutation(26)][:10].values
@@ -168,7 +168,7 @@ class Consultation:
 
         text_index = text.lower()
 
-        text_index = text_index.replace("?", "").replace("!", "")
+        text_index = text_index.replace("?", "").replace("!", "").replace("“", "").replace("”", "")
 
         text_index = text_index.replace(" ", "0 ").replace(".", "0 ").replace(",", "0 ")
         rep_1 = {"th": "11 ", "sh": "9 ", "ch": "9 ", "ee": "3 "}
@@ -258,6 +258,10 @@ class Consultation:
         vat_answers = {"answers": self.modules["VAT"].answers, "times": self.modules["VAT"].answer_times}
 
         clock_data = {"angle_errors": self.modules["Clock"].angle_errors}
+
+        shape_data = {"scores": self.modules["Shapes"].scores,
+                      "question_counts": self.modules["Shapes"].question_counts,
+                      "answer_times": self.modules["Shapes"].answer_times}
         # Spiral Test Handling
         try:
             spiral_data, spiral_size = self.modules["Spiral"].output
@@ -290,33 +294,13 @@ class Consultation:
                 "pss": pss_answers,
                 "wct": wct_answers,
                 "vat": vat_answers,
-                "clock": clock_data
+                "clock": clock_data,
+                "shape": shape_data
             }
         }
 
         self.db_client: DBClient
         self.db_client.upload_consult(self.output)
-
-        # records.insert_one(self.output)
-
-        # base_path = "/Users/benhoskings/Library/CloudStorage/OneDrive-UniversityofWarwick/hero_data"
-        # base_path = "/Users/benhoskings/Documents/RStudio/hero_dashbaord/web_application/data"
-        #
-        # if self.user:
-        #     if not os.path.isdir(f"data/consult_records/user_{self.user.id}"):
-        #         os.mkdir(f"data/consult_records/user_{self.user.id}")
-        #
-        #     if not os.path.isdir(f"{base_path}/consult_records/user_{self.user.id}"):
-        #         os.mkdir(f"{base_path}/consult_records/user_{self.user.id}")
-        #
-        #     save_path_local = f"data/consult_records/user_{self.user.id}/consult_{self.id}.json"
-        #     save_path_global = f"{base_path}/consult_records/user_{self.user.id}/consult_{self.id}.json"
-        #
-        #     with open(save_path_local, "w") as write_file:
-        #         json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
-        #
-        #     with open(save_path_global, "w") as write_file:
-        #         json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
 
         shutil.rmtree("consultation/question_audio_tmp")
 
@@ -387,11 +371,12 @@ class NpEncoder(json.JSONEncoder):
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
+    pg.event.pump()
 
     db = client.get_database('hero_data')
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=True, seamless=True, auto_run=True, username="benhoskings", password="pass"
+        pi=False, authenticate=False, seamless=True, auto_run=False, username="benhoskings", password="pass"
     )
     consult.loop()

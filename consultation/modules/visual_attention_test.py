@@ -220,10 +220,7 @@ class VisualAttentionTest:
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
                         # do something with mouse click
-                        if self.parent:
-                            pos = pg.Vector2(self.parent.get_relative_mose_pos())
-                        else:
-                            pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
                         selection = self.touch_screen.click_test(pos)
                         if selection is not None:

@@ -11,8 +11,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import joblib
 
+
 class FeatureEngineering:
-    def __init__(self):
+    def __init__(self, spiral_data):
         self.center = [200, 200]
         self.end = [400, 200]
         self.turns = 3
@@ -20,17 +21,19 @@ class FeatureEngineering:
         self.spiral2 = pd.DataFrame()
         self.errors = pd.DataFrame()
 
-    def pull_tests(self,input):
+        self.spiral_data = spiral_data
+
+    def pull_tests(self, input):
         pd_data = input[input['Test ID'] == 0].copy()
         return pd_data
 
     def gen_data(self, df):
         turns = 0
         df.loc[:, 'Time'] = df['Time'] - df['Time'].iloc[0]
-        if df['Time'].iloc[-1]>100:
+        if df['Time'].iloc[-1] > 100:
             df.loc[:, 'Time'] = df['Time'] / 1000
-        df.loc[:, 'X'] = df['Plot X']-200
-        df.loc[:, 'Y'] = df['Plot Y']-200
+        df.loc[:, 'X'] = df['Plot X'] - 200
+        df.loc[:, 'Y'] = df['Plot Y'] - 200
         df.loc[:, 'Theta'] = np.arctan2(df['Y'], df['X'])
 
         df.loc[:, 'Angular Velocity'] = df['Theta'].diff()
@@ -57,23 +60,24 @@ class FeatureEngineering:
         self.spiral.loc[:, 'X'] = (b * self.spiral['Theta']) * np.cos(-self.spiral['Theta'])
         self.spiral.loc[:, 'Y'] = (b * self.spiral['Theta']) * np.sin(-self.spiral['Theta'])
 
-        self.spiral.loc[:, 'Magnitude'] =np.linalg.norm(self.spiral[['X', 'Y']], axis=1)
-        self.spiral.loc[:, 'Angular Velocity'] = self.spiral['Theta'].diff(periods=20) / self.spiral['Time'].diff(periods=20)
-        self.spiral.loc[:, 'Dist'] = np.linalg.norm(self.spiral[['X', 'Y']].diff(axis=0,periods=20), axis=1)
+        self.spiral.loc[:, 'Magnitude'] = np.linalg.norm(self.spiral[['X', 'Y']], axis=1)
+        self.spiral.loc[:, 'Angular Velocity'] = self.spiral['Theta'].diff(periods=20) / self.spiral['Time'].diff(
+            periods=20)
+        self.spiral.loc[:, 'Dist'] = np.linalg.norm(self.spiral[['X', 'Y']].diff(axis=0, periods=20), axis=1)
         self.spiral.loc[:, 'Drawing Speed'] = self.spiral['Dist'] / (self.spiral['Time'].diff(periods=20))
 
-    def gen_spiral_time(self, df,Y):
+    def gen_spiral_time(self, df, Y):
         self.spiral_time = pd.DataFrame()
 
         b = np.linalg.norm(np.array(self.end) - np.array(self.center)) / (self.turns * 2 * np.pi)
         self.spiral_time.loc[:, 'Time'] = df['Time']
         # # normalised=df['Time']/max(df['Time'])
-        if Y=='Magnitude':
+        if Y == 'Magnitude':
             self.spiral_time['Theta'] = df['Theta']
             self.spiral_time.loc[:, 'X'] = (b * self.spiral_time['Theta']) * np.cos(-self.spiral_time['Theta'])
             self.spiral_time.loc[:, 'Y'] = (b * self.spiral_time['Theta']) * np.sin(-self.spiral_time['Theta'])
             self.spiral_time.loc[:, 'Magnitude'] = abs(np.linalg.norm(self.spiral_time[['X', 'Y']], axis=1))
-        elif Y=='Theta':
+        elif Y == 'Theta':
             self.spiral_time['Magnitude'] = df['Magnitude']
             n = len(df['Magnitude'])
             theta = (np.linspace(0, self.turns * 2 * np.pi, n))
@@ -87,9 +91,12 @@ class FeatureEngineering:
             self.spiral_time.loc[:, 'X'] = (b * self.spiral_time['Theta']) * np.cos(-self.spiral_time['Theta'])
             self.spiral_time.loc[:, 'Y'] = (b * self.spiral_time['Theta']) * np.sin(-self.spiral_time['Theta'])
             self.spiral_time.loc[:, 'Magnitude'] = abs(np.linalg.norm(self.spiral_time[['X', 'Y']], axis=1))
-            self.spiral_time.loc[:, 'Angular Velocity'] = self.spiral_time['Theta'].diff(periods=20) / self.spiral_time['Time'].diff(periods=20)
-            self.spiral_time.loc[:, 'Dist'] = np.linalg.norm(self.spiral_time[['X', 'Y']].diff(axis=0,periods=20), axis=1)
-            self.spiral_time.loc[:, 'Drawing Speed'] = self.spiral_time['Dist'] / (self.spiral_time['Time'].diff(periods=20))
+            self.spiral_time.loc[:, 'Angular Velocity'] = self.spiral_time['Theta'].diff(periods=20) / self.spiral_time[
+                'Time'].diff(periods=20)
+            self.spiral_time.loc[:, 'Dist'] = np.linalg.norm(self.spiral_time[['X', 'Y']].diff(axis=0, periods=20),
+                                                             axis=1)
+            self.spiral_time.loc[:, 'Drawing Speed'] = self.spiral_time['Dist'] / (
+                self.spiral_time['Time'].diff(periods=20))
 
     def get_closest_coords(self, df):
         self.closest_coords = pd.DataFrame()
@@ -118,7 +125,7 @@ class FeatureEngineering:
         self.closest_coords.loc[:, 'Drawing Speed'] = self.closest_coords['Dist'] / (
             self.closest_coords['Time'].diff(periods=20))
 
-    def plot_graph(self, X, Y,file_name):
+    def plot_graph(self, X, Y, file_name):
         if X == 'Time':
             plt.scatter(self.spiral_time[X], self.spiral_time[Y], s=0.09)
         else:
@@ -133,8 +140,6 @@ class FeatureEngineering:
         plt.show()
         # plt.savefig(\Generated)
 
-
-
     # def plot_graphs(self):
     #     self.plot_graph('X', 'Y' )
     #     self.plot_graph('Theta', 'Magnitude')
@@ -145,15 +150,15 @@ class FeatureEngineering:
     def sum_error(self, X, Y):
         for name, df in self.dfs.items():
             df.reset_index(drop=True, inplace=True)
-            if X=='Time':
-                self.gen_spiral_time(df,Y)
+            if X == 'Time':
+                self.gen_spiral_time(df, Y)
                 error = abs(df[Y] - self.spiral_time[Y])
-                error_diff=abs(error.diff()/df[X].diff())
+                error_diff = abs(error.diff() / df[X].diff())
                 error_diff.replace(np.inf, 0, inplace=True)
             else:
                 self.gen_spiral(df)
                 self.get_closest_coords(df)
-                error=abs(df[X] - self.closest_coords[X]) + abs(df[Y] - self.closest_coords[Y])
+                error = abs(df[X] - self.closest_coords[X]) + abs(df[Y] - self.closest_coords[Y])
                 errorX = abs(df[X] - self.closest_coords[X])
                 sum_errorX = errorX.sum() / len(df[X])
                 string = '_'.join([X, 'closest_error'])
@@ -162,13 +167,13 @@ class FeatureEngineering:
                 sum_errorY = errorY.sum() / len(df[Y])
                 string = '_'.join([Y, 'closest_error'])
                 self.errors.at[self.index, string] = sum_errorY
-                error_diff = abs(error.diff()/df[X].diff())
+                error_diff = abs(error.diff() / df[X].diff())
                 error_diff.replace(np.inf, 0, inplace=True)
             sum_error = error.sum() / len(df[X])
             sum_error_diff = error_diff.sum() / len(df[X])
             string1 = '_'.join([X, Y])
             self.errors.at[self.index, string1] = sum_error
-            string2 = '_'.join([X, Y,'diff'])
+            string2 = '_'.join([X, Y, 'diff'])
             self.errors.at[self.index, string2] = sum_error_diff
 
     # def sum_error_closest(self, X, Y):
@@ -179,42 +184,39 @@ class FeatureEngineering:
     #         string = '_'.join([name, X, Y])
     #         self.errors.at[self.index, string] = sum_squared_error
 
-    def final_value(self,Y):
+    def final_value(self, Y):
         for name, df in self.dfs.items():
-            string = '_'.join([Y,'Final'])
+            string = '_'.join([Y, 'Final'])
             self.errors.at[self.index, string] = df[Y].iloc[-1]
 
-    def std (self,Y):
+    def std(self, Y):
         for name, df in self.dfs.items():
-            string = '_'.join([Y,'std'])
+            string = '_'.join([Y, 'std'])
             self.errors.at[self.index, string] = df[Y].std()
 
-
-    def calc_errors(self,file_name):
+    def calc_errors(self, file_name):
         self.sum_error('Theta', 'Magnitude')
-        self.plot_graph('Theta', 'Magnitude',file_name)
-        self.plot_graph('X', 'Y',file_name)
+        self.plot_graph('Theta', 'Magnitude', file_name)
+        self.plot_graph('X', 'Y', file_name)
         self.sum_error('Time', 'Drawing Speed')
-        self.plot_graph('Time', 'Drawing Speed',file_name)
+        self.plot_graph('Time', 'Drawing Speed', file_name)
         self.sum_error('Time', 'Angular Velocity')
         # self.plot_graph('Time', 'Angular Velocity',file_name)
-        self.sum_error('Time','Magnitude')
-        self.plot_graph('Time', 'Magnitude',file_name)
+        self.sum_error('Time', 'Magnitude')
+        self.plot_graph('Time', 'Magnitude', file_name)
         self.std('Theta')
         self.std('Magnitude')
         self.std('Drawing Speed')
         self.final_value('Time')
 
-
-
     def plot_file(self, test, input, file):
         base_path = r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/parkinsons_data'
         file_path = os.path.join(base_path, input, file)
-        if test=='SST':
+        if test == 'SST':
             pd_data = pd.read_csv(file_path, delimiter=';', header=None,
-                                   names=['Plot X', 'Plot Y', 'Z', 'Pressure', 'GripAngle', 'Time', 'Test ID'])
-            pd_data= self.pull_tests(pd_data)
-        if test=='Manual':
+                                  names=['Plot X', 'Plot Y', 'Z', 'Pressure', 'GripAngle', 'Time', 'Test ID'])
+            pd_data = self.pull_tests(pd_data)
+        if test == 'Manual':
             pd_data = pd.read_csv(file_path, delimiter=';')
 
         self.spiral = pd.DataFrame()
@@ -240,12 +242,12 @@ class FeatureEngineering:
             print(file_name)
             self.index = file_index
             pd_data = pd.read_csv(file_path, delimiter=';')
-            if file_name[0]=='C' or file_name[0]=='P' or file_name[0]=='H':
-                pd_data = pd.read_csv(file_path, delimiter=';',header=None,
-                                   names=['Plot X', 'Plot Y', 'Z', 'Pressure', 'GripAngle', 'Time', 'Test ID'])
+            if file_name[0] == 'C' or file_name[0] == 'P' or file_name[0] == 'H':
+                pd_data = pd.read_csv(file_path, delimiter=';', header=None,
+                                      names=['Plot X', 'Plot Y', 'Z', 'Pressure', 'GripAngle', 'Time', 'Test ID'])
                 pd_data = self.pull_tests(pd_data)
             print(pd_data)
-            pd_data=self.gen_data(pd_data)
+            pd_data = self.gen_data(pd_data)
             self.dfs = {'SST': pd_data}
             self.calc_errors(file_name)
             # self.plot_graphs(file_name)
@@ -262,35 +264,38 @@ class FeatureEngineering:
         self.errors.to_csv(file_name, sep=';', index=False)
         print('Done')
 
-    def user_data(self):
-        self.index=0
+    def process_data(self):
+        self.index = 0
+
         self.errors = pd.DataFrame()
-        # file_path = r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/user_spiral.txt'
-        file_path = r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/parkinsons_data/spiral_data/manual2.txt'
-        # file_path = r'C:\Users\Thinkpad\Desktop\Warwick\hero - monitor\data\parkinsons_data\new_dataset\
-        data = pd.read_csv(file_path, delimiter=';')
-        data= self.gen_data(data)
-        self.gen_spiral(data)
-        self.dfs = {'USER': data}
+
+        spiral_data = self.gen_data(self.spiral_data)
+        self.gen_spiral(spiral_data)
+        self.dfs = {'USER': spiral_data}
         self.calc_errors('User')
-        self.errors.to_csv(r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\user_spiral_errors.txt', sep=';', index=False)
+        self.errors.to_csv(r'data\user_drawing\user_spiral_errors.txt', sep=';', index=False)
+
         with open('columns_for_training.txt', 'r') as file:
             lines = file.readlines()
 
         include_indices = [index for index, line in enumerate(lines) if line.startswith('1')]
         # print(include_indices)
         new_errors = self.errors.iloc[:, include_indices]
-        new_errors.to_csv(r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\user_drawing\selected_user_spiral_errors.txt',
-                           sep=';', index=False)
+        new_errors.to_csv(r'user_drawing\selected_user_spiral_errors.txt',
+                          sep=';', index=False)
         return new_errors
 
+
 class DataAnalytics:
-    def __init__(self):
-        pass
+    def __init__(self, spiral_data):
+        self.spiral_data = spiral_data
+        self.probability = None
+        self.classification = None
+
     def extract_errors(self):
         # List of folders to open
         folders_to_open = ['SST']
-        data_path = r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data'
+        data_path = ""
         with open('columns_for_training.txt', 'r') as file:
             lines = file.readlines()
 
@@ -298,7 +303,6 @@ class DataAnalytics:
         include_indices.extend([len(lines)])
         # print(include_indices)
         for folder in folders_to_open:
-
             folder_path = os.path.join(data_path, folder)
             control_error_file = os.path.join(folder_path, 'control_error.txt')
             parkinsons_error_file = os.path.join(folder_path, 'parkinson_error.txt')
@@ -308,7 +312,7 @@ class DataAnalytics:
             control_error_data['Catagory'] = 0
 
             parkinsons_error_data = pd.read_csv(parkinsons_error_file, sep=';')
-            parkinsons_error_data = parkinsons_error_data.iloc[0:14,include_indices]
+            parkinsons_error_data = parkinsons_error_data.iloc[0:14, include_indices]
             parkinsons_error_data['Catagory'] = 1
             train_ratio = 0.7
 
@@ -324,11 +328,11 @@ class DataAnalytics:
 
             test = pd.concat([c_test, p_test])
             train = pd.concat([c_train, p_train])
-            whole_set= pd.concat([control_error_data, parkinsons_error_data])
+            whole_set = pd.concat([control_error_data, parkinsons_error_data])
 
-            whole_set.to_csv(r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/whole_set_errors.txt', sep=';', index=False)
+            whole_set.to_csv(r'user_drawing/whole_set_errors.txt', sep=';', index=False)
 
-        return train, test ,whole_set
+        return train, test, whole_set
 
     def box_plots(self, data):
         for col in data[:-1]:
@@ -341,14 +345,14 @@ class DataAnalytics:
                 plt.show()
 
     def confusion_matrix(self, classification):
-            if col != 'File' and col != 'Catagory':
-                confusion_matrix = metrics.confusion_matrix(classification['Final C'], classification['Catagory'])
-                cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix,
-                                                    display_labels=['Healthy', 'Parkinsons'])  # Assuming Category values are 0 and 1
-                cm_display.plot()
-                plt.title(f'Confusion Matrix for Test Data')
-                plt.show()
-
+        if col != 'File' and col != 'Catagory':
+            confusion_matrix = metrics.confusion_matrix(classification['Final C'], classification['Catagory'])
+            cm_display = metrics.ConfusionMatrixDisplay(confusion_matrix=confusion_matrix,
+                                                        display_labels=['Healthy',
+                                                                        'Parkinsons'])  # Assuming Category values are 0 and 1
+            cm_display.plot()
+            plt.title(f'Confusion Matrix for Test Data')
+            plt.show()
 
     def regression(self, train_data):
         Y = np.array(train_data['Catagory'])
@@ -362,7 +366,6 @@ class DataAnalytics:
                 model_filename = f"{col}_model.joblib"
                 joblib.dump(model, model_filename)
 
-
     def random_forest(self, train_data):
         Y = np.array(train_data['Catagory'])
         features = train_data.columns.difference(['File', 'Catagory'])
@@ -374,10 +377,12 @@ class DataAnalytics:
         model_filename = 'random_forest_model.joblib'
         joblib.dump(model, model_filename)
 
-    def get_prob_reg(self, test_data,name):
-        prediction = pd.DataFrame()
-        classification= pd.DataFrame()
+    def get_prob_reg(self, test_data, name):
+
         if 'File' in test_data.columns:
+            prediction = pd.DataFrame()
+            classification = pd.DataFrame()
+
             prediction['File'] = test_data['File'].copy()
             prediction['Catagory'] = test_data['Catagory'].copy()
             classification['File'] = test_data['File'].copy()
@@ -394,30 +399,55 @@ class DataAnalytics:
                     prediction[col] = probability.reshape(-1, 1)
                     classification[col] = model.predict(X.reshape(-1, 1))
 
-
-            test_data['Final P'] = prediction.iloc[:, :-2].mean(axis=1)
+            test_data['Final P'] = prediction.iloc[:, 2:].mean(axis=1)
             test_data['Final C'] = (test_data['Final P'] > 0.5).astype(int)
         else:
 
-            for col in test_data:
-                if col != 'File' and col != 'Catagory':
-                    model_filename = f"{col}_model.joblib"
-                    model = joblib.load(model_filename)
-                    X = np.array(test_data[col])
-                    odds = model.coef_ * X + model.intercept_
-                    odds = np.exp(odds)
-                    probability = odds / (1 + odds)
-                    prediction[col] = [probability]
-                    classification[col] = model.predict(X.reshape(-1, 1))
-            test_data['Final P'] = prediction.mean(axis=1)
-            test_data['Final C'] = (test_data['Final P'] > 0.5).astype(int)
-            print(test_data['Final P'])
-            print(test_data['Final C'])
+            numeric_values = self.spiral_data.select_dtypes(include='number')
+            print(numeric_values)
 
+            predictions = []
+            classifications = []
+            for col in numeric_values:
+                model_filename = f"{col}_model.joblib"
+                model = joblib.load(model_filename)
+                X = np.array(test_data[col])
+                odds = model.coef_ * X + model.intercept_
 
-        test_data.to_csv(f'Classifications/{name}_prediction.txt', sep=';', index=False)
+                # sigmoid activation
+                odds = np.exp(odds)
+                probability = odds / (1 + odds)
 
-    def get_prob_rf(self, test_data,name):
+                predictions.append(probability[0, 0])
+                classifications.append(model.predict(X.reshape(-1, 1)))
+
+            self.probability = sum(predictions) / len(predictions)
+            self.classification = round(self.probability)
+
+    def classify(self):
+        numeric_values: pd.DataFrame = self.spiral_data.select_dtypes(include='number')
+
+        models = [joblib.load(f"{predictor}_model.joblib") for predictor in numeric_values.columns]
+
+        predictions = []
+        classifications = []
+        for col in numeric_values:
+            model_filename = f"{col}_model.joblib"
+            model = joblib.load(model_filename)
+            X = np.array(numeric_values.loc[0, col])
+            odds = model.coef_ * X + model.intercept_
+
+            #
+            odds = np.exp(odds)
+            probability = odds / (1 + odds)
+
+            predictions.append(probability[0, 0])
+            classifications.append(model.predict(X.reshape(-1, 1)))
+
+        self.probability = sum(predictions) / len(predictions)
+        self.classification = round(self.probability)
+
+    def get_prob_rf(self, test_data, name):
         model_filename = "random_forest_model.joblib"
         model = joblib.load(model_filename)
 
@@ -440,59 +470,54 @@ class DataAnalytics:
 
             # Get probability estimates for each class
             probabilities = model.predict_proba(X)
-            test_data.loc[:,'Final P'] = probabilities[:, 1]
-            test_data.loc[:,'Final C'] = model.predict(X)
-            print(test_data.loc[:,'Final C'])
-            print(test_data.loc[:,'Final P'])
+            test_data.loc[:, 'Final P'] = probabilities[:, 1]
+            test_data.loc[:, 'Final C'] = model.predict(X)
+            print(test_data.loc[:, 'Final C'])
+            print(test_data.loc[:, 'Final P'])
 
             test_data.to_csv(f'Classifications/{name}_prediction.txt', sep=';', index=False)
 
-
-
-
     def error_graphs(self):
-        whole_set = pd.read_csv(r'Classifications\whole_set_prediction.txt', sep=';')
+        whole_set = pd.read_csv(r'Classifications/whole_set_prediction.txt', sep=';')
         # print(whole_set)
-        test = pd.read_csv(r'Classifications\user_data_prediction.txt', sep=';')
+        test = pd.read_csv(r'Classifications/user_data_prediction.txt', sep=';')
         # print(test)
         for col in test:
             plt.scatter(whole_set[col][whole_set['Final C'] == 0], whole_set['Final P'][whole_set['Final C'] == 0],
-                            color='blue', label='z=0')
+                        color='blue', label='z=0')
             plt.scatter(whole_set[col][whole_set['Final C'] == 1], whole_set['Final P'][whole_set['Final C'] == 1],
-                            color='red', label='z=1')
+                        color='red', label='z=1')
             plt.scatter(test[col][test['Final C'] == 0], test['Final P'][test['Final C'] == 0],
-                            color='blue', label='z=0',marker='s')
+                        color='blue', label='z=0', marker='s')
             plt.scatter(test[col][test['Final C'] == 1], test['Final P'][test['Final C'] == 1],
-                            color='red', label='z=1',marker='s')
+                        color='red', label='z=1', marker='s')
             plt.xlabel(str(col))
             plt.ylabel('Probability')
             plt.title(whole_set['File'].iloc[0])
             plt.show()
 
-
-
-        file_path = r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/user_spiral_errors.txt'
+        file_path = r'user_drawing/user_spiral_errors.txt'
         test = pd.read_csv(file_path, sep=';')
 
-    def user_classify(self,type,file_path):
+    def user_classify(self, type, file_path):
         test = pd.read_csv(file_path, sep=';')
-        prediction=pd.DataFrame()
-        classification=pd.DataFrame()
+        prediction = pd.DataFrame()
+        classification = pd.DataFrame()
         # print(test.columns)
-        if type=='Logistic':
+        if type == 'Logistic':
             for col in test.columns:
-                if col!='File':
+                if col != 'File':
                     model_filename = f"{col}_model.joblib"
-                    model= joblib.load(model_filename)
+                    model = joblib.load(model_filename)
                     X = np.array([test[col]])
                     odds = model.coef_ * X + model.intercept_
                     odds = np.exp(odds)
                     probability = odds / (1 + odds)
                     # print(probability)
                     prediction[col] = probability[0]
-                    classification[col]=model.predict(X)
+                    classification[col] = model.predict(X)
             test['Final P'] = prediction.sum(axis=1)
-            classification= classification.sum(axis=1)
+            classification = classification.sum(axis=1)
             test['Final C'] = classification.apply(lambda x: 0 if x < 0.5 else 1)
             print(test['Final C'])
             print(test['Final P'])
@@ -508,7 +533,7 @@ class DataAnalytics:
             # Get probability estimates for each class
             probabilities = model.predict_proba(X)
             test['Final P'] = probabilities[:, 1]
-            test['Final C']=model.predict(X)
+            test['Final C'] = model.predict(X)
             print(test['Final C'])
             print(test['Final P'])
 
@@ -517,45 +542,46 @@ class DataAnalytics:
         return test
 
 
-
-
-
 if __name__ == "__main__":
-    os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor/data')
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor/data")
+
 
     def final_gen_SST():
         data = FeatureEngineering()
         data.loop_SST('control')
         data.loop_SST('parkinson')
 
+
     def final_train_model():
         spiral = DataAnalytics()
-        train, test , whole_set =spiral.extract_errors()
+        train, test, whole_set = spiral.extract_errors()
         # spiral.regression(train)
-        spiral.get_prob_reg(test,'test')
-        spiral.get_prob_reg(whole_set,'whole_set')
+        spiral.get_prob_reg(test, 'test')
+        spiral.get_prob_reg(whole_set, 'whole_set')
         # test_output,test_feature_importance=spiral.get_prob_rf(test)
-        # test_output.to_csv(r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\SST\test_output.txt', sep=';',
+        # test_output.to_csv(r'\SST\test_output.txt', sep=';',
         #                  index=False)
-        # test_feature_importance.to_csv(r'C:\Users\Thinkpad\Desktop\Warwick\hero-monitor\data\SST\test_feature_importance.txt', sep=';',
+        # test_feature_importance.to_csv(r'\SST\test_feature_importance.txt', sep=';',
         #                  index=False)
         # p_whole = spiral.user_classify('RF','C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/whole_set_errors.txt')
         # p_whole.to_csv('C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/whole_set_errors.txt', sep=';')
-        spiral.confusion_matrix(test)
+        # spiral.confusion_matrix(test)
+
+
     def final_user():
         data = FeatureEngineering()
-        user_data=data.user_data()
+        user_data = data.user_data()
         spiral = DataAnalytics()
-        spiral.get_prob_reg(user_data,'user_data')
+        spiral.get_prob_reg(user_data, 'user_data')
         # p_user=spiral.user_classify('RF', 'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/selected_user_spiral_errors.txt')
         spiral.error_graphs()
 
 
     # final_gen_SST()
     final_train_model()
-    # final_user()
+    final_user()
 
-    data = FeatureEngineering()
+    # data = FeatureEngineering()
     # data.plot_file('Manual', 'spiral_data', 'manual1.txt')
     #
-

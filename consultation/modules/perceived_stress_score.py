@@ -1,5 +1,5 @@
 import os
-import time
+import shutil
 
 import gtts
 import pygame as pg
@@ -11,23 +11,34 @@ from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 
 
 class PSS:
-    def __init__(self, parent, question_count=10, auto_run=False):
+    def __init__(self, size=pg.Vector2(1024, 600), parent=None, question_count=10, auto_run=False, preload_audio=True):
         self.parent = parent
+        self.parent = parent
+        if parent is not None:
+            self.display_size = parent.display_size
+            self.bottom_screen = parent.bottom_screen
+            self.top_screen = parent.top_screen
+
+            self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+
+        else:
+            self.display_size = pg.Vector2(size)
+            self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+
+            self.top_screen = self.window.subsurface(((0, 0), self.display_size))
+            self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
+            self.display_screen = DisplayScreen(self.display_size)
+
+        if not os.path.isdir("consultation/question_audio_tmp"):
+            os.mkdir("consultation/question_audio_tmp")
         if not os.path.isdir("consultation/question_audio_tmp/pss"):
             os.mkdir("consultation/question_audio_tmp/pss")
 
-        self.display_size = self.parent.display_size
-
-        self.top_screen: pg.Surface = parent.top_screen
-        self.bottom_screen: pg.Surface = parent.bottom_screen
-
-        self.touch_screen = TouchScreen(self.top_screen.get_size())
-        self.display_screen = DisplayScreen(self.bottom_screen.get_size(), avatar=parent.avatar)
-        self.display_screen.avatar = parent.display_screen.avatar
-        count = 5
+        self.touch_screen = TouchScreen(size)
 
         gap = 10
         labels = ["Never", "Almost Never", "Sometimes", "Very Often", "Always"]
+        count = len(labels)
 
         self.likert_buttons = []
         for idx in range(count):
@@ -36,14 +47,12 @@ class PSS:
             button = GameButton(pg.Vector2(position, self.display_size.y/2), pg.Vector2(width, 50), idx, text=labels[idx],)
             self.likert_buttons.append(button)
 
-        if parent:
-            self.display_screen.avatar = parent.display_screen.avatar
-
         hints = ["" for _ in pss_questions]
         self.questions = [Question(question, hint) for question, hint in zip(pss_questions, hints)]
-        self.questions = self.questions[:min(len(self.questions)-1, question_count)]
+        self.questions = self.questions[:min(len(self.questions), question_count+1)]
 
-        self.preload_audio()
+        if preload_audio:
+            self.preload_audio()
 
         self.question_idx = 0
 
@@ -101,7 +110,10 @@ class PSS:
         self.update_display()
 
     def exit_sequence(self):
-        self.parent.speak_text("Thank you for completing the PSS module")
+        if self.parent:
+            self.parent.speak_text("Thank you for completing the PSS module")
+        else:
+            shutil.rmtree("consultation/question_audio_tmp")
 
     def loop(self, infinite=False):
         self.entry_sequence()
@@ -139,7 +151,8 @@ class PSS:
                             self.parent.take_screenshot("pss")
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
-                        button_id = self.touch_screen.click_test(self.parent.get_relative_mose_pos())
+                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+                        button_id = self.touch_screen.click_test(pos)
                         if button_id is not None and self.awaiting_response:
                             self.answers.append(int(button_id))
                             if infinite:
@@ -157,3 +170,12 @@ class PSS:
                         self.running = False
 
         self.exit_sequence()
+
+
+if __name__ == "__main__":
+    pg.init()
+    pg.event.pump()
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+
+    pss = PSS()
+    pss.loop()

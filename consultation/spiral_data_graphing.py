@@ -276,7 +276,7 @@ class FeatureEngineering:
     def user_data(self):
         self.index=0
         self.errors = pd.DataFrame()
-        file_path = r'C:/Users/Thinkpad/Desktop/Warwick/hero-monitor/data/user_drawing/user_spiral.txt'
+        file_path = 'user_drawing/user_spiral.txt'
         data = pd.read_csv(file_path, delimiter=',')
         data= self.gen_data(data)
         self.gen_spiral(data)

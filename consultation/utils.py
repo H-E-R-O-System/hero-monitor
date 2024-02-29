@@ -3,6 +3,8 @@ import datetime
 import pygame as pg
 
 
+def sigmoid(x):
+    return
 def take_screenshot(screen, filename=None):
     print("Taking Screenshot")
     img_array = pg.surfarray.array3d(screen)
