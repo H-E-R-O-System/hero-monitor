@@ -276,7 +276,7 @@ class SpiralTest:
 
                 update_flag = True
 
-        if update_flag:
+        if self.prev_pos:
             self.update_display(top=False)
 
         print(f"process time: {time.monotonic() - start}")
@@ -361,6 +361,6 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=False, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=False, auto_run=False, spiral_size=600)
     spiral_test.loop()  # optionally extract data from here as array
     print(spiral_test.classification, spiral_test.prediction)
