@@ -108,6 +108,11 @@ class PSS:
 
     def entry_sequence(self):
         self.update_display()
+        if self.parent:
+            self.parent.speak_text("I will now ask some questions about how you have been feeling recently",
+                                   display_screen=self.display_screen, touch_screen=self.touch_screen)
+
+        self.update_display()
 
     def exit_sequence(self):
         if self.parent:

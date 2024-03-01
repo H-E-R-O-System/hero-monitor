@@ -103,11 +103,13 @@ class ShapeSearcher:
         self.running = False
         self.auto_run = auto_run
 
-    def instruction_loop(self):
+    def instruction_loop(self, question):
         if self.auto_run:
             return
 
+        temp_instruction = self.display_screen.instruction
         self.display_screen.state = 1
+        self.display_screen.refresh()
         self.display_screen.instruction = None
 
         button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
@@ -120,13 +122,21 @@ class ShapeSearcher:
         self.display_screen.add_multiline_text("Match the Shapes!", rect=info_rect.scale_by(0.9, 0.9),
                                                font_size=50)
 
-        self.display_screen.add_multiline_text(
-            rect=info_rect.scale_by(0.9, 0.9), text=
-            "You will now have to try and remember a set of shapes. You will be shown two or three shapes, "
-            "which will then disappear. After a short amount of time, a new screen with shapes will appear. "
-            "Your task is to identify if the two sets of shapes are the same or different. Sets are considered the "
-            "same if each shape and colour matches. The positions on the screen will not be the same!",
-            center_vertical=True)
+        if question == "perception":
+            self.display_screen.add_multiline_text(
+                rect=info_rect.scale_by(0.9, 0.9), text=
+                "During this session, you will see three coloured shapes located above and below a black line. "
+                "Your task is to say whether the coloured shapes that you see above the line are the same as the "
+                "coloured shapes you will see below the line.",
+                center_vertical=True)
+        else:
+            self.display_screen.add_multiline_text(
+                rect=info_rect.scale_by(0.9, 0.9), text=
+                "You will now have to try and remember a set of coloured shapes. You will be shown two or three "
+                "shapes, which will then disappear. After a short amount of time, a second set set of shapes will appear. "
+                "Your task is to identify if the two sets of shapes are the same or different. Sets are considered the "
+                "same if each shape and colour matches.",
+                center_vertical=True)
 
         self.update_display()
         if self.parent:
@@ -153,6 +163,10 @@ class ShapeSearcher:
                             take_screenshot(self.window, "Shape_match")
 
         self.touch_screen.kill_sprites()
+        self.display_screen.state = 0
+        self.display_screen.refresh()
+        self.display_screen.instruction = temp_instruction
+        self.update_display()
 
     def update_display(self):
 
@@ -166,7 +180,7 @@ class ShapeSearcher:
         # what the users are expected to do (e.g. game rules, aim, etc.)
 
         # only OPTIONAL and can leave blank
-        self.instruction_loop()
+        self.instruction_loop(question="perception")
 
         self.perception_question()
         self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
@@ -328,6 +342,10 @@ class ShapeSearcher:
             self.running = False
         else:
             # Update for next question
+            if self.turns == 10:
+                self.touch_screen.refresh()
+                self.instruction_loop("shape")
+
             if self.question_types[self.turns] == "perception":
                 self.perception_question()
             elif self.question_types[self.turns] == "shape":
@@ -353,6 +371,9 @@ class ShapeSearcher:
 
                 selection = random.choices([0, 1], weights=weights, k=1)[0]
                 self.process_selection(selection)
+                #
+                # if self.turns == 9:
+                #     self.auto_run = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
@@ -384,7 +405,7 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
     # Module Testing
-    shape_searcher = ShapeSearcher(auto_run=False)
+    shape_searcher = ShapeSearcher(auto_run=True)
     shape_searcher.loop()
     print(f"Score: {sum(shape_searcher.scores)}/{sum(shape_searcher.question_counts)}")
     print("Module run successfully")

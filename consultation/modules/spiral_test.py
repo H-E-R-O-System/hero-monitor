@@ -65,12 +65,13 @@ def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds")
         turns=turns,
         theta=angles
     )
-
+    # print(((data_aug["theta"] / 2 * np.pi * 3) - data_aug["magnitude"]))
     data_aug = data_aug.assign(
+        error=((data_aug["theta"] / (2 * np.pi * 3)) - data_aug["magnitude"]) * data_aug["theta"],
         angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
     )
 
-    return data_aug[['x_pos', 'y_pos', 'time', 'magnitude', 'distance', 'turns', 'theta', 'angular_velocity']]
+    return data_aug[['x_pos', 'y_pos', 'time', 'magnitude', 'distance', 'turns', 'theta', 'angular_velocity', "error"]]
 
     # if not time_unit == "seconds":
     #     data_aug = data_aug.assign(time = data_aug["time"]/1000)
@@ -104,17 +105,13 @@ def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds")
     # return data_aug[col_order]
 
 
-def create_feature(track_data):
-    track_data: pd.DataFrame
-    mean_values = np.mean(track_data, axis=0)
-    rms_vals = np.sqrt(np.mean(track_data ** 2, axis=0))
-
-    return np.array(np.concatenate([mean_values.values, rms_vals.values]))
+def create_feature(spiral_data):
+    return np.mean(spiral_data, axis=0)
 
 
 class SpiralTest:
     def __init__(self, turns, size=(1024, 600), spiral_size=400, parent=None, draw_trace=False, auto_run=False):
-        self.parent = None
+        self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
@@ -228,14 +225,16 @@ class SpiralTest:
     def entry_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text("Please trace the spiral, starting from the center", visual=False)
+            print("speaking")
+            self.parent.speak_text("Please trace the spiral, starting from the center", display_screen=self.display_screen, touch_screen=self.touch_screen)
 
     def exit_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text("Thank you for completing the spiral test", visual=False)
+            self.parent.speak_text("Thank you for completing the spiral test", display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         data_aug = augment_data(self.tracking_data, spiral_radius=self.spiral_size.x/2)
+        print(data_aug.tail(20).to_string())
         plt.scatter(data_aug["x_pos"], data_aug["y_pos"])
         plt.show()
 
@@ -243,7 +242,7 @@ class SpiralTest:
         plt.show()
         spiral_features = create_feature(data_aug)
 
-        prediction = self.prediction_model.predict(spiral_features.reshape(1, -1))
+        prediction = self.prediction_model.predict(spiral_features.values.reshape(1, -1))
         self.prediction = prediction[0]
         self.classification = self.prediction > 0.5
 
@@ -280,8 +279,14 @@ class SpiralTest:
         self.entry_sequence()
         while self.running:
             if self.auto_run:
+
+                def moving_average(x, w):
+                    return np.convolve(x, np.ones(w), 'same') / w
+
+                moving_error_x = moving_average(np.cumsum(np.random.normal(0, 0.8, self.target_coords.shape[0])), 5)
+                moving_error_y = moving_average(np.cumsum(np.random.normal(0, 0.8, self.target_coords.shape[0])), 5)
                 mu, sigma = 0.05, 0.001
-                sim_positions = self.target_coords + np.random.normal(0, 3, self.target_coords.shape)
+                sim_positions = self.target_coords + np.concatenate([moving_error_x.reshape(-1, 1), moving_error_y.reshape(-1, 1)], axis=1)
                 start_pos = sim_positions[0, :]
 
                 self.tracking_data.loc[self.tracking_data.shape[0]] = [
@@ -349,6 +354,6 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=False, auto_run=True, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=True, spiral_size=600)
     spiral_test.loop()  # optionally extract data from here as array
     print(spiral_test.classification, spiral_test.prediction)

@@ -157,8 +157,6 @@ class Consultation:
         pg.display.flip()
 
     def speak_text(self, text, visual=True, display_screen=None, touch_screen=None):
-        if self.auto_run:
-            return
 
         if not display_screen:
             display_screen = self.display_screen

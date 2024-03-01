@@ -10,7 +10,7 @@ db.clear_all()
 # os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
 pg.init()
 
-sim_count = 5
+sim_count = 30
 
 all_user_data = pd.read_csv("data/user_data.csv")
 all_user_data = all_user_data.set_index("Username")
