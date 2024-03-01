@@ -33,7 +33,7 @@ class AffectiveModule:
 
         button_size = pg.Vector2(self.display_size.x*0.9, self.display_size.y*0.15)
         self.main_button = GameButton(pg.Vector2(0.5*self.display_size.x, 0.85*self.display_size.y) - button_size / 2,
-                                      button_size, id=1, text="Finished", colour=Colours.hero_blue)
+                                      button_size, id=1, text="Begin", colour=Colours.hero_blue)
         self.touch_screen.sprites = GameObjects([self.main_button])
 
         self.display_screen.instruction = "I'm listening ..."
@@ -76,6 +76,7 @@ class AffectiveModule:
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
         self.running = True
+        self.display_screen.instruction = "Press the button to start"
         self.update_display()  # render graphics to main consult
         # add code below
 
@@ -159,6 +160,8 @@ class AffectiveModule:
                     button_id = self.touch_screen.click_test(pos)
                     if button_id is not None:
                         if button_id:
+                            self.display_screen.instruction = "Press the button to start"
+                            self.main_button.text = "I'm finished"
                             self.question_loop()
 
                         self.update_display()
