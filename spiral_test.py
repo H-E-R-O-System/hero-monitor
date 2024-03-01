@@ -265,7 +265,6 @@ class SpiralTest:
         if idx - self.coord_idx < 10:
             if (idx-self.coord_idx) > 0:
                 for i in range(self.coord_idx, idx+1):
-
                     pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                                  self.target_coords[i, :],
                                  self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)

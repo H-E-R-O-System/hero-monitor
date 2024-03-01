@@ -161,9 +161,12 @@ class SpiralTest:
         self.auto_run = auto_run
         self.ignore_turn = False
 
-    def update_display(self):
-        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
-        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+    def update_display(self, top=True):
+        if top:
+            self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+            self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
+        else:
+            self.bottom_screen.blit(self.touch_screen.base_surface, (0, 0))
         pg.display.flip()
 
     def get_closest_coord_2(self, pos):
@@ -260,25 +263,24 @@ class SpiralTest:
             update_flag = True
 
         if idx - self.coord_idx < 10:
-            print(idx-self.coord_idx)
-            for i in range(self.coord_idx, idx+1):
+            if (idx-self.coord_idx) > 0:
+                for i in range(self.coord_idx, idx+1):
+                    pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
+                                 self.target_coords[i, :],
+                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
 
-                pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
-                             self.target_coords[i, :],
-                             self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
+                self.coord_idx = idx
 
-            self.coord_idx = idx
+                if self.coord_idx == len(self.target_coords) - 1:
+                    self.spiral_finished = True
+                    self.running = False
 
-            if self.coord_idx == len(self.target_coords) - 1:
-                self.spiral_finished = True
-                self.running = False
-
-            update_flag = True
+                update_flag = True
 
         if update_flag:
-            self.update_display()
+            self.update_display(top=False)
 
-        print(f"process time: {time.monotonic() - start}")
+        # print(f"process time: {time.monotonic() - start}")
 
     def loop(self):
         self.entry_sequence()
@@ -353,13 +355,13 @@ class SpiralTest:
 if __name__ == "__main__":
     # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    os.chdir("/home/pi/hero-monitor")
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/home/pi/hero-monitor")
     print(os.getcwd())
 
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=False, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=False, auto_run=False, spiral_size=600)
     spiral_test.loop()  # optionally extract data from here as array
     print(spiral_test.classification, spiral_test.prediction)
