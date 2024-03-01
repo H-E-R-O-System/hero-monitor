@@ -161,8 +161,9 @@ class SpiralTest:
         self.auto_run = auto_run
         self.ignore_turn = False
 
-    def update_display(self):
-        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
+    def update_display(self, top=True):
+        if top:
+            self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
 
@@ -273,10 +274,10 @@ class SpiralTest:
                     self.spiral_finished = True
                     self.running = False
 
-        update_flag = True
+                update_flag = True
 
         if update_flag:
-            self.update_display()
+            self.update_display(top=False)
 
         print(f"process time: {time.monotonic() - start}")
 
