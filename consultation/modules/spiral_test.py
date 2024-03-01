@@ -3,7 +3,7 @@ import pygame as pg
 import pandas as pd
 import os
 import time
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 import joblib
 
 from consultation.touch_screen import TouchScreen, GameObjects
@@ -14,47 +14,102 @@ from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
 from consultation.utils import take_screenshot
 
 
-def augment_data(input_data, spiral_radius):
-    data_aug = input_data.assign(
-        x_pos=(input_data["x_pos"] - spiral_radius) / spiral_radius,
-        y_pos=(input_data["y_pos"] - spiral_radius) / spiral_radius
-    )
-    data_aug = data_aug.assign(
-        time=(data_aug["time"] - data_aug.loc[0, "time"]) / 1000,
-        magnitude=np.linalg.norm(data_aug[["x_pos", "y_pos"]], axis=1),
-        theta=np.arctan2(data_aug["y_pos"], data_aug["x_pos"])
-    )
+def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds"):
+    if invert_y:
+        data_aug = input_data.assign(
+            x_pos=(input_data["x_pos"] - spiral_radius) / spiral_radius,
+            y_pos=(spiral_radius - input_data["y_pos"]) / spiral_radius
+        )
+    else:
+        data_aug = input_data.assign(
+            x_pos=(input_data["x_pos"] - spiral_radius) / spiral_radius,
+            y_pos=(input_data["y_pos"] - spiral_radius) / spiral_radius
+        )
 
-    data_aug = data_aug.assign(
-        distance=data_aug["magnitude"].diff(),
-        angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
-    )
+    if not time_unit == "seconds":
+        data_aug = data_aug.assign(time=(data_aug["time"]-min(data_aug["time"])) / 1000)
+
+    data_aug = data_aug.assign(magnitude=np.linalg.norm(data_aug[["x_pos", "y_pos"]], axis=1))
+
+
+    data_aug = data_aug.assign(distance=data_aug["magnitude"].diff())
+
     turn_count = 0
-    turns = np.array([])
-    for row_idx in data_aug.index:
-        if data_aug.loc[row_idx, "angular_velocity"] > np.pi * 2:
-            turn_count += 1
+    if data_aug.loc[0, "y_pos"] < 0:
+        turn_count -= 1
 
-        turns = np.append(turns, turn_count)
+    turns = np.array([turn_count])
+    angles = np.array([])
+    for row_idx in data_aug.index:
+        pos = data_aug.loc[row_idx, ["x_pos", "y_pos"]].values
+        if row_idx > 0:
+            prev_pos = data_aug.loc[row_idx - 1, ["x_pos", "y_pos"]].values
+            if pos[0] > 0 and prev_pos[0] > 0 and prev_pos[1] >= 0 > pos[1]:
+                turn_count -= 1  # anit-clockwise crossing of positive x-axis
+            elif pos[0] > 0 and prev_pos[0] > prev_pos[1] <= 0 < pos[1]:
+                turn_count += 1  # clockwise crossing of positive x-axis
+            turns = np.append(turns, turn_count)
+
+        atan_result = np.arctan2(pos[1], pos[0])
+
+        if pos[1] == pos[0] == 0:
+            angle = 0
+        elif atan_result > 0:
+            angle = atan_result + 2 * np.pi * turn_count
+        else:
+            angle = atan_result + 2 * np.pi * (turn_count + 1)
+
+        angles = np.append(angles, angle)
 
     data_aug = data_aug.assign(
         turns=turns,
-        theta=data_aug["theta"] + turns * 2 * np.pi
+        theta=angles
     )
 
     data_aug = data_aug.assign(
         angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
     )
-    return data_aug
+
+    return data_aug[['x_pos', 'y_pos', 'time', 'magnitude', 'distance', 'turns', 'theta', 'angular_velocity']]
+
+    # if not time_unit == "seconds":
+    #     data_aug = data_aug.assign(time = data_aug["time"]/1000)
+    #
+    # data_aug = data_aug.assign(
+    #     distance=data_aug["magnitude"].diff(),
+    #     angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
+    # )
+    # if "turns" not in data_aug.columns:
+    #     turn_count = 0
+    #     turns = np.array([])
+    #     for row_idx in data_aug.index:
+    #         if data_aug.loc[row_idx, "angular_velocity"] > np.pi * 2:
+    #             turn_count += 1
+    #
+    #         turns = np.append(turns, turn_count)
+    # else:
+    #    turns = data_aug["turns"]
+    #
+    # data_aug = data_aug.assign(
+    #     turns=turns,
+    #     theta=data_aug["theta"] + turns * 2 * np.pi
+    # )
+    #
+    # data_aug = data_aug.assign(
+    #     angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
+    # )
+    #
+    # col_order = ['x_pos', 'y_pos', 'time', 'magnitude', 'theta', 'distance',
+    #    'angular_velocity', 'turns']
+    # return data_aug[col_order]
 
 
-def create_feature(spiral_data):
-    spiral_data: pd.DataFrame
-    mean_values = np.mean(spiral_data, axis=0)
-    sum_values = np.sum(spiral_data, axis=0)
-    rms_vals = np.sqrt(np.mean(spiral_data ** 2, axis=0))
+def create_feature(track_data):
+    track_data: pd.DataFrame
+    mean_values = np.mean(track_data, axis=0)
+    rms_vals = np.sqrt(np.mean(track_data ** 2, axis=0))
 
-    return np.array(np.concatenate([mean_values.values, sum_values.values, rms_vals.values]))
+    return np.array(np.concatenate([mean_values.values, rms_vals.values]))
 
 
 class SpiralTest:
@@ -104,9 +159,10 @@ class SpiralTest:
 
         self.prediction_model = joblib.load("data/linear_regression_model.joblib")
 
-        self.output = None
+        self.prediction, self.classification = None, None
         self.draw_trace = draw_trace
         self.auto_run = auto_run
+        self.ignore_turn = False
 
     def update_display(self):
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
@@ -180,47 +236,19 @@ class SpiralTest:
             self.parent.speak_text("Thank you for completing the spiral test", visual=False)
 
         data_aug = augment_data(self.tracking_data, spiral_radius=self.spiral_size.x/2)
-        print(data_aug.columns)
+        plt.scatter(data_aug["x_pos"], data_aug["y_pos"])
+        plt.show()
+
+        plt.plot(data_aug["time"], data_aug["theta"])
+        plt.show()
         spiral_features = create_feature(data_aug)
 
         prediction = self.prediction_model.predict(spiral_features.reshape(1, -1))
-        print(prediction)
+        self.prediction = prediction[0]
+        self.classification = self.prediction > 0.5
 
-        # pixel_positions = [self.mouse_positions[idx, 0:2] - self.spiral_offset for idx in
-        #                    range(len(self.mouse_positions))]
-        # rel_positions = [self.mouse_positions[idx, 0:2] - self.center_offset for idx in
-        #                  range(len(self.mouse_positions))]
-        # errors = [(self.get_closest_coord_2(self.mouse_positions[idx, 0:2]))[2] for idx in
-        #           range(len(self.mouse_positions))]
-        #
-        # data = np.concatenate((np.array(pixel_positions), np.array(rel_positions),
-        #                        np.expand_dims(self.mouse_positions[:, 3], axis=1),
-        #                        np.expand_dims(np.array(errors), axis=1),
-        #                        np.expand_dims(np.array(self.mouse_positions[:, 2] - self.mouse_positions[0, 2]),
-        #                                       axis=1)), axis=1)
-        #
-        # self.output = pd.DataFrame(data=data,
-        #                            columns=["Plot X", "Plot Y", "rel_pos_x", "rel_pos_y", "theta", "error",
-        #                                     "Time"]), self.spiral_size
-
-        # selected_data = self.tracking_data.columns
-        # print(selected_data)
 
     def process_input(self, pos):
-        rel_pos = pos - self.center_offset
-        true_pos = [self.center_offset[0] + rel_pos[0], self.center_offset[1] - rel_pos[1]]
-
-        if rel_pos[0] > 0 and self.prev_pos[0] > 0 and self.prev_pos[1] >= 0 > rel_pos[1]:
-            self.turns -= 1  # anit-clockwise crossing of positive x-axis
-        elif rel_pos[0] > 0 and self.prev_pos[0] > self.prev_pos[1] <= 0 < rel_pos[1]:
-            self.turns += 1  # clockwise crossing of positive x-axis
-            # print(self.turns)
-
-        if np.arctan2(*np.flip(pos - self.center_offset)) > 0:
-            angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * self.turns
-        else:
-            angle = np.arctan2(*np.flip(pos - self.center_offset)) + 2 * np.pi * (self.turns + 1)
-
         idx, _, _ = self.get_closest_coord_2(np.array(pos))
         self.tracking_data.loc[self.tracking_data.shape[0]] = [*(pos - self.spiral_offset), time.monotonic() - self.start_time]
 
@@ -232,13 +260,12 @@ class SpiralTest:
             update_flag = True
 
         if idx - self.coord_idx < 10:
-            for i in range(idx - self.coord_idx):
+            for i in range(self.coord_idx, idx+1):
                 pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
-                             self.target_coords[self.coord_idx, :],
-                             self.target_coords[min([idx, self.target_coords.shape[0]-1]), :], width=3)
+                             self.target_coords[i, :],
+                             self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
 
-                self.coord_idx += 1
-                idx += 1
+            self.coord_idx = idx
 
             if self.coord_idx == len(self.target_coords) - 1:
                 self.spiral_finished = True
@@ -253,14 +280,16 @@ class SpiralTest:
         self.entry_sequence()
         while self.running:
             if self.auto_run:
-                self.start_time = time.monotonic()
-
-                mu, sigma = 0.01, 0.001
-                sim_positions = self.target_coords + np.random.normal(0, 4, self.target_coords.shape)
+                mu, sigma = 0.05, 0.001
+                sim_positions = self.target_coords + np.random.normal(0, 3, self.target_coords.shape)
                 start_pos = sim_positions[0, :]
 
-                self.tracking_data.loc[self.tracking_data.shape[0]] = [*(start_pos - self.spiral_offset), time.monotonic() - self.start_time]
+                self.tracking_data.loc[self.tracking_data.shape[0]] = [
+                    *(start_pos - self.spiral_offset), 0
+                ]
                 self.prev_pos = pg.Vector2(start_pos.tolist()) - self.center_offset
+
+                self.start_time = time.monotonic()
 
                 for idx in range(1, sim_positions.shape[0]):
                     pos = pg.Vector2(sim_positions[idx, :].tolist())
@@ -268,11 +297,8 @@ class SpiralTest:
                     self.process_input(pos)
                     self.prev_pos = pos - self.center_offset
 
-                    if idx == 100:
-
-                        take_screenshot(self.window, "spiral_test")
-
-                print(self.tracking_data["time"].shape, np.cumsum(sigma * np.random.randn(sim_positions.shape[0]) + mu).shape)
+                    # if idx == 100:
+                    #     take_screenshot(self.window, "spiral_test")
 
                 self.tracking_data.loc[:, "time"] = np.cumsum(sigma * np.random.randn(sim_positions.shape[0]) + mu)
 
@@ -282,22 +308,24 @@ class SpiralTest:
                 for event in pg.event.get():
                     if event.type == pg.MOUSEBUTTONDOWN:
                         if not self.spiral_started:
-                            pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
-                            idx, _, _ = self.get_closest_coord_2(np.array(pos))
-                            self.mouse_positions = np.append(
-                                self.mouse_positions, np.expand_dims([*pos, time.perf_counter(), idx], axis=0), axis=0)
-                            self.spiral_started = True
-                            self.prev_pos = pos - self.center_offset
 
-                            if (pos - self.center_offset)[1] < 0:
-                                self.turns -= 1
+                            pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+
+                            self.tracking_data.loc[self.tracking_data.shape[0]] = [
+                                *(pos - self.spiral_offset), 0
+                            ]
+
+                            self.prev_pos = pos - self.center_offset
+                            self.spiral_started = True
+                            self.start_time = time.monotonic()
 
                         self.mouse_down = True
 
                     elif event.type == pg.MOUSEMOTION and self.mouse_down:
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
-                        print(pos)
+                        # print(pos)
                         self.process_input(pos)
+                        self.prev_pos = pos - self.center_offset
 
                     elif event.type == pg.MOUSEBUTTONUP:
                         self.mouse_down = False
@@ -321,33 +349,6 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=True, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=False, auto_run=True, spiral_size=600)
     spiral_test.loop()  # optionally extract data from here as array
-    spiral_data, spiral_size = spiral_test.output
-    # Spiral data is a pd dataframe that contains the coordinates
-    # reconstructed image should be of size spiral_size
-    # file_path = r'\user_drawing\user_spiral.txt'
-    # spiral_data.to_csv(file_path, index=False)
-    # spiral_test.plot_data.to_csv("spiral_data_ref.csv", index=False)
-    #
-    # # reconstruct image
-    # spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
-    # spiral_image.fill(Colours.white.value)  # fill with white background
-    # # draw in lines between each point recorded
-    # pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["Plot X", "Plot Y"]].to_numpy(), width=3)
-    #
-    # img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
-    # img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
-    # img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
-    # cv2.imwrite("spiral.png", img_array)  # Save image
-
-    # os.chdir(os.getcwd() + "/data")
-    #
-    # feature_engineering = FeatureEngineering(spiral_data)
-    # spiral_data_aug = feature_engineering.process_data()
-    #
-    # spiral_analytics = DataAnalytics(spiral_data=spiral_data_aug)
-    # spiral_analytics.classify()
-
-    # spiral.get_prob_reg(spiral_data_aug, 'user_data')
-    # spiral.error_graphs()
+    print(spiral_test.classification, spiral_test.prediction)

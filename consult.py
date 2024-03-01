@@ -100,7 +100,7 @@ class Consultation:
         self.auto_run = auto_run
         self.modules = {
             "Shapes": ShapeSearcher(parent=self, auto_run=auto_run),
-            "Spiral": SpiralTest(turns=3, touch_size=(self.display_size.y*0.9, self.display_size.y*0.9), parent=self),
+            "Spiral": SpiralTest(turns=3, spiral_size=self.display_size.y*0.9, parent=self, auto_run=auto_run),
             "VAT": VisualAttentionTest(parent=self, grid_size=(self.display_size.y*0.9, self.display_size.y*0.9), auto_run=auto_run),
             "WCT": CardGame(parent=self, max_turns=wct_turns, auto_run=auto_run,),
             "PSS": PSS(parent=self, question_count=self.pss_question_count, auto_run=auto_run, preload_audio=False),
@@ -110,7 +110,7 @@ class Consultation:
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["PSS", "Shapes", "VAT", "WCT", "Clock"]
+        self.module_order = ["Spiral", "PSS", "Shapes", "VAT", "WCT", "Clock", ]
 
         self.module_idx = 0
 
@@ -263,23 +263,8 @@ class Consultation:
                       "question_counts": self.modules["Shapes"].question_counts,
                       "answer_times": self.modules["Shapes"].answer_times}
         # Spiral Test Handling
-        try:
-            spiral_data, spiral_size = self.modules["Spiral"].output
-            spiral_data.to_csv('spiraldata.csv', index=False)
-
-            spiral_image = pg.Surface(spiral_size, pg.SRCALPHA)  # create surface of correct size
-            spiral_image.fill(Colours.white.value)  # fill with white background
-            # draw in lines between each point recorded
-            pg.draw.lines(spiral_image, Colours.black.value, False, spiral_data[["pixel_x", "pixel_y"]].to_numpy(),
-                          width=3)
-
-            img_array = pg.surfarray.array3d(spiral_image)  # extract the pixel data from the pygame surface
-            img_array = cv2.transpose(img_array)  # transpose to switch from pg to cv2 axis
-            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)  # switch from RGB (pygame) to BGR (cv2) colours
-            cv2.imwrite("consultation/response_data/spiral.png", img_array)  # Save image
-
-        except TypeError:
-            pass
+        spiral_data = {"classification": int(self.modules["Spiral"].classification),
+                       "value": self.modules["Spiral"].prediction}
 
         if self.user is None:
             user_id = None
@@ -295,7 +280,8 @@ class Consultation:
                 "wct": wct_answers,
                 "vat": vat_answers,
                 "clock": clock_data,
-                "shape": shape_data
+                "shape": shape_data,
+                "spiral": spiral_data
             }
         }
 
@@ -377,6 +363,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=False, seamless=True, auto_run=False, username="benhoskings", password="pass"
+        pi=False, authenticate=False, seamless=True, auto_run=True, username="benhoskings", password="pass"
     )
     consult.loop()
