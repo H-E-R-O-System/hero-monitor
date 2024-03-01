@@ -278,7 +278,7 @@ class SpiralTest:
 
                 update_flag = True
 
-        if self.prev_pos:
+        if update_flag:
             self.update_display(top=False)
 
         print(f"process time: {time.monotonic() - start}")
