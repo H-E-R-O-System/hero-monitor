@@ -300,20 +300,18 @@ class Consultation:
         base_path = "data"
         if self.user:
             if self.local:
-                if not os.path.isdir(f"data/consult_records/user_{self.user.id}"):
-                    os.mkdir(f"data/consult_records/user_{self.user.id}")
+                record_path = os.path.join(base_path, "consult_records")
+                if not os.path.isdir(record_path):
+                    os.mkdir(record_path)
 
-                if not os.path.isdir(f"{base_path}/consult_records/user_{self.user.id}"):
-                    os.mkdir(f"{base_path}/consult_records/user_{self.user.id}")
+                user_path = os.path.join(record_path, f"user_{self.user.id}")
+                if not os.path.isdir(user_path):
+                    os.mkdir(user_path)
 
-                save_path_local = f"data/consult_records/user_{self.user.id}/consult_{self.id}.json"
-                save_path_global = f"{base_path}/consult_records/user_{self.user.id}/consult_{self.id}.json"
+                consult_path = os.path.join(user_path, f"consult_{self.id}")
                 # records.insert_one(self.output)
 
-                with open(save_path_local, "w") as write_file:
-                    json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
-
-                with open(save_path_global, "w") as write_file:
+                with open(consult_path, "w") as write_file:
                     json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
 
             else:
