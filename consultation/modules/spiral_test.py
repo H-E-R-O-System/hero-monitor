@@ -248,6 +248,7 @@ class SpiralTest:
 
 
     def process_input(self, pos):
+        start = time.monotonic()
         idx, _, _ = self.get_closest_coord_2(np.array(pos))
         self.tracking_data.loc[self.tracking_data.shape[0]] = [*(pos - self.spiral_offset), time.monotonic() - self.start_time]
 
@@ -259,7 +260,9 @@ class SpiralTest:
             update_flag = True
 
         if idx - self.coord_idx < 10:
+            print(idx-self.coord_idx)
             for i in range(self.coord_idx, idx+1):
+
                 pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                              self.target_coords[i, :],
                              self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
@@ -274,6 +277,8 @@ class SpiralTest:
 
         if update_flag:
             self.update_display()
+
+        print(f"process time: {time.monotonic() - start}")
 
     def loop(self):
         self.entry_sequence()
@@ -328,7 +333,6 @@ class SpiralTest:
 
                     elif event.type == pg.MOUSEMOTION and self.mouse_down:
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
-                        # print(pos)
                         self.process_input(pos)
                         self.prev_pos = pos - self.center_offset
 
@@ -350,10 +354,11 @@ if __name__ == "__main__":
     # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
     os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/home/pi")
 
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=True, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=False, spiral_size=600)
     spiral_test.loop()  # optionally extract data from here as array
     print(spiral_test.classification, spiral_test.prediction)
