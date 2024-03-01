@@ -56,7 +56,7 @@ class ConsultConfig:
 
 class Consultation:
     def __init__(self, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True,
-                 username=None, password=None, consult_date=None, auto_run=False, wct_turns=8,
+                 username=None, password=None, consult_date=None, auto_run=False, wct_turns=20,
                  pss_questions=10, db_client=None):
 
         self.authenticate_user = authenticate
@@ -110,7 +110,7 @@ class Consultation:
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["Clock", "Shapes", "PSS", "Spiral", "VAT", "WCT", ]
+        self.module_order = ["Shapes", "VAT", "WCT", "Clock", "Shapes", "PSS", "Spiral",  "WCT"]
 
         self.module_idx = 0
 

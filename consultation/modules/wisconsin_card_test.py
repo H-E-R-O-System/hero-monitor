@@ -206,13 +206,13 @@ class CardGame:
 
         self.display_screen.add_multiline_text("Match The Card!", rect=info_rect.scale_by(0.9, 0.9),
                                                font_size=50)
+        info_text = ("In this game you must match the top card to one of the three shown below it. "
+                     "You must work out how to match the cards from me telling you if you are correct or not. "
+                     "The way in which cards match will change throughout the game, so you must adapt for this too! "
+                     "An example of a match is shown below.")
 
         self.display_screen.add_multiline_text(
-            rect=info_rect.scale_by(0.9, 0.9), text=
-            "n this game you must match the cards based on the pictures on the cards to the 3 cards at the bottom of"
-            " the screen. Each card has a different colour, number and shape. There is a rule for matching the cards "
-            "but I cannot tell you what the rule is but I can tell you if you are correct. Finally the rule will "
-            "change during the game and you will have to figure out the new rule.",
+            rect=info_rect.scale_by(0.9, 0.9), text=info_text,
             center_vertical=True)
 
         question_rect = pg.Rect(0.05 * self.display_size.x, 0.05 * self.display_size.y, 0.4 * self.display_size.x,
@@ -238,7 +238,7 @@ class CardGame:
 
         self.update_displays()
         if self.parent:
-            self.parent.speak_text("Match the card", visual=True,
+            self.parent.speak_text(info_text, visual=True,
                                    display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         wait = True

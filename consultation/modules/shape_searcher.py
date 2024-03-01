@@ -123,7 +123,7 @@ class ShapeSearcher:
         if question == "perception":
             info_text = (
                 "You will see three coloured shapes located above and below a black line. " +
-                "Your task is to say whether the shapes that you see above the line are the same as the shapes you will see below the line.")
+                "Your task is to say whether the shapes that you see above the line are the same as the shapes below the line.")
             self.display_screen.add_multiline_text(
                 rect=info_rect.scale_by(0.9, 0.9), text=info_text,
                 center_vertical=True)
@@ -164,6 +164,7 @@ class ShapeSearcher:
         self.display_screen.state = 0
         self.display_screen.refresh()
         self.display_screen.instruction = temp_instruction
+        print(self.display_screen.instruction)
         self.update_display()
 
     def update_display(self):
@@ -182,7 +183,7 @@ class ShapeSearcher:
         if self.parent:
             self.parent.speak_text("your next set of tasks will all involve matching sets of shapes",
                                    display_screen=self.display_screen, touch_screen=self.touch_screen)
-
+        self.display_screen.instruction = "Match the sets!"
         self.instruction_loop(question="perception")
 
         self.perception_question()
