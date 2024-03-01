@@ -152,6 +152,10 @@ class ClockDraw:
         self.display_screen.state = 1
         self.display_screen.instruction = None
 
+        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(150, 150), (100, 100))
+        start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+        self.touch_screen.sprites = GameObjects([start_button])
+
         info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
         pg.draw.rect(self.display_screen.surface, Colours.white.value,
                      info_rect)
@@ -182,12 +186,6 @@ class ClockDraw:
         if self.parent:
             self.parent.speak_text(info_text, display_screen=self.display_screen, touch_screen=self.touch_screen)
 
-        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(150, 150), (100, 100))
-        start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
-        self.touch_screen.sprites = GameObjects([start_button])
-        self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
-        self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
-        pg.display.flip()
 
         wait = True
         while wait:
