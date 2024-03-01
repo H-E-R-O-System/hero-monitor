@@ -37,7 +37,7 @@ class PSS:
         self.touch_screen = TouchScreen(size)
 
         gap = 10
-        labels = ["Never", "Almost Never", "Sometimes", "Very Often", "Always"]
+        labels = ["Never", "Rarely", "Sometimes", "Often", "Always"]
         count = len(labels)
 
         self.likert_buttons = []
