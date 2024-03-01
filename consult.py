@@ -57,7 +57,7 @@ class ConsultConfig:
 class Consultation:
     def __init__(self, enable_speech=True, scale=1, pi=True, authenticate=True, seamless=True,
                  username=None, password=None, consult_date=None, auto_run=False, wct_turns=20,
-                 pss_questions=10, db_client=None):
+                 pss_questions=10, db_client=None, local=True):
 
         self.authenticate_user = authenticate
         self.user = None
@@ -124,10 +124,14 @@ class Consultation:
         else:
             self.date = date.today()
 
-        if db_client is None:
-            self.db_client = DBClient()
+        self.local = local
+        if not local:
+            if db_client is None:
+                self.db_client = DBClient()
+            else:
+                self.db_client = db_client
         else:
-            self.db_client = db_client
+            self.db_client = None
 
         # self.update_display()
         # pg.event.pump()
@@ -156,7 +160,8 @@ class Consultation:
         pg.display.flip()
 
     def speak_text(self, text, visual=True, display_screen=None, touch_screen=None):
-
+        if self.auto_run:
+            return
         if not display_screen:
             display_screen = self.display_screen
 
@@ -292,8 +297,29 @@ class Consultation:
             }
         }
 
-        self.db_client: DBClient
-        self.db_client.upload_consult(self.output)
+        base_path = "data"
+        if self.user:
+            if self.local:
+                if not os.path.isdir(f"data/consult_records/user_{self.user.id}"):
+                    os.mkdir(f"data/consult_records/user_{self.user.id}")
+
+                if not os.path.isdir(f"{base_path}/consult_records/user_{self.user.id}"):
+                    os.mkdir(f"{base_path}/consult_records/user_{self.user.id}")
+
+                save_path_local = f"data/consult_records/user_{self.user.id}/consult_{self.id}.json"
+                save_path_global = f"{base_path}/consult_records/user_{self.user.id}/consult_{self.id}.json"
+                # records.insert_one(self.output)
+
+                with open(save_path_local, "w") as write_file:
+                    json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+
+                with open(save_path_global, "w") as write_file:
+                    json.dump(self.output, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+
+            else:
+                self.db_client: DBClient
+                self.db_client.upload_consult(self.output)
+                records.insert_one(self.output)
 
         shutil.rmtree("consultation/question_audio_tmp")
 
@@ -370,6 +396,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=False, seamless=True, auto_run=False, username="benhoskings", password="pass", pss_questions=2
+        pi=False, authenticate=False, seamless=True, auto_run=True, username="benhoskings", password="pass", pss_questions=2
     )
     consult.loop()
