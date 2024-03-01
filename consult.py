@@ -92,7 +92,6 @@ class Consultation:
         self.main_button = GameButton((self.display_size - button_size) /2, button_size, id=1, text="Start")
 
         self.avatar = Avatar(size=(self.display_size.y * 0.7, self.display_size.y * 0.7))
-        # self.avatar = Avatar(scale=pg.Vector2(3, 3))
         self.display_screen.avatar = self.avatar
 
         self.pss_question_count = pss_questions
@@ -110,7 +109,7 @@ class Consultation:
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["Clock", "Shapes", "VAT", "WCT", "Clock", "Shapes", "PSS", "Spiral",  "WCT"]
+        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS"]
 
         self.module_idx = 0
 

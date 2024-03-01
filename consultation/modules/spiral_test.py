@@ -110,7 +110,7 @@ def create_feature(spiral_data):
 
 
 class SpiralTest:
-    def __init__(self, turns, size=(1024, 600), spiral_size=400, parent=None, draw_trace=False, auto_run=False):
+    def __init__(self, turns, size=(1024, 600), spiral_size=400, parent=None, draw_trace=True, auto_run=False):
         self.parent = parent
         if parent is not None:
             self.display_size = parent.display_size
