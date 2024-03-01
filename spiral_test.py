@@ -166,7 +166,7 @@ class SpiralTest:
             self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
             self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         else:
-            self.bottom_screen.blit(self.touch_screen.surface, (0, 0))
+            self.bottom_screen.blit(self.touch_screen.base_surface, (0, 0))
         pg.display.flip()
 
     def get_closest_coord_2(self, pos):
