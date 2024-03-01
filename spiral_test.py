@@ -273,7 +273,7 @@ class SpiralTest:
                     self.spiral_finished = True
                     self.running = False
 
-                update_flag = True
+        update_flag = True
 
         if update_flag:
             self.update_display()
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    os.chdir("/home/pi/hero-monitor")
+    # os.chdir("/home/pi/hero-monitor")
     print(os.getcwd())
 
     pg.init()
