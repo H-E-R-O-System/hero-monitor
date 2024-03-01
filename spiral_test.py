@@ -260,20 +260,20 @@ class SpiralTest:
             update_flag = True
 
         if idx - self.coord_idx < 10:
-            print(idx-self.coord_idx)
-            for i in range(self.coord_idx, idx+1):
+            if (idx-self.coord_idx) > 0:
+                for i in range(self.coord_idx, idx+1):
 
-                pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
-                             self.target_coords[i, :],
-                             self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
+                    pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
+                                 self.target_coords[i, :],
+                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
 
-            self.coord_idx = idx
+                self.coord_idx = idx
 
-            if self.coord_idx == len(self.target_coords) - 1:
-                self.spiral_finished = True
-                self.running = False
+                if self.coord_idx == len(self.target_coords) - 1:
+                    self.spiral_finished = True
+                    self.running = False
 
-            update_flag = True
+                update_flag = True
 
         if update_flag:
             self.update_display()
