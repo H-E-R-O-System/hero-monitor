@@ -120,9 +120,9 @@ class ClockDraw:
         time = start
         min_ang, hour_ang = 0, 0
         while not valid_time:
-            time = start + datetime.timedelta(minutes=randrange(60*24))
-            min_ang = time.minute/60 * 360
-            hour_ang = (time.hour % 12)/12 * 360 + min_ang / 12
+            time = start + datetime.timedelta(minutes=randrange(60 * 24))
+            min_ang = time.minute / 60 * 360
+            hour_ang = (time.hour % 12) / 12 * 360 + min_ang / 12
 
             if abs(min_ang - hour_ang) > 60:
                 valid_time = True
@@ -134,9 +134,9 @@ class ClockDraw:
         self.clock_offset = (self.display_size - pg.Vector2(self.clock_radius * 2, self.clock_radius * 2)) / 2
 
         self.minute_hand = ClockHand(id="minute", clock_radius=self.clock_radius,
-                                     hand_radius=int(self.clock_radius*0.9))
+                                     hand_radius=int(self.clock_radius * 0.9))
         self.hour_hand = ClockHand(id="hour", clock_radius=self.clock_radius,
-                                     hand_radius=int(self.clock_radius * 0.7))
+                                   hand_radius=int(self.clock_radius * 0.7))
 
         self.hand_clicked = None
 
@@ -162,16 +162,17 @@ class ClockDraw:
 
         self.display_screen.add_multiline_text("Set the Time!", rect=info_rect.scale_by(0.9, 0.9),
                                                font_size=50)
+        info_text = (
+            "Please set the clock to the time shown in the screen. To do this, drag each clock hand around to the "
+            "position that you think it should be in. An example of a correct time is shown below.")
 
         self.display_screen.add_multiline_text(
-            rect=info_rect.scale_by(0.9, 0.9), text=
-            "Please set the clock to the time shown in the screen. To do this, drag each clock hand around to the "
-            "position that you think it should be in. See the example below.",
+            rect=info_rect.scale_by(0.9, 0.9), text=info_text,
             center_vertical=True, font_size=40)
 
 
-        im_size = pg.Vector2(self.touch_screen.surface.get_size())*0.95
-        image_rect = pg.Rect((self.touch_screen.size - im_size)/2, im_size)
+        im_size = pg.Vector2(self.touch_screen.surface.get_size()) * 0.95
+        image_rect = pg.Rect((self.touch_screen.size - im_size) / 2, im_size)
         self.touch_screen.load_image("consultation/graphics/instructions/clock_example.png",
                                      pos=image_rect.topleft, size=image_rect.size)
 
@@ -181,6 +182,10 @@ class ClockDraw:
         self.top_screen.blit(self.display_screen.get_surface(), (0, 0))
         self.bottom_screen.blit(self.touch_screen.get_surface(), (0, 0))
         pg.display.flip()
+
+        if self.parent:
+            self.parent.speak_text(info_text, display_screen=self.display_screen, touch_screen=self.touch_screen)
+
 
         wait = True
         while wait:
@@ -210,11 +215,16 @@ class ClockDraw:
         # add everything needed to introduce your module and explain
         # what the users are expected to do (e.g. game rules, aim, etc.)
         self.running = True
+        self.update_display()
+        if self.parent:
+            self.parent.speak_text(
+                "You will now have to set the hands of a clock to the position indicated on the screen.",
+                display_screen=self.display_screen, touch_screen=self.touch_screen)
         self.instruction_loop()
 
         pg.draw.circle(self.touch_screen.base_surface, Colours.black.value, self.center_offset, self.clock_radius,
                        width=5)
-        self.touch_screen.add_multiline_text(self.time.strftime("%H:%M"), pg.Rect((0, 10), self.display_size),
+        self.touch_screen.add_multiline_text(self.time.strftime("%-H:%M"), pg.Rect((0, 10), self.display_size),
                                              center_horizontal=True, base=True)
 
         button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(200, 150), (150, 100))
@@ -223,6 +233,9 @@ class ClockDraw:
         self.touch_screen.sprites = GameObjects([self.minute_hand, self.hour_hand, submit_button])
 
         self.update_display()  # render graphics to main consult
+
+        if self.parent:
+            self.parent.speak_text(f"Set the time to {self.time.strftime('%-H:%M')}", display_screen=self.display_screen, touch_screen=self.touch_screen)
         # add code below
 
     def exit_sequence(self):
@@ -236,10 +249,10 @@ class ClockDraw:
 
         rel_pos_min = self.minute_hand.endpoint - pg.Vector2(self.clock_radius, self.clock_radius)
 
-        if np.pi/2 + np.arctan2(*np.flip(rel_pos_min)) > 0:
-            min_angle = np.pi/2 + np.arctan2(*np.flip(rel_pos_min))
+        if np.pi / 2 + np.arctan2(*np.flip(rel_pos_min)) > 0:
+            min_angle = np.pi / 2 + np.arctan2(*np.flip(rel_pos_min))
         else:
-            min_angle = 5*np.pi/2 + np.arctan2(*np.flip(rel_pos_min))
+            min_angle = 5 * np.pi / 2 + np.arctan2(*np.flip(rel_pos_min))
 
         rel_pos_hour = self.hour_hand.endpoint - pg.Vector2(self.clock_radius, self.clock_radius)
         if np.pi / 2 + np.arctan2(*np.flip(rel_pos_hour)) > 0:
@@ -270,7 +283,8 @@ class ClockDraw:
                 threshold_val = 20
 
                 pass_angle = (math.sqrt(2) * threshold_val) / 2
-                self.angle_errors = [random.gauss(mu=pass_angle*0.7, sigma=4), random.gauss(mu=pass_angle*0.7, sigma=4)]
+                self.angle_errors = [random.gauss(mu=pass_angle * 0.7, sigma=4),
+                                     random.gauss(mu=pass_angle * 0.7, sigma=4)]
                 self.running = False
 
             else:
@@ -315,7 +329,7 @@ class ClockDraw:
 
 
 def update_time():
-    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250*0.7)
+    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250 * 0.7)
 
     test_count = 10000
     start_time = time.perf_counter()

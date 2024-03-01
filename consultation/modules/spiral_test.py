@@ -234,12 +234,12 @@ class SpiralTest:
             self.parent.speak_text("Thank you for completing the spiral test", display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         data_aug = augment_data(self.tracking_data, spiral_radius=self.spiral_size.x/2)
-        print(data_aug.tail(20).to_string())
-        plt.scatter(data_aug["x_pos"], data_aug["y_pos"])
-        plt.show()
-
-        plt.plot(data_aug["time"], data_aug["theta"])
-        plt.show()
+        # print(data_aug.tail(20).to_string())
+        # plt.scatter(data_aug["x_pos"], data_aug["y_pos"])
+        # plt.show()
+        #
+        # plt.plot(data_aug["time"], data_aug["theta"])
+        # plt.show()
         spiral_features = create_feature(data_aug)
 
         prediction = self.prediction_model.predict(spiral_features.values.reshape(1, -1))

@@ -110,7 +110,7 @@ class Consultation:
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["Spiral", "PSS", "Shapes", "VAT", "WCT", "Clock", ]
+        self.module_order = ["Clock", "Shapes", "PSS", "Spiral", "VAT", "WCT", ]
 
         self.module_idx = 0
 
@@ -186,7 +186,14 @@ class Consultation:
         pattern = re.compile("|".join(rep_2.keys()))
         text_index = pattern.sub(lambda m: rep_2[re.escape(m.group(0))], text_index).strip()
 
-        mouth_ids = [int(num) for num in text_index.split(" ")]
+        mouth_ids = []
+        for num in text_index.split(" "):
+            try:
+                mouth_idx = int(num)
+                mouth_ids.append(mouth_idx)
+
+            except ValueError:
+                pass
 
         question_audio = gtts.gTTS(text=text, lang='en', slow=False)
         question_audio_file = 'consultation/question_audio_tmp/tempsave.mp3'
@@ -203,10 +210,13 @@ class Consultation:
             start = time.monotonic()
             while pg.mixer.music.get_busy():
                 if time.monotonic() - start > 0.15:
-                    display_screen.avatar.mouth_idx = mouth_ids[mouth_idx]
-                    self.update_display(display_screen=display_screen, touch_screen=touch_screen)
-                    start = time.monotonic()
-                    mouth_idx += 1
+                    try:
+                        display_screen.avatar.mouth_idx = mouth_ids[mouth_idx]
+                        self.update_display(display_screen=display_screen, touch_screen=touch_screen)
+                        start = time.monotonic()
+                        mouth_idx += 1
+                    except IndexError:
+                        pass
 
             display_screen.avatar.mouth_idx = 0
 
@@ -361,6 +371,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=False, seamless=True, auto_run=True, username="benhoskings", password="pass"
+        pi=False, authenticate=False, seamless=True, auto_run=False, username="benhoskings", password="pass", pss_questions=2
     )
     consult.loop()

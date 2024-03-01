@@ -81,8 +81,6 @@ class ShapeSearcher:
                                                      self.touch_screen.size.y - button_pad.y - self.button_size.y),
                                            size=self.button_size, id=0, text="Different")
 
-        self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
-
         self.shape_size = pg.Vector2(80, 80)
         self.match = None
 
@@ -112,7 +110,7 @@ class ShapeSearcher:
         self.display_screen.refresh()
         self.display_screen.instruction = None
 
-        button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
+        button_rect = pg.Rect((self.display_size - pg.Vector2(600, 400))/2, (600, 400))
         start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
         self.touch_screen.sprites = GameObjects([start_button])
         info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
@@ -123,26 +121,26 @@ class ShapeSearcher:
                                                font_size=50)
 
         if question == "perception":
+            info_text = (
+                "You will see three coloured shapes located above and below a black line. " +
+                "Your task is to say whether the shapes that you see above the line are the same as the shapes you will see below the line.")
             self.display_screen.add_multiline_text(
-                rect=info_rect.scale_by(0.9, 0.9), text=
-                "During this session, you will see three coloured shapes located above and below a black line. "
-                "Your task is to say whether the coloured shapes that you see above the line are the same as the "
-                "coloured shapes you will see below the line.",
+                rect=info_rect.scale_by(0.9, 0.9), text=info_text,
                 center_vertical=True)
         else:
+            info_text = ("You will now have to try and remember a set of coloured shapes. You will be shown two or three " +
+                "shapes, which will then disappear after a short amount of time. A second set of shapes will then appear, " +
+                "and your task is to identify if the two sets are the same or different. Sets are considered the " +
+                "same if each shape and colour matches.")
+            # info_text=""
             self.display_screen.add_multiline_text(
-                rect=info_rect.scale_by(0.9, 0.9), text=
-                "You will now have to try and remember a set of coloured shapes. You will be shown two or three "
-                "shapes, which will then disappear. After a short amount of time, a second set set of shapes will appear. "
-                "Your task is to identify if the two sets of shapes are the same or different. Sets are considered the "
-                "same if each shape and colour matches.",
+                rect=info_rect.scale_by(0.9, 0.9), text=info_text,
                 center_vertical=True)
 
         self.update_display()
         if self.parent:
             self.parent.speak_text(
-                "Match the card", visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen
-            )
+                info_text, visual=True, display_screen=self.display_screen, touch_screen=self.touch_screen)
 
         self.update_display()
         wait = True
@@ -180,6 +178,11 @@ class ShapeSearcher:
         # what the users are expected to do (e.g. game rules, aim, etc.)
 
         # only OPTIONAL and can leave blank
+        self.update_display()
+        if self.parent:
+            self.parent.speak_text("your next set of tasks will all involve matching sets of shapes",
+                                   display_screen=self.display_screen, touch_screen=self.touch_screen)
+
         self.instruction_loop(question="perception")
 
         self.perception_question()
@@ -233,8 +236,6 @@ class ShapeSearcher:
 
     def perception_question(self):
         self.touch_screen.refresh()
-
-        self.display_screen.instruction = "Do the sets match?"
 
         place_area = pg.Rect((0, 0), self.touch_screen.size).scale_by(0.95, 0.7)
         place_area.topleft -= pg.Vector2(0, self.touch_screen.size.y * 0.1)
@@ -343,8 +344,20 @@ class ShapeSearcher:
         else:
             # Update for next question
             if self.turns == 10:
+                if self.parent:
+                    self.display_screen.refresh()
+                    self.touch_screen.kill_sprites()
+                    self.touch_screen.refresh()
+                    self.display_screen.instruction = None
+                    self.update_display()
+
+                    self.parent.speak_text("Well done, we are now moving onto the second task",
+                                           display_screen=self.display_screen, touch_screen=self.touch_screen)
+                    self.display_screen.instruction = "Do the sets match?"
+
                 self.touch_screen.refresh()
                 self.instruction_loop("shape")
+                self.display_screen.refresh()
 
             if self.question_types[self.turns] == "perception":
                 self.perception_question()
@@ -371,7 +384,7 @@ class ShapeSearcher:
 
                 selection = random.choices([0, 1], weights=weights, k=1)[0]
                 self.process_selection(selection)
-                #
+
                 # if self.turns == 9:
                 #     self.auto_run = False
             else:

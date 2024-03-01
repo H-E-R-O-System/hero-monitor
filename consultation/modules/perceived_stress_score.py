@@ -116,7 +116,7 @@ class PSS:
 
     def exit_sequence(self):
         if self.parent:
-            self.parent.speak_text("Thank you for completing the PSS module")
+            self.parent.speak_text("Thank you for answering the questions")
         else:
             shutil.rmtree("consultation/question_audio_tmp")
 
