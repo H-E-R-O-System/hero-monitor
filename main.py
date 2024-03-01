@@ -9,3 +9,4 @@ pg.init()
 pg.event.pump()
 consult = Consultation(authenticate=True, seamless=True, auto_run=False)
 consult.loop()
+
