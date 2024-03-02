@@ -127,6 +127,7 @@ class AffectiveModule:
 
         self.display_screen.instruction = "Press the button to start"
         self.main_button.text = "begin"
+        self.display_screen.refresh()
 
     def exit_sequence(self):
         # post-loop completion section
