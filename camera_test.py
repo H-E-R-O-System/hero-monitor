@@ -111,7 +111,7 @@ import cv2
 
 print(list_ports())
 image_size = (1280, 720)
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(3,image_size[0])
 cap.set(4,image_size[1])
 
