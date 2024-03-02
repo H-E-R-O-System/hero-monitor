@@ -115,7 +115,7 @@ cap = cv2.VideoCapture(0)
 cap.set(3,image_size[0])
 cap.set(4,image_size[1])
 
-fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('affective.mp4', fourcc, 20.0, image_size)
 
 while(True):
