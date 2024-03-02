@@ -125,6 +125,9 @@ class AffectiveModule:
 
         print("question complete")
 
+        self.display_screen.instruction = "Press the button to start"
+        self.main_button.text = "begin"
+
     def exit_sequence(self):
         # post-loop completion section
         # maybe add short thank you for completing the section?
@@ -159,7 +162,7 @@ class AffectiveModule:
                     button_id = self.touch_screen.click_test(pos)
                     if button_id is not None:
                         if button_id:
-                            self.display_screen.instruction = "Press the button to start"
+                            self.display_screen.instruction = "Press the button to stop"
                             self.main_button.text = "I'm finished"
                             self.question_loop()
 
