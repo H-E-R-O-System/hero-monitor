@@ -255,14 +255,11 @@ class CardGame:
                         wait = False
 
                 elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    if event.key == pg.K_s:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            take_screenshot(self.parent.window)
                         else:
-                            img_array = pg.surfarray.array3d(self.touch_screen.get_surface())
-                            img_array = cv2.transpose(img_array)
-                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-                            cv2.imwrite("screenshots/wct.png", img_array)
+                            take_screenshot(self.window, "wisconsin_card_test")
 
     def render_game(self):
         # clear game screens

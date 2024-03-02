@@ -9,7 +9,6 @@ import joblib
 from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
-from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
 
 from consultation.utils import take_screenshot
 
@@ -342,9 +341,11 @@ class SpiralTest:
                         self.mouse_down = False
 
                     elif event.type == pg.KEYDOWN:
-                        if event.key == pg.K_x:
+                        if event.key == pg.K_s:
                             if self.parent:
-                                self.parent.take_screenshot()
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "Spiral trace")
 
                     elif event.type == pg.QUIT:
                         self.running = False
