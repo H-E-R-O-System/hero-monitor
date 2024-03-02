@@ -104,7 +104,8 @@ def list_ports():
                 print("Port %s for camera ( %s x %s) is present but does not reads." %(dev_port,h,w))
                 available_ports.append(dev_port)
         dev_port +=1
-    return available_ports,working_ports
+
+    return available_ports, working_ports
 
 import cv2
 
