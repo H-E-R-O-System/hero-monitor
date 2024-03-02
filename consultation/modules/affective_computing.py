@@ -44,14 +44,13 @@ class AffectiveModule:
         self.running = False
 
         try:
-            pygame.camera.init()
-            self.face_cam = pygame.camera.Camera(size=(1280, 720))
-            self.face_cam.start()
-            self.cam_size = self.face_cam.get_size()
+            # pygame.camera.init()
+            # self.face_cam = pygame.camera.Camera(size=(1280, 720))
+            # self.face_cam.start()
+            # self.cam_size = self.face_cam.get_size()
 
             self.pyaud = pyaudio.PyAudio()
             device_info = self.pyaud.get_default_input_device_info()
-            # print(device_info)
             self.audio_rate = int(device_info["defaultSampleRate"])
         except ValueError:
             self.face_cam = None
