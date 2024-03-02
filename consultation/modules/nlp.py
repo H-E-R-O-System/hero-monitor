@@ -1,3 +1,4 @@
+import os
 import pickle
 import whisper
 from transformers import AutoTokenizer
@@ -7,7 +8,7 @@ class NLP:
     def __init__(self):
         self.transcription_model = whisper.load_model('base')
 
-        nlp_model_file = 'consultation/modules/nlp_model.pkl'
+        nlp_model_file = 'models/nlp_model.pkl'
         with open(nlp_model_file, 'rb') as file:
             self.bert_tuned = pickle.load(file)
         
@@ -50,7 +51,10 @@ class NLP:
         probs = sigmoid(logits.squeeze().cpu())
         for i in range(len(probs)):
             if probs[i] > 0.5:
-                return(self.labels2symptom[i+1])
+                return self.labels2symptom[i + 1]
 
-nlp = NLP()
-print(nlp.classify_text('I am feeling sad'))
+
+if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    nlp = NLP()
+    print(nlp.classify_text('I am feeling happy'))

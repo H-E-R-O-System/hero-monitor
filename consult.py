@@ -105,11 +105,11 @@ class Consultation:
             "PSS": PSS(parent=self, question_count=self.pss_question_count, auto_run=auto_run, preload_audio=False),
             "Clock": ClockDraw(parent=self, auto_run=self.auto_run),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
+            "Affective": AffectiveModule(parent=self)
         }
 
-        # "Affective": AffectiveModule(parent=self)
-
-        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
+        # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
+        self.module_order = ["Affective", ]
 
         self.module_idx = 0
 
