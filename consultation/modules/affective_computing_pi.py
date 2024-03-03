@@ -119,7 +119,7 @@ class AffectiveModulePi:
         self.touch_screen.refresh()
 
         if self.listening:
-            self.touch_screen.load_image("consultation/graphics/listening.png", size=pg.Vector2(300, 300),
+            self.touch_screen.load_image(".../consultation/graphics/listening.png", size=pg.Vector2(300, 300),
                                          pos=pg.Vector2(self.display_size.x*0.5, self.display_size.y*0.4),
                                          location=BlitLocation.centre)
 
@@ -285,7 +285,8 @@ class AffectiveModulePi:
 
 if __name__ == "__main__":
     # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    os.chdir("/home/pi/hero-monitor")
+    # os.chdir("/home/pi/hero-monitor")
+    print(os.getcwd())
     pg.init()
     # Module Testing
     module_name = AffectiveModulePi(pi=True, cleanse_files=False)
