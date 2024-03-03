@@ -78,9 +78,10 @@ class AffectiveModulePi:
             # specify RGB only
             config = self.picam.create_preview_configuration({'format': 'BGR888'})
             self.picam.configure(config)
-            self.cv2_cam = None
             print("config done!!")
             print(self.cv2_cam)
+            self.cv2_cam = None
+
 
         else:
             cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # this is the magic!
@@ -166,6 +167,7 @@ class AffectiveModulePi:
 
         if self.picam:
             self.picam.start()
+            print("starting picam")
         else:
             self.cv2_cam = cv2.VideoCapture(0)
 
@@ -183,6 +185,7 @@ class AffectiveModulePi:
                 if self.picam:
                     # self.picam.capture_file(os.path.join(image_directory, f"im_{i}.png"))
                     frame = self.picam.capture_array()
+                    print(frame.shape)
 
                 elif self.cv2_cam:
                     ret, frame = self.cv2_cam.read()
