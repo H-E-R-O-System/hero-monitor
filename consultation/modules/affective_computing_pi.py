@@ -186,7 +186,6 @@ class AffectiveModulePi:
                 if self.picam:
                     # self.picam.capture_file(os.path.join(image_directory, f"im_{i}.png"))
                     frame = self.picam.capture_array()
-                    print(frame.shape)
 
                 elif self.cv2_cam:
                     ret, frame = self.cv2_cam.read()
