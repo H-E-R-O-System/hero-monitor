@@ -214,6 +214,8 @@ class AffectiveModulePi:
         self.update_display()
 
         self.question_idx += 1
+        if self.question_idx == 2:
+            self.running = False
 
     def exit_sequence(self):
         # post-loop completion section
