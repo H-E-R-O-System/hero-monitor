@@ -19,8 +19,8 @@ picam2.configure(video_config)
 
 encoder = H264Encoder(10000000)
 
-picam2.start_recording(encoder, 'affective_record.h264')
 stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=int(rate), input=True, frames_per_buffer=chunk)
+picam2.start_recording(encoder, 'affective_record.h264')
 
 frames = []
 
