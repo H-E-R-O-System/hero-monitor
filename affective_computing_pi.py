@@ -81,6 +81,8 @@ class AffectiveModulePi:
             self.picam.configure(config)
             self.cv2_cam = None
 
+            print("config done")
+
         else:
             cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # this is the magic!
 

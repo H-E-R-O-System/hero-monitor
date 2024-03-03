@@ -79,6 +79,8 @@ class AffectiveModulePi:
             config = self.picam.create_preview_configuration({'format': 'BGR888'})
             self.picam.configure(config)
             self.cv2_cam = None
+            print("config done!!")
+            print(self.cv2_cam)
 
         else:
             cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # this is the magic!
