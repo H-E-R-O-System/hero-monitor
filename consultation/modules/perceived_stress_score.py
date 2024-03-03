@@ -10,9 +10,6 @@ from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.utils import take_screenshot
 
-from picamera2 import Picamera2
-from picamera2.encoders import H264Encoder
-
 
 class PSS:
     def __init__(self, size=pg.Vector2(1024, 600), parent=None, question_count=10, auto_run=False, preload_audio=False,
@@ -66,15 +63,6 @@ class PSS:
         self.running = True
         self.awaiting_response = False
         self.auto_run = auto_run
-        self.record_video = record_video
-
-        if record_video:
-            encoder = H264Encoder(10000000)
-            picam2.start_recording(encoder, 'affective_record.h264')
-            picam2 = Picamera2()
-            video_config = picam2.create_video_configuration()
-            picam2.configure(video_config)
-            picam2.stop_recording()
 
     def preload_audio(self):
         exit_text = "Thank you for completing the PSS survey"
