@@ -2,6 +2,7 @@ import pygame as pg
 from consultation.touch_screen import TouchScreen, GameButton, GameObjects
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
+from consultation.utils import take_screenshot
 import cv2
 import wave
 import pyaudio
@@ -36,8 +37,6 @@ class AffectiveModulePi:
                                       button_size, id=1, text="Begin", colour=Colours.hero_blue)
         self.touch_screen.sprites = GameObjects([self.main_button])
 
-        self.display_screen.instruction = "I'm listening ..."
-
         # Additional class properties
         self.listening = False
 
@@ -51,10 +50,17 @@ class AffectiveModulePi:
             self.picam = picamera.Picamera2()
             config = self.picam.create_preview_configuration()
             self.picam.configure(config)
+            self.cv2_cam = None
+
         else:
+            cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # this is the magic!
+
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
             self.cv2_cam = cv2.VideoCapture(0)
             self.picam = None
-            print("Pi not specified, won't use camera")
+            print("pi not specified, will use cv2 instead")
 
         if not os.path.isdir("data/affective_images"):
             os.mkdir("data/affective_images")
@@ -96,6 +102,11 @@ class AffectiveModulePi:
         # add code below
 
     def question_loop(self, max_time=10):
+        self.display_screen.instruction = "Press the button to stop"
+        self.main_button.text = "I'm finished"
+        self.display_screen.refresh()
+        self.update_display()
+
         if not os.path.isdir(f"data/affective_images/question_{self.question_idx}"):
             os.mkdir(f"data/affective_images/question_{self.question_idx}")
 
@@ -120,9 +131,6 @@ class AffectiveModulePi:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
                 cv2.imwrite(f"data/affective_images/question_{self.question_idx}/im_{i}.png", frame)
 
-
-
-
         stream.stop_stream()
         stream.close()
 
@@ -144,6 +152,7 @@ class AffectiveModulePi:
         self.display_screen.instruction = "Press the button to start"
         self.main_button.text = "begin"
         self.display_screen.refresh()
+        self.update_display()
 
     def exit_sequence(self):
         # post-loop completion section
@@ -151,6 +160,7 @@ class AffectiveModulePi:
 
         # only OPTIONAL and can leave blank
         if self.cleanse_files:
+            print("cleansing files")
             shutil.rmtree("data/affective_images")
             shutil.rmtree("data/nlp_audio")
             print(f"successfully cleansed files")
@@ -162,13 +172,10 @@ class AffectiveModulePi:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_s:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            take_screenshot(self.parent.window)
                         else:
-                            img_array = pg.surfarray.array3d(self.window)
-                            img_array = cv2.transpose(img_array)
-                            img_array = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
-                            cv2.imwrite("screenshots/affective.png", img_array)
-                        ...
+                            take_screenshot(self.window, "affective_module")
+
                     elif event.key == pg.K_ESCAPE:
                         self.running = False
 
@@ -182,12 +189,9 @@ class AffectiveModulePi:
                     button_id = self.touch_screen.click_test(pos)
                     if button_id is not None:
                         if button_id:
-                            self.display_screen.instruction = "Press the button to stop"
-                            self.main_button.text = "I'm finished"
                             self.question_loop()
 
-                        self.update_display()
-                    ...
+                        # self.update_display()
 
                 elif event.type == pg.QUIT:
                     # break the running loop
