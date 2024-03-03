@@ -232,7 +232,10 @@ class AffectiveModulePi:
 
         # only OPTIONAL and can leave blank
         if self.classify:
-            base_path = "/Users/benhoskings/Documents/Pycharm/Hero_Monitor"
+            if self.pi:
+                base_path = "/home/pi/hero-monitor"
+            else:
+                base_path = "/Users/benhoskings/Documents/Pycharm/Hero_Monitor"
             label_data = {}
 
             try:
