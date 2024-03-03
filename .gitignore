@@ -17,4 +17,4 @@ screenshots
 data
 !data/contents.txt
 
-models
+models/*

@@ -15,12 +15,6 @@ picam.start()
 if not os.path.isdir("data/affective_images"):
     os.mkdir("data/affective_images")
 
-
-# for i in range(1, 10):
-#
-#     print(f"Captured image {i}")
-#     time.sleep(3)
-
 pyaud = pyaudio.PyAudio()
 
 device_info = pyaud.get_default_input_device_info()
@@ -30,7 +24,6 @@ chunk, max_time = 1024, 10
 path = "mic_test.wav"
 
 stream = pyaud.open(format=pyaudio.paInt16, channels=1, rate=int(rate), input=True, frames_per_buffer=chunk)
-
 
 frames = []
 
