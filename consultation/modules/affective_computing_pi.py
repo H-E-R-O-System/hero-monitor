@@ -185,7 +185,8 @@ class AffectiveModulePi:
             if (i % 16) == 0:
                 if self.picam:
                     # self.picam.capture_file(os.path.join(image_directory, f"im_{i}.png"))
-                    frame = self.picam.capture_array()
+                    # frame =
+                    frame = cv2.flip(self.picam.capture_array(), 0)
 
                 elif self.cv2_cam:
                     ret, frame = self.cv2_cam.read()
