@@ -230,6 +230,9 @@ class SpiralTest:
             print("speaking")
             self.parent.speak_text("Please trace the spiral, starting from the center", display_screen=self.display_screen, touch_screen=self.touch_screen)
 
+            if self.parent.pi:
+                pg.mouse.set_visible(False)
+
     def exit_sequence(self):
         self.update_display()
         if self.parent:
@@ -248,6 +251,9 @@ class SpiralTest:
         self.prediction = prediction[0]
         self.classification = self.prediction > 0.5
 
+        if self.parent:
+            if self.parent.pi:
+                pg.mouse.set_visible(True)
 
     def process_input(self, pos):
         start = time.monotonic()

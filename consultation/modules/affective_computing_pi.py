@@ -121,6 +121,7 @@ class AffectiveModulePi:
         self.detector = vision.FaceLandmarker.create_from_options(options)
 
     def update_display(self):
+        self.display_screen.refresh()
         self.touch_screen.refresh()
 
         if self.listening:
@@ -154,7 +155,6 @@ class AffectiveModulePi:
     def question_loop(self, max_time=10):
         self.display_screen.instruction = "Press the button to stop"
         self.main_button.text = "I'm finished"
-        self.display_screen.refresh()
         self.update_display()
 
         question_path = f"data/affective_images/question_{self.question_idx}"
@@ -221,7 +221,7 @@ class AffectiveModulePi:
 
         self.display_screen.instruction = "Press the button to start"
         self.main_button.text = "begin"
-        self.display_screen.refresh()
+        self.listening = False
         self.update_display()
 
         self.question_idx += 1

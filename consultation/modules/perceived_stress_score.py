@@ -176,6 +176,8 @@ class PSS:
                             if self.question_idx == len(self.questions):
                                 self.running = False
 
+                        pg.event.clear()
+
                     elif event.type == pg.QUIT:
                         self.running = False
 

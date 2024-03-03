@@ -375,6 +375,8 @@ class CardGame:
                         if selection is not None:
                             self.process_selection(selection, card_id)
 
+                        pg.event.clear()
+
 
 
         self.exit_sequence()

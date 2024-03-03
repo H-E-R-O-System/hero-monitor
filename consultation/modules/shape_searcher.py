@@ -88,7 +88,7 @@ class ShapeSearcher:
 
         self.scores = [0, 0, 0]
 
-        self.question_counts = [10, 16, 16]
+        self.question_counts = [10, 8, 8]
 
         self.answer_times = []
         self.start_time = None
@@ -406,6 +406,8 @@ class ShapeSearcher:
 
                         if selection is not None:
                             self.process_selection(selection)
+
+                        pg.event.clear()
 
                     elif event.type == pg.QUIT:
                         # break the running loop

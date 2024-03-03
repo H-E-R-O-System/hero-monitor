@@ -226,6 +226,8 @@ class VisualAttentionTest:
                         if selection is not None:
                             self.process_selection(selection)
 
+                        pg.event.clear()
+
                     elif event.type == pg.QUIT:
                         # break the running loop
                         self.running = False

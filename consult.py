@@ -108,7 +108,7 @@ class Consultation:
         }
 
         # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
-        self.module_order = ["Affective", ]
+        self.module_order = ["PSS", ]
 
         self.module_idx = 0
 
@@ -131,6 +131,8 @@ class Consultation:
                 self.db_client = db_client
         else:
             self.db_client = None
+
+        self.pi = pi
 
         # self.update_display()
         # pg.event.pump()
@@ -249,6 +251,9 @@ class Consultation:
 
             self.display_screen.instruction = "Click the button to start"
             self.update_display()
+
+        if self.pi:
+            pg.mouse.set_visible(False)
 
     def exit_sequence(self):
         self.speak_text("The consultation is now complete. Thank you for your time")
@@ -382,6 +387,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=False, seamless=True, auto_run=True, username="benhoskings", password="pass", pss_questions=2
+        pi=False, authenticate=False, seamless=True, auto_run=False, username="benhoskings", password="pass", pss_questions=2
     )
     consult.loop()
