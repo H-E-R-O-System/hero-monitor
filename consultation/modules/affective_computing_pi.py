@@ -194,7 +194,7 @@ class AffectiveModulePi:
                 if frame is not None:
                     img_face = self.crop_face(frame)
                     if img_face is not None:
-                        cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"), cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+                        cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"), cv2.cvtColor(img_face, cv2.COLOR_RGB2BGR))
                     else:
                         cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"),
                                     cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
