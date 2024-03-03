@@ -50,6 +50,7 @@ class NLP:
 
     def classify_audio(self, audio_file_path):
         transcription_text = self.transcribe_audio(audio_file_path)
+        print(transcription_text)
         return self.classify_text(transcription_text)
 
 
