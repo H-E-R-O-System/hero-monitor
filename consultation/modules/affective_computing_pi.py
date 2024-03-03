@@ -138,8 +138,8 @@ class AffectiveModulePi:
         self.display_screen.instruction = "Press the button to start"
         self.update_display()  # render graphics to main consult
 
-    def crop_face(self, image):
-        frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    def crop_face(self, frame):
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_mp = mp.Image(data=frame, image_format=mp.ImageFormat.SRGB)
         face_landmarks, _, _ = get_pipe_data(self.detector, img_mp)
         if face_landmarks is not None:
@@ -250,6 +250,7 @@ class AffectiveModulePi:
                         batch_size=16,
                         image_size=image_shape[0:2],
                         shuffle=False)
+
 
                     predictions = affective_model.predict(image_ds)
                     question_data["labels"] = np.argmax(predictions, axis=1)
