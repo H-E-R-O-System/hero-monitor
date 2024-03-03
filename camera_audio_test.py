@@ -13,7 +13,7 @@ config = picam.create_preview_configuration()
 picam.configure(config)
 picam.start()
 if not os.path.isdir("data/affective_images"):
-    os.mkdir("data.affective_images")
+    os.mkdir("data/affective_images")
 
 
 # for i in range(1, 10):
@@ -39,7 +39,7 @@ for i in range(0, iter_per_second * max_time):
     data = stream.read(chunk)
     # data is a raw bytes object
     frames.append(data)
-    picam.capture_file(f"data/im_{i}.png")
+    picam.capture_file(f"data/affective_images/im_{i}.png")
 
 stream.stop_stream()
 stream.close()
