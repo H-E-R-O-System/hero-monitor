@@ -79,7 +79,7 @@ class AffectiveModulePi:
             config = self.picam.create_preview_configuration({'format': 'BGR888'})
             self.picam.configure(config)
             print("config done!!")
-            print(self.cv2_cam)
+            print(self.picam)
             self.cv2_cam = None
 
 
