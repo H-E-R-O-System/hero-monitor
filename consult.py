@@ -373,10 +373,11 @@ class Consultation:
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
+    pg.font.init()
     pg.event.pump()
 
-    db = client.get_database('hero_data')
-    records = db.user_records
+    # db = client.get_database('hero_data')
+    # records = db.user_records
 
     consult = Consultation(
         pi=False, authenticate=False, seamless=True, auto_run=True, username="benhoskings", password="pass", pss_questions=2
