@@ -274,6 +274,8 @@ class Consultation:
                       "question_counts": self.modules["Shapes"].question_counts,
                       "answer_times": self.modules["Shapes"].answer_times}
         # Spiral Test Handling
+
+
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
                        "value": self.modules["Spiral"].prediction}
 
@@ -376,8 +378,8 @@ if __name__ == "__main__":
     pg.font.init()
     pg.event.pump()
 
-    # db = client.get_database('hero_data')
-    # records = db.user_records
+    db = client.get_database('hero_data')
+    records = db.user_records
 
     consult = Consultation(
         pi=False, authenticate=False, seamless=True, auto_run=True, username="benhoskings", password="pass", pss_questions=2
