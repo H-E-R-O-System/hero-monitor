@@ -48,8 +48,7 @@ class NLP:
             if probs[i] > 0.5:
                 return(self.labels2symptom[i+1])
 
+    def classify_audio(self, audio_file_path):
+        transcription_text = self.transcribe_audio(audio_file_path)
+        return self.classify_text(transcription_text)
 
-if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    nlp = NLP()
-    print(nlp.classify_text('I am feeling happy'))
