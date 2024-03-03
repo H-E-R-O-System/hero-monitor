@@ -54,17 +54,17 @@ class LoginScreen:
         top_size = pg.Vector2(self.display_size.x * 0.4, 80)
         username_button = GameButton(
             position=pg.Vector2(0.25 * self.display_size.x, 0.1 * self.display_size.y) - top_size / 2,
-            size=top_size, id="username", text="username")
+            size=top_size, id="username", text="enter username")
         password_button = GameButton(
             position=pg.Vector2(0.75 * self.display_size.x, 0.1 * self.display_size.y) - top_size / 2,
-            size=top_size, id="password", text="password")
+            size=top_size, id="password", text="enter password")
         delete_size = pg.Vector2(160, 80)
         delete_button = GameButton(
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.65 * self.display_size.y),
             size=delete_size, id="delete", text="delete")
         enter_button = GameButton(
             position=pg.Vector2(0.9 * self.display_size.x - delete_size.x / 2, 0.82 * self.display_size.y),
-            size=delete_size, id="enter", text="enter")
+            size=delete_size, id="enter", text="submit")
 
         # Additional class properties
         letters_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
@@ -228,7 +228,12 @@ class LoginScreen:
                                 elif self.active_string == "pass" and self.pass_string:
                                     del self.pass_string[-1]
                             elif button_id == "enter":
-                                if self.check_credentials():
+                                if not self.pass_string:
+                                    self.active_string = "pass"
+                                    self.active_string = "pass"
+                                    self.keys[-1].colour = Colours.lightGrey.value  # grey out password
+                                    self.keys[-2].colour = Colours.hero_blue.value
+                                elif self.check_credentials():
                                     self.running = False
                                 else:
                                     if self.parent:

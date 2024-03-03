@@ -39,7 +39,7 @@ class NLP:
         outputs = self.bert_tuned(**encoding)
 
         logits = outputs.logits
-        logits.shape
+        # logits.shape
 
         # apply sigmoid + threshold condition of > 0.5
         sigmoid = torch.nn.Sigmoid()
