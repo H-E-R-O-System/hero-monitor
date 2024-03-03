@@ -154,7 +154,7 @@ class SpiralTest:
         self.prev_pos = None
         self.turns = 0
 
-        self.prediction_model = joblib.load("data/linear_regression_model.joblib")
+        self.prediction_model = joblib.load("models/linear_regression_model.joblib")
 
         self.prediction, self.classification = None, None
         self.draw_trace = draw_trace

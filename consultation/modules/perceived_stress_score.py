@@ -8,10 +8,12 @@ from random import randint
 from consultation.display_screen import DisplayScreen
 from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
+from consultation.utils import take_screenshot
 
 
 class PSS:
-    def __init__(self, size=pg.Vector2(1024, 600), parent=None, question_count=10, auto_run=False, preload_audio=True):
+    def __init__(self, size=pg.Vector2(1024, 600), parent=None, question_count=10, auto_run=False, preload_audio=False,
+                 record_video=False):
         self.parent = parent
         self.parent = parent
         if parent is not None:
@@ -152,8 +154,11 @@ class PSS:
                         if event.key == pg.K_ESCAPE:
                             self.running = False
 
-                        elif event.key == pg.K_w:
-                            self.parent.take_screenshot("pss")
+                        elif event.key == pg.K_s:
+                            if self.parent:
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "perceived_stress_score")
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)

@@ -1,3 +1,4 @@
+import os
 import pickle
 import whisper
 from transformers import AutoTokenizer
@@ -7,7 +8,7 @@ class NLP:
     def __init__(self):
         self.transcription_model = whisper.load_model('base')
 
-        nlp_model_file = 'consultation/modules/nlp_model.pkl'
+        nlp_model_file = 'models/nlp_model.pkl'
         with open(nlp_model_file, 'rb') as file:
             self.bert_tuned = pickle.load(file)
         
@@ -46,7 +47,6 @@ class NLP:
         for i in range(len(probs)):
             if probs[i] > 0.5:
                 return(self.labels2symptom[i+1])
-    
-    def classify_audio(self, audio_file_path):
-        transcription_text = self.transcribe_audio(audio_file_path)
-        return self.classify_text(transcription_text)
+
+nlp = NLP()
+print(nlp.classify_text('I am feeling sad'))

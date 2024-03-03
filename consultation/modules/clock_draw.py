@@ -12,6 +12,7 @@ from shapely import geometry
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
+from consultation.utils import take_screenshot
 
 hour_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
 minute_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
@@ -197,9 +198,11 @@ class ClockDraw:
                         wait = False
 
                 elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    if event.key == pg.K_s:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            take_screenshot(self.parent.window)
+                        else:
+                            take_screenshot(self.window, "clock")
 
         self.touch_screen.kill_sprites()
         self.touch_screen.refresh()
@@ -292,7 +295,10 @@ class ClockDraw:
                     if event.type == pg.KEYDOWN:
                         if event.key == pg.K_s:
                             if self.parent:
-                                self.parent.take_screenshot("clock")
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "clock")
+
                         elif event.key == pg.K_ESCAPE:
                             self.running = False
 
@@ -329,7 +335,7 @@ class ClockDraw:
 
 
 def update_time():
-    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250 * 0.7)
+    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250*0.7)
 
     test_count = 10000
     start_time = time.perf_counter()
@@ -348,6 +354,6 @@ if __name__ == "__main__":
 
     # Module Testing
     pg.init()
-    clock_draw = ClockDraw(auto_run=True)
+    clock_draw = ClockDraw(auto_run=False)
     clock_draw.loop()
     print("Module run successfully")

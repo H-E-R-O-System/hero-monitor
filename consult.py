@@ -28,15 +28,14 @@ from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.wisconsin_card_test import CardGame
 from consultation.modules.login_screen import LoginScreen
 from consultation.modules.affective_computing import AffectiveModule
+from consultation.modules.affective_computing_pi import AffectiveModulePi
 
 # import graphics helpers
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, NpEncoder
 from consultation.screen import Colours, Fonts
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from json import loads, dumps
-
 
 
 class User:
@@ -105,11 +104,11 @@ class Consultation:
             "PSS": PSS(parent=self, question_count=self.pss_question_count, auto_run=auto_run, preload_audio=False),
             "Clock": ClockDraw(parent=self, auto_run=self.auto_run),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
+            "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False)
         }
 
-        # "Affective": AffectiveModule(parent=self)
-
-        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
+        # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
+        self.module_order = ["Affective", ]
 
         self.module_idx = 0
 
@@ -275,6 +274,8 @@ class Consultation:
                       "question_counts": self.modules["Shapes"].question_counts,
                       "answer_times": self.modules["Shapes"].answer_times}
         # Spiral Test Handling
+
+
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
                        "value": self.modules["Spiral"].prediction}
 
@@ -368,26 +369,13 @@ class Consultation:
                         self.running = False
 
         self.exit_sequence()
-
-
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
-
-        return super(NpEncoder, self).default(obj)
         # return str(obj)
 
 
 if __name__ == "__main__":
     os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
     pg.init()
+    pg.font.init()
     pg.event.pump()
 
     db = client.get_database('hero_data')

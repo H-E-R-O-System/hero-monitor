@@ -1,0 +1,6 @@
+This will list the files that should be in data, however are too big to
+host on github
+
+- AffectInceptionResNetV3.keras
+- nlp_model.pkl
+- linear_regression_model.joblib
