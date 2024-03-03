@@ -194,10 +194,10 @@ class AffectiveModulePi:
                 if frame is not None:
                     img_face = self.crop_face(frame)
                     if img_face is not None:
-                        cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"), cv2.cvtColor(img_face, cv2.COLOR_RGB2BGR))
-                    else:
-                        cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"),
-                                    cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+                        cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"), img_face)
+                    # else:
+                    #     cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"),
+                    #                 cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
         stream.stop_stream()
         stream.close()
@@ -239,16 +239,19 @@ class AffectiveModulePi:
             for q_idx in range(self.question_idx):
                 question_data = {}
                 question_directory = os.path.join(base_path, f"data/affective_images/question_{q_idx}")
-                image_ds = keras.utils.image_dataset_from_directory(
-                    directory=question_directory,
-                    batch_size=16,
-                    image_size=image_shape[0:2],
-                    shuffle=False)
+                try:
+                    image_ds = keras.utils.image_dataset_from_directory(
+                        directory=question_directory,
+                        batch_size=16,
+                        image_size=image_shape[0:2],
+                        shuffle=False)
 
-                predictions = affective_model.predict(image_ds)
-                question_data["labels"] = np.argmax(predictions, axis=1)
-                question_data["predictions"] = 100 * softmax(predictions, axis=1)
-                label_data[f"question_{q_idx}"] = question_data
+                    predictions = affective_model.predict(image_ds)
+                    question_data["labels"] = np.argmax(predictions, axis=1)
+                    question_data["predictions"] = 100 * softmax(predictions, axis=1)
+                    label_data[f"question_{q_idx}"] = question_data
+                except:
+                    label_data[f"question_{q_idx}"] = None
 
             with open("data/affective_predictions.json", "w") as write_file:
                 json.dump(label_data, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
@@ -295,11 +298,11 @@ class AffectiveModulePi:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     # os.chdir("/home/pi/hero-monitor")
     print(os.getcwd())
     pg.init()
     # Module Testing
-    module_name = AffectiveModulePi(pi=True, cleanse_files=False)
+    module_name = AffectiveModulePi(pi=False, cleanse_files=False)
     module_name.loop()
     print("Module run successfully")
