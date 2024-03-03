@@ -234,7 +234,12 @@ class AffectiveModulePi:
         if self.classify:
             base_path = "/Users/benhoskings/Documents/Pycharm/Hero_Monitor"
             label_data = {}
-            affective_model = keras.models.load_model("models/AffectInceptionResNetV3.keras")
+
+            try:
+                affective_model = keras.models.load_model("models/AffectInceptionResNetV3.keras")
+            except:
+                print("model field to load")
+
             image_shape = (224, 224, 3)
             for q_idx in range(self.question_idx):
                 question_data = {}
