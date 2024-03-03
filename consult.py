@@ -30,13 +30,11 @@ from consultation.modules.login_screen import LoginScreen
 from consultation.modules.affective_computing import AffectiveModule
 
 # import graphics helpers
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, NpEncoder
 from consultation.screen import Colours, Fonts
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from json import loads, dumps
-
 
 
 class User:
@@ -368,20 +366,6 @@ class Consultation:
                         self.running = False
 
         self.exit_sequence()
-
-
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
-
-        return super(NpEncoder, self).default(obj)
         # return str(obj)
 
 

@@ -1,17 +1,43 @@
+import numpy as np
 import pygame as pg
 from consultation.touch_screen import TouchScreen, GameButton, GameObjects
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, NpEncoder, get_pipe_data
 import cv2
 import wave
 import pyaudio
 import os
-
+import keras
+from scipy.special import softmax
 import shutil
+import json
+
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+from pygame import Rect, Vector2
+
+
+def segment_face(landmarks, img_array):
+    px_locations_x = landmarks[:, 0] * img_array.shape[1]
+    px_locations_y = landmarks[:, 1] * img_array.shape[0]
+
+    max_x, min_x = max(px_locations_x), min(px_locations_x)
+    max_y, min_y = max(px_locations_y), min(px_locations_y)
+
+    # create bounding box of face and scale to adjust for full head region
+    scale = Vector2(1.8, 1.6)
+    bbox = np.asarray([min_x, min_y, max_x - min_x, max_y - min_y], dtype=np.int16)
+    face_rect = Rect(bbox).scale_by(scale.x, scale.y)
+    face_rect = face_rect.clip(Rect((0, 0), img_array.shape[:2]))
+    cropped_img = img_array[face_rect.top:face_rect.bottom, face_rect.left:face_rect.right]
+
+    return cropped_img
+
 
 class AffectiveModulePi:
-    def __init__(self, size=(1024, 600), parent=None, pi=True, cleanse_files=True):
+    def __init__(self, size=(1024, 600), parent=None, pi=True, cleanse_files=True, classify=True):
 
         self.parent = parent
         if parent is not None:
@@ -48,7 +74,9 @@ class AffectiveModulePi:
         if pi:
             picamera = __import__('picamera2')
             self.picam = picamera.Picamera2()
-            config = self.picam.create_preview_configuration()
+
+            # specify RGB only
+            config = self.picam.create_preview_configuration({'format': 'BGR888'})
             self.picam.configure(config)
             self.cv2_cam = None
 
@@ -58,7 +86,7 @@ class AffectiveModulePi:
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
-            self.cv2_cam = cv2.VideoCapture(0)
+            self.cv2_cam = None
             self.picam = None
             print("pi not specified, will use cv2 instead")
 
@@ -79,6 +107,13 @@ class AffectiveModulePi:
             self.audio_rate = None
 
         self.cleanse_files = cleanse_files
+        self.classify = classify
+
+        base_options = python.BaseOptions(model_asset_path='models/face_landmarker_v2_with_blendshapes.task')
+        options = vision.FaceLandmarkerOptions(base_options=base_options, output_face_blendshapes=True,
+                                               output_facial_transformation_matrixes=True, num_faces=1, )
+
+        self.detector = vision.FaceLandmarker.create_from_options(options)
 
     def update_display(self):
         self.touch_screen.refresh()
@@ -99,7 +134,16 @@ class AffectiveModulePi:
         self.running = True
         self.display_screen.instruction = "Press the button to start"
         self.update_display()  # render graphics to main consult
-        # add code below
+
+    def crop_face(self, image):
+        frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_mp = mp.Image(data=frame, image_format=mp.ImageFormat.SRGB)
+        face_landmarks, _, _ = get_pipe_data(self.detector, img_mp)
+        if face_landmarks is not None:
+            img_face = segment_face(face_landmarks, frame)
+            return img_face
+        else:
+            return None
 
     def question_loop(self, max_time=10):
         self.display_screen.instruction = "Press the button to stop"
@@ -107,11 +151,21 @@ class AffectiveModulePi:
         self.display_screen.refresh()
         self.update_display()
 
-        if not os.path.isdir(f"data/affective_images/question_{self.question_idx}"):
-            os.mkdir(f"data/affective_images/question_{self.question_idx}")
+        question_path = f"data/affective_images/question_{self.question_idx}"
+        if not os.path.isdir(question_path):
+            os.mkdir(question_path)
+
+        image_directory = os.path.join(question_path, "images")
+        if not os.path.isdir(image_directory):
+            os.mkdir(image_directory)
 
         self.listening = True
         self.update_display()
+
+        if self.picam:
+            self.picam.start()
+        else:
+            self.cv2_cam = cv2.VideoCapture(0)
 
         chunk_size = 1024
         stream = self.pyaud.open(format=pyaudio.paInt16, channels=1, rate=int(self.audio_rate), input=True, frames_per_buffer=chunk_size)
@@ -123,13 +177,18 @@ class AffectiveModulePi:
             # data is a raw bytes object
             frames.append(data)
 
-            if self.picam:
-                self.picam.capture_file(f"data/affective_images/question_{self.question_idx}/im_{i}.png")
+            if (i % 16) == 0:
+                if self.picam:
+                    # self.picam.capture_file(os.path.join(image_directory, f"im_{i}.png"))
+                    frame = self.picam.capture_array()
 
-            elif self.cv2_cam:
-                ret, frame = self.cv2_cam.read()
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
-                cv2.imwrite(f"data/affective_images/question_{self.question_idx}/im_{i}.png", frame)
+                elif self.cv2_cam:
+                    ret, frame = self.cv2_cam.read()
+
+                if frame is not None:
+                    img_face = self.crop_face(frame)
+                    if img_face is not None:
+                        cv2.imwrite(os.path.join(image_directory, f"im_{i}.png"), cv2.cvtColor(img_face, cv2.COLOR_RGB2BGR))
 
         stream.stop_stream()
         stream.close()
@@ -154,11 +213,35 @@ class AffectiveModulePi:
         self.display_screen.refresh()
         self.update_display()
 
+        self.question_idx += 1
+
     def exit_sequence(self):
         # post-loop completion section
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
+        if self.classify:
+            base_path = "/Users/benhoskings/Documents/Pycharm/Hero_Monitor"
+            label_data = {}
+            affective_model = keras.models.load_model("models/AffectInceptionResNetV3.keras")
+            image_shape = (224, 224, 3)
+            for q_idx in range(self.question_idx):
+                question_data = {}
+                question_directory = os.path.join(base_path, f"data/affective_images/question_{q_idx}")
+                image_ds = keras.utils.image_dataset_from_directory(
+                    directory=question_directory,
+                    batch_size=16,
+                    image_size=image_shape[0:2],
+                    shuffle=False)
+
+                predictions = affective_model.predict(image_ds)
+                question_data["labels"] = np.argmax(predictions, axis=1)
+                question_data["predictions"] = 100 * softmax(predictions, axis=1)
+                label_data[f"question_{q_idx}"] = question_data
+
+            with open("data/affective_predictions.json", "w") as write_file:
+                json.dump(label_data, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+
         if self.cleanse_files:
             print("cleansing files")
             shutil.rmtree("data/affective_images")
@@ -205,6 +288,6 @@ if __name__ == "__main__":
 
     pg.init()
     # Module Testing
-    module_name = AffectiveModulePi(pi=False)
+    module_name = AffectiveModulePi(pi=True, cleanse_files=False)
     module_name.loop()
     print("Module run successfully")
