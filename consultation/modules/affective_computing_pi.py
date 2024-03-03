@@ -252,7 +252,7 @@ class AffectiveModulePi:
                 question_data = {}
                 affective_data = {}
                 image_directory = os.path.join(base_path, f"data/affective_images/question_{q_idx}")
-                audio_path = os.path.join(base_path, f"data/nlp_audio/question_{q_idx}")
+                audio_path = os.path.join(base_path, f"data/nlp_audio/question_{q_idx}.wav")
 
                 image_ds = keras.utils.image_dataset_from_directory(
                     directory=image_directory,
