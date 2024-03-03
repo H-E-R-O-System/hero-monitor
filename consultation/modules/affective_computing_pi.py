@@ -284,8 +284,8 @@ class AffectiveModulePi:
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/home/pi/hero-monitor")
     pg.init()
     # Module Testing
     module_name = AffectiveModulePi(pi=True, cleanse_files=False)
