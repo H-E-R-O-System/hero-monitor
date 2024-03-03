@@ -32,11 +32,6 @@ class NLP:
         return transcription['text']
     
     def classify_text(self, text):
-
-        '''
-        Returns a list of labels that meet the threshold.
-        '''
-
         encoding = self.tokenizer(text, return_tensors="pt")
         encoding = {k: v.to(self.bert_tuned.device) for k,v in encoding.items()}
 
@@ -51,6 +46,7 @@ class NLP:
         for i in range(len(probs)):
             if probs[i] > 0.5:
                 return(self.labels2symptom[i+1])
-
-nlp = NLP()
-print(nlp.classify_text('I am feeling sad'))
+    
+    def classify_audio(self, audio_file_path):
+        transcription_text = self.transcribe_audio(audio_file_path)
+        return self.classify_text(transcription_text)
