@@ -52,3 +52,8 @@ class NLP:
         transcription_text = self.transcribe_audio(audio_file_path)
         return self.classify_text(transcription_text)
 
+
+if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    nlp = NLP()
+    print(nlp.classify_text('I am feeling happy'))

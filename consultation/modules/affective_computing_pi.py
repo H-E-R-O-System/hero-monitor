@@ -242,12 +242,15 @@ class AffectiveModulePi:
 
             try:
                 affective_model = keras.models.load_model("models/AffectInceptionResNetV3.keras")
+                nlp_model = NLP()
+
             except:
-                print("model field to load")
+                print("models field to load")
 
             image_shape = (224, 224, 3)
             for q_idx in range(self.question_idx):
                 question_data = {}
+                affective_data = {}
                 image_directory = os.path.join(base_path, f"data/affective_images/question_{q_idx}")
                 audio_path = os.path.join(base_path, f"data/nlp_audio/question_{q_idx}")
 
@@ -260,9 +263,12 @@ class AffectiveModulePi:
                 print("found the images")
 
                 predictions = affective_model.predict(image_ds)
-                question_data["labels"] = np.argmax(predictions, axis=1)
-                question_data["predictions"] = 100 * softmax(predictions, axis=1)
-                label_data[f"question_{q_idx}"] = question_data
+                affective_data["labels"] = np.argmax(predictions, axis=1)
+                affective_data["predictions"] = 100 * softmax(predictions, axis=1)
+
+                label = nlp_model.classify_audio(audio_path)
+
+                label_data[f"question_{q_idx}"] = {"affective_data": affective_data, "nlp_label": label}
                 # except:
                 #     label_data[f"question_{q_idx}"] = None
 
