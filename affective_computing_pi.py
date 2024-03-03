@@ -44,6 +44,7 @@ class AffectiveModulePi:
             self.display_size = parent.display_size
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
+
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
 
         else:

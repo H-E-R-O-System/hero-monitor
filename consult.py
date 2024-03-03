@@ -28,6 +28,7 @@ from consultation.modules.visual_attention_test import VisualAttentionTest
 from consultation.modules.wisconsin_card_test import CardGame
 from consultation.modules.login_screen import LoginScreen
 from consultation.modules.affective_computing import AffectiveModule
+from consultation.modules.affective_computing_pi import AffectiveModulePi
 
 # import graphics helpers
 from consultation.utils import take_screenshot, NpEncoder
@@ -76,8 +77,10 @@ class Consultation:
 
         if pi:
             self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.NOFRAME | pg.SRCALPHA)
+            affective_module = AffectiveModulePi(parent=self, pi=True, cleanse_files=False)
         else:
             self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
+            affective_module = AffectiveModulePi(parent=self, pi=False, cleanse_files=False)
 
         self.top_screen = self.window.subsurface(((0, 0), self.display_size))
         self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
@@ -103,7 +106,7 @@ class Consultation:
             "PSS": PSS(parent=self, question_count=self.pss_question_count, auto_run=auto_run, preload_audio=False),
             "Clock": ClockDraw(parent=self, auto_run=self.auto_run),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
-            "Affective": AffectiveModule(parent=self)
+            "Affective": affective_module
         }
 
         # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
