@@ -4,6 +4,8 @@ from consultation.touch_screen import TouchScreen, GameButton, GameObjects
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
 from consultation.utils import take_screenshot, NpEncoder, get_pipe_data
+from consultation.modules.nlp import NLP
+
 import cv2
 import wave
 import pyaudio
@@ -246,10 +248,11 @@ class AffectiveModulePi:
             image_shape = (224, 224, 3)
             for q_idx in range(self.question_idx):
                 question_data = {}
-                question_directory = os.path.join(base_path, f"data/affective_images/question_{q_idx}")
+                image_directory = os.path.join(base_path, f"data/affective_images/question_{q_idx}")
+                audio_path = os.path.join(base_path, f"data/nlp_audio/question_{q_idx}")
 
                 image_ds = keras.utils.image_dataset_from_directory(
-                    directory=question_directory,
+                    directory=image_directory,
                     batch_size=16,
                     image_size=image_shape[0:2],
                     shuffle=False)

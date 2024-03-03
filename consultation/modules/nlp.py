@@ -48,5 +48,8 @@ class NLP:
             if probs[i] > 0.5:
                 return(self.labels2symptom[i+1])
 
-nlp = NLP()
-print(nlp.classify_text('I am feeling sad'))
+
+if __name__ == "__main__":
+    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    nlp = NLP()
+    print(nlp.classify_text('I am feeling happy'))
