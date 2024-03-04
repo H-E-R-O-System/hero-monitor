@@ -110,7 +110,7 @@ class ShapeSearcher:
         self.display_screen.refresh()
         self.display_screen.instruction = None
 
-        button_rect = pg.Rect((self.display_size - pg.Vector2(600, 400))/2, (600, 400))
+        button_rect = pg.Rect((self.display_size - pg.Vector2(300, 200))/2, (300, 200))
         start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
         self.touch_screen.sprites = GameObjects([start_button])
         info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
