@@ -210,7 +210,7 @@ class SpiralTest:
 
         points += np.array([self.spiral_offset.x, self.spiral_offset.y])
 
-        pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
+        pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=5)
 
         # screen_rect = self.touch_screen.base_surface.get_rect()
         # pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
@@ -272,7 +272,7 @@ class SpiralTest:
                 for i in range(self.coord_idx, idx+1):
                     pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                                  self.target_coords[i, :],
-                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
+                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=5)
 
                 self.coord_idx = idx
 

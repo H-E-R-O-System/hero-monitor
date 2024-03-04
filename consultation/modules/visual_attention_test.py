@@ -13,13 +13,18 @@ from consultation.utils import take_screenshot
 
 
 class AttentionCharacter(pg.sprite.Sprite):
-    def __init__(self, size, text_surf, pos=(0, 0), odd=False):
+    def __init__(self, size, text_surf, pos=(0, 0), odd=False, colour=None):
         super().__init__()
         self.object_type = "card"
         self.image = pg.Surface(size)
-        self.image.fill(Colours.lightGrey.value)
+
         self.rect = self.image.get_rect()
-        self.image.blit(text_surf, (pg.Vector2(self.rect.size) - pg.Vector2(text_surf.get_size())) / 2)
+        if colour:
+            self.image.fill(colour.value)
+        else:
+            self.image.fill(Colours.hero_blue.value)
+            self.image.blit(text_surf, (pg.Vector2(self.rect.size) - pg.Vector2(text_surf.get_size())) / 2)
+
         self.rect.topleft = pos
         self.odd = odd
 
@@ -113,7 +118,7 @@ class VisualAttentionTest:
         self.common_letter = random.choice(letters)
         self.odd_letter = random.choice(letters.replace(self.common_letter, ''))
 
-    def update_grid(self):
+    def update_grid(self, colour=None):
         self.touch_screen.kill_sprites()
 
         if self.parent:
@@ -122,13 +127,13 @@ class VisualAttentionTest:
             font = self.fonts.normal
 
         grid_oddness = [0 for _ in range(self.grid_count)]
-        grid_letters = [font.render(self.common_letter, False, Colours.black.value) for _ in range(self.grid_count)]
+        grid_letters = [font.render(self.common_letter, False, Colours.white.value) for _ in range(self.grid_count)]
 
         self.odd_idx = random.randint(0, self.grid_count - 1)
         grid_oddness[self.odd_idx] = 1
-        grid_letters[self.odd_idx] = font.render(self.odd_letter, False, Colours.black.value)
+        grid_letters[self.odd_idx] = font.render(self.odd_letter, False, Colours.white.value)
 
-        self.characters = [AttentionCharacter(self.cell_size, letter, pos=pos + self.grid_offset, odd=odd) for letter, pos, odd in
+        self.characters = [AttentionCharacter(self.cell_size, letter, pos=pos + self.grid_offset, odd=odd, colour=colour) for letter, pos, odd in
                            zip(grid_letters, self.grid_positions, grid_oddness)]
 
         self.touch_screen.sprites = GameObjects(self.characters)
@@ -196,6 +201,10 @@ class VisualAttentionTest:
             self.running = False
         else:
             self.select_letters()
+            # blink
+            self.update_grid(Colours.hero_blue)
+            self.update_display()
+            time.sleep(0.1)
             self.update_grid()
 
     def loop(self):

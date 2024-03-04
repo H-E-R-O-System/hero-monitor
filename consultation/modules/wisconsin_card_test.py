@@ -206,14 +206,17 @@ class CardGame:
 
         self.display_screen.add_multiline_text("Match The Card!", rect=info_rect.scale_by(0.9, 0.9),
                                                font_size=50)
-        info_text = ("In this game you must match the top card to one of the three shown below it. "
-                     "You must work out how to match the cards from me telling you if you are correct or not. "
-                     "The way in which cards match will change throughout the game, so you must adapt for this too! "
-                     "An example of a match is shown below.")
+        # info_text = ("In this game you must select the bottom card that you think matches the top card "
+        #              "You must work out how to match the cards from me telling you if you are correct or not. "
+        #              "The way in which cards match will change throughout the game, so you must adapt for this too! "
+        #              "An example of a match is shown below.")
+
+        info_text = ("In this game you must select the bottom card that you think matches the top card. Don't worry if"
+                     " you guess incorrectly, the rule will change at random!")
 
         self.display_screen.add_multiline_text(
             rect=info_rect.scale_by(0.9, 0.9), text=info_text,
-            center_vertical=True)
+            center_vertical=True, font_size=40)
 
         question_rect = pg.Rect(0.05 * self.display_size.x, 0.05 * self.display_size.y, 0.4 * self.display_size.x,
                                 0.9 * self.display_size.y)
