@@ -229,7 +229,7 @@ class CardGame:
         self.touch_screen.add_multiline_text("Question",
                                              pg.Rect(question_rect.topleft, (question_rect.w, 0.08 * question_rect.h)),
                                              center_horizontal=True, center_vertical=True,
-                                             bg_colour=Colours.lightGrey)
+                                             bg_colour=Colours.hero_blue, colour=Colours.white)
 
         self.touch_screen.load_image("consultation/graphics/instructions/wct_answer.png",
                                      size=answer_rect.size,
@@ -237,7 +237,7 @@ class CardGame:
         # pg.draw.rect(self.touch_screen.surface, Colours.lightGrey.value, answer_rect, width=3)
         self.touch_screen.add_multiline_text(
             "Answer", pg.Rect(answer_rect.topleft, (answer_rect.w, 0.08 * answer_rect.h)),
-            center_horizontal=True, center_vertical=True, bg_colour=Colours.lightGrey)
+            center_horizontal=True, center_vertical=True, bg_colour=Colours.hero_blue, colour=Colours.white)
 
         self.update_displays()
         if self.parent:

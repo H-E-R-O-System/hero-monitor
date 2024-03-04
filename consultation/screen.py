@@ -176,7 +176,7 @@ class Screen:
         rect: pg.Rect
 
         if colour is None:
-            colour = Colours.black
+            colour = Colours.hero_blue
 
         if font_size:
             self.fonts.update_custom(font_size)
