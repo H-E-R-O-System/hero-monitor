@@ -388,6 +388,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=False, seamless=True, auto_run=False, username="benhoskings", password="pass", pss_questions=2
+        scale=0.7, pi=False, authenticate=True, seamless=True, auto_run=False, username="user k", password="pass", pss_questions=2
     )
     consult.loop()

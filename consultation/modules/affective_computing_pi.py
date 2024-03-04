@@ -106,7 +106,7 @@ class AffectiveModulePi:
             device_info = self.pyaud.get_default_input_device_info()
             self.audio_rate = int(device_info["defaultSampleRate"])
 
-        except ValueError:
+        except:
             print("Microphone error")
             self.pyaud = None
             self.audio_rate = None
