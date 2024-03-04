@@ -259,14 +259,14 @@ class Consultation:
     def exit_sequence(self):
         self.speak_text("The consultation is now complete. Thank you for your time")
 
+        self.modules["Affective"].exit_sequence()
+
         # PSS consult_record handling
         pss_answers = np.array(self.modules["PSS"].answers)
         if pss_answers.size > 0:
             pss_reverse_idx = np.array([3, 4, 6, 7])
             pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < self.pss_question_count]
             pss_answers[pss_reverse_idx] = 4 - pss_answers[pss_reverse_idx]
-
-
 
         pss_answers = {"answers": pss_answers.tolist()}
         # Wisconsin Card Test consult_record handling
