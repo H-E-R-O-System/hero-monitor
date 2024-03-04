@@ -107,8 +107,8 @@ class Consultation:
             "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False)
         }
 
-        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", "Affective"]
-        # self.module_order = ["PSS", ]
+        # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", "Affective"]
+        self.module_order = ["Affective", ]
 
         self.module_idx = 0
 
@@ -279,11 +279,11 @@ class Consultation:
         shape_data = {"scores": self.modules["Shapes"].scores,
                       "question_counts": self.modules["Shapes"].question_counts,
                       "answer_times": self.modules["Shapes"].answer_times}
+
         # Spiral Test Handling
-
-
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
-                       "value": self.modules["Spiral"].prediction}
+                       "value": self.modules["Spiral"].prediction,
+                       "tracking_data": self.modules["Spiral"].tracking_data}
 
         if self.user is None:
             user_id = None

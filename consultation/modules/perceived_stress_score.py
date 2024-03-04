@@ -129,6 +129,7 @@ class PSS:
             if not self.awaiting_response:
                 self.ask_question()
                 self.awaiting_response = True
+                pg.event.clear()
 
             elif self.awaiting_response and self.auto_run:
                 # select random button within button range
