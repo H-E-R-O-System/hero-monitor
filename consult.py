@@ -109,7 +109,8 @@ class Consultation:
 
         # "Affective": AffectiveModule(parent=self)
 
-        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
+        # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", ]
+        self.module_order = ["Affective"]
 
         self.module_idx = 0
 
