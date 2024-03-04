@@ -231,6 +231,7 @@ class SpiralTest:
             self.parent.speak_text("Please trace the spiral, starting from the center", display_screen=self.display_screen, touch_screen=self.touch_screen)
 
             if self.parent.pi:
+                pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_CROSSHAIR))
                 pg.mouse.set_visible(True)
 
     def exit_sequence(self):

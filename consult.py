@@ -200,7 +200,7 @@ class Consultation:
             except ValueError:
                 pass
 
-        question_audio = gtts.gTTS(text=text, lang='en', tld='com.au', slow=True)
+        question_audio = gtts.gTTS(text=text, lang='en', tld='com.au', slow=False)
         question_audio_file = 'consultation/question_audio_tmp/tempsave.mp3'
         question_audio.save(question_audio_file)
 
