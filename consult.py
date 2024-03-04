@@ -282,8 +282,9 @@ class Consultation:
 
         # Spiral Test Handling
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
-                       "value": self.modules["Spiral"].prediction,
-                       "tracking_data": self.modules["Spiral"].tracking_data}
+                       "value": self.modules["Spiral"].prediction,}
+
+        # "tracking_data": self.modules["Spiral"].tracking_data
 
         if self.user is None:
             user_id = None
@@ -388,6 +389,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        scale=0.7, pi=False, authenticate=True, seamless=True, auto_run=False, username="user k", password="pass", pss_questions=2
+        pi=False, authenticate=True, seamless=True, auto_run=False, username="user k", password="pass", pss_questions=2
     )
     consult.loop()
