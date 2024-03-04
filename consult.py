@@ -200,7 +200,7 @@ class Consultation:
             except ValueError:
                 pass
 
-        question_audio = gtts.gTTS(text=text, lang='en', slow=False)
+        question_audio = gtts.gTTS(text=text, lang='en', tld='com.au', slow=True)
         question_audio_file = 'consultation/question_audio_tmp/tempsave.mp3'
         question_audio.save(question_audio_file)
 
@@ -253,6 +253,7 @@ class Consultation:
             self.update_display()
 
         if self.pi:
+            print("Mouse invisible")
             pg.mouse.set_visible(False)
 
     def exit_sequence(self):
