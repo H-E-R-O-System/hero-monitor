@@ -321,10 +321,11 @@ class ShapeSearcher:
 
     def exit_sequence(self):
         # post-loop completion section
-        ...
+        if self.auto_run:
+            self.answer_times = [random.gauss(mu=1, sigma=0.1) for _ in range(self.turns)]
 
     def process_selection(self, selection):
-        self.answer_times.append(self.start_time - time.monotonic())
+        self.answer_times.append(time.monotonic() - self.start_time)
 
         if selection == self.match:
             if self.question_types[self.turns] == "perception":

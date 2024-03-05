@@ -72,37 +72,6 @@ def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds")
 
     return data_aug[['x_pos', 'y_pos', 'time', 'magnitude', 'distance', 'turns', 'theta', 'angular_velocity', "error"]]
 
-    # if not time_unit == "seconds":
-    #     data_aug = data_aug.assign(time = data_aug["time"]/1000)
-    #
-    # data_aug = data_aug.assign(
-    #     distance=data_aug["magnitude"].diff(),
-    #     angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
-    # )
-    # if "turns" not in data_aug.columns:
-    #     turn_count = 0
-    #     turns = np.array([])
-    #     for row_idx in data_aug.index:
-    #         if data_aug.loc[row_idx, "angular_velocity"] > np.pi * 2:
-    #             turn_count += 1
-    #
-    #         turns = np.append(turns, turn_count)
-    # else:
-    #    turns = data_aug["turns"]
-    #
-    # data_aug = data_aug.assign(
-    #     turns=turns,
-    #     theta=data_aug["theta"] + turns * 2 * np.pi
-    # )
-    #
-    # data_aug = data_aug.assign(
-    #     angular_velocity=data_aug["theta"].diff() / data_aug["time"].diff()
-    # )
-    #
-    # col_order = ['x_pos', 'y_pos', 'time', 'magnitude', 'theta', 'distance',
-    #    'angular_velocity', 'turns']
-    # return data_aug[col_order]
-
 
 def create_feature(spiral_data):
     return np.mean(spiral_data, axis=0)

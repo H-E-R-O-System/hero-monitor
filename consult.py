@@ -325,7 +325,10 @@ class Consultation:
             else:
                 self.db_client: DBClient
                 self.db_client.upload_consult(self.output)
-                records.insert_one(self.output)
+
+                # db = client.get_database('hero_data')
+                # records = db.user_records
+                # records.insert_one(self.output)
 
         shutil.rmtree("consultation/question_audio_tmp")
 
