@@ -154,7 +154,7 @@ class ShapeSearcher:
                         wait = False
 
                 elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    if event.key == pg.K_s:
                         if self.parent:
                             take_screenshot(self.parent.window)
                         else:
@@ -387,17 +387,19 @@ class ShapeSearcher:
                 selection = random.choices([0, 1], weights=weights, k=1)[0]
                 self.process_selection(selection)
 
-                # if self.turns == 9:
+                # if self.turns == 20:
                 #     self.auto_run = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
-                        if event.key == pg.K_w:
+                        if event.key == pg.K_s:
                             if self.parent:
-                                self.parent.take_screenshot(filename="shape_searcher")
-                                ...
-                            elif event.key == pg.K_ESCAPE:
-                                self.running = False
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "Shape_match")
+
+                        elif event.key == pg.K_ESCAPE:
+                            self.running = False
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
                         # do something with mouse click
@@ -422,7 +424,7 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
     # Module Testing
-    shape_searcher = ShapeSearcher(auto_run=True)
+    shape_searcher = ShapeSearcher(auto_run=False)
     shape_searcher.loop()
     print(f"Score: {sum(shape_searcher.scores)}/{sum(shape_searcher.question_counts)}")
     print("Module run successfully")

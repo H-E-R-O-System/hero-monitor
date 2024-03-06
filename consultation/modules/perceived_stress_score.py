@@ -47,7 +47,7 @@ class PSS:
         for idx in range(count):
             width = (self.display_size.x - (count + 1) * gap) / count
             position = gap + idx * ((self.display_size.x - (count + 1) * gap) / count + gap)
-            button = GameButton(pg.Vector2(position, self.display_size.y/2), pg.Vector2(width, 50), idx, text=labels[idx],)
+            button = GameButton(pg.Vector2(position, (self.display_size.y - 150)/2), pg.Vector2(width, 150), idx, text=labels[idx],)
             self.likert_buttons.append(button)
 
         hints = ["" for _ in pss_questions]
