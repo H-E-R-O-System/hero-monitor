@@ -8,7 +8,7 @@ class NLP:
     def __init__(self):
         self.transcription_model = whisper.load_model('base')
 
-        nlp_model_file = 'models/nlp_model.pkl'
+        nlp_model_file = 'C:/Users/rosem/OneDrive/Documents/hero/hero-monitor/consultation/modules/nlp_model.pkl'
         with open(nlp_model_file, 'rb') as file:
             self.bert_tuned = pickle.load(file)
         
@@ -25,14 +25,16 @@ class NLP:
             8: 'balance problems (this may increase the chances of a fall)',
             9: 'loss of sense of smell (anosmia)',
             10: 'problems sleeping (insomnia)',
-            11: 'memory problems'
+            11: 'memory problems',
+            12: 'asymptomatic'
         }
 
     def transcribe_audio(self, audio_file_path):
         transcription = self.transcription_model.transcribe(audio_file_path)
         return transcription['text']
-    
+
     def classify_text(self, text):
+        
         encoding = self.tokenizer(text, return_tensors="pt")
         encoding = {k: v.to(self.bert_tuned.device) for k,v in encoding.items()}
 
@@ -47,14 +49,31 @@ class NLP:
         for i in range(len(probs)):
             if probs[i] > 0.5:
                 return(self.labels2symptom[i+1])
+        
+        return 'asymptomatic'
 
     def classify_audio(self, audio_file_path):
         transcription_text = self.transcribe_audio(audio_file_path)
+
+        transcriptions = transcription_text.split('.')[:-1]
+        classifications = []
+        for t in transcriptions:
+            classifications.append(self.classify_text(t))
         print(transcription_text)
+        
         return self.classify_text(transcription_text)
+    
+    def classify_text_test(self, transcription_text):
+        transcriptions = transcription_text.split('.')[:-1]
+        classifications = []
+        for t in transcriptions:
+            classifications.append(self.classify_text(t))
+        
+        return classifications
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
     nlp = NLP()
-    print(nlp.classify_text('I am feeling happy'))
+    text_test = 'I am feeling sad. I keep falling over. I feel fine.'
+    print(text_test)
+    print(nlp.classify_text_test(text_test))
