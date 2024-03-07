@@ -1,5 +1,6 @@
 import gpiod
 
+# Define Raspberry Pi button pins
 button_dict = {
     4: "Power",     # Pin number 7
     17: "Home",     # Pin number 11

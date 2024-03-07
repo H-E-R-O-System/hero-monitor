@@ -197,6 +197,7 @@ class FaceCloud:
 
             # XY view
             ax.view_init(*ViewAngle.XY.value)
+            plt.savefig("../figures/affective_xy_align", bbox_inches="tight")
 
             plt.show()
 
@@ -227,6 +228,7 @@ class FaceCloud:
 
             # XY view
             ax.view_init(*ViewAngle.YZ.value)
+            plt.savefig("../figures/affective_yz_align", bbox_inches="tight")
 
             plt.show()
 
@@ -274,33 +276,6 @@ class FaceCloud:
 
         if demo:
             fig = plt.figure()
-            # gs = fig.add_gridspec(2, 2)
-            # ax1 = fig.add_subplot(2, 2, 1)
-            # colours = ["r", "r", "g", "g", "b", "b"]
-            # for idx, (line, val) in enumerate(zip(mouth_lines, mouth_values)):
-            #     x = np.reshape(np.linspace(min(line[:, 0]), max(line[:, 0]), 21), (-1, 1))
-            #     y = get_poly_values(x, val)
-            #     ax1.scatter(line[:, 0], line[:, 1], marker="*")
-            #     ax1.plot(x, y, colours[idx])
-            #
-            # ax2 = fig.add_subplot(2, 2, 2)
-            #
-            # colours = ["r", "b", "r", "b"]
-            # for idx, (line, val) in enumerate(zip(eye_lines, eye_values)):
-            #     x = np.reshape(np.linspace(min(line[:, 0]), max(line[:, 0]), 21), (-1, 1))
-            #     y = get_poly_values(x, val)
-            #     ax2.scatter(line[:, 0], line[:, 1], marker="*")
-            #     ax2.plot(x, y, colours[idx])
-            #
-            # ax3 = fig.add_subplot(2, 2, 3)
-            # # ax3.scatter(self.key_points.right_eyebrow[[0, 2, 3, 6, 8], 0], self.key_points.right_eyebrow[[0, 2, 3, 6, 8], 1])
-            # colours = ["r", "b", "r", "b"]
-            # for idx, (line, val) in enumerate(zip(eyebrow_lines, eyebrow_values)):
-            #     x = np.reshape(np.linspace(min(line[:, 0]), max(line[:, 0]), 21), (-1, 1))
-            #     y = get_poly_values(x, val)
-            #     ax3.scatter(line[:, 0], line[:, 1], marker="*")
-            #     ax3.plot(x, y, colours[idx])
-
             ax4 = fig.add_subplot()
             colours = ["g", "g", "g", "g", "b", "b"] + ["r", "r", "r", "r"] + ["b", "b", "b", "b"]
             extend = 0.01
@@ -309,6 +284,8 @@ class FaceCloud:
                 y = get_poly_values(x, val)
                 # ax4.scatter(line[:, 0], line[:, 1], marker="*")
                 ax4.plot(x, y, colours[idx])
+
+            plt.savefig("../figures/shape_feature.png", bbox_inches="tight")
 
             plt.show()
 
