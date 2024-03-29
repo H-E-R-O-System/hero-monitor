@@ -105,7 +105,7 @@ class AffectiveModulePi:
             self.pyaud = pyaudio.PyAudio()
             device_info = self.pyaud.get_default_input_device_info()
             self.audio_rate = int(device_info["defaultSampleRate"])
-
+            print(f"Audio rate {self.audio_rate}")
             print(f"Photo period {self.audio_rate / (1024 * 16)}")
 
         except:

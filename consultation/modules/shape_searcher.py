@@ -321,7 +321,7 @@ class ShapeSearcher:
 
         self.touch_screen.sprites = GameObjects([circle])
         self.update_display()
-        take_screenshot(self.window, "touch the dot")
+        # take_screenshot(self.window, "touch the dot")
 
     def exit_sequence(self):
         # post-loop completion section
