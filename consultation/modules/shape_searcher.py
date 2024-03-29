@@ -186,7 +186,10 @@ class ShapeSearcher:
         self.display_screen.instruction = "Match the sets!"
         self.instruction_loop(question="perception")
 
-        self.perception_question()
+        # self.perception_question()
+
+        self.display_screen.refresh()
+        self.speed_question()
         self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
         self.update_display()
         self.running = True
@@ -318,6 +321,7 @@ class ShapeSearcher:
 
         self.touch_screen.sprites = GameObjects([circle])
         self.update_display()
+        take_screenshot(self.window, "touch the dot")
 
     def exit_sequence(self):
         # post-loop completion section
@@ -371,6 +375,7 @@ class ShapeSearcher:
         self.start_time = time.monotonic()
 
     def loop(self):
+
         self.entry_sequence()
         while self.running:
             if self.auto_run:

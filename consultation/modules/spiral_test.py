@@ -339,6 +339,8 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=False, auto_run=False, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=False, spiral_size=600)
+
     spiral_test.loop()  # optionally extract data from here as array
     print(spiral_test.classification, spiral_test.prediction)
+    # print(spiral_test.tracking_data)

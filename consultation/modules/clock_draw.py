@@ -138,7 +138,7 @@ class ClockDraw:
         self.minute_hand = ClockHand(id="minute", clock_radius=self.clock_radius,
                                      hand_radius=int(self.clock_radius * 0.9))
         self.hour_hand = ClockHand(id="hour", clock_radius=self.clock_radius,
-                                   hand_radius=int(self.clock_radius * 0.7))
+                                   hand_radius=int(self.clock_radius * 0.6))
 
         self.hand_clicked = None
 
