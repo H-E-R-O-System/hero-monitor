@@ -60,8 +60,10 @@ class Buttons:
             self.states[name] = button_state
 
 
+buttons = Buttons()
 while True:
-    for idx, (line, name) in enumerate(button_lines):
-        button_state = line.get_value()
-        if button_state == 1:
-            print(f"{name} Pressed")
+    buttons.check_pressed()
+    # for idx, (line, name) in enumerate(button_lines):
+    #     button_state = line.get_value()
+    #     if button_state == 1:
+    #         print(f"{name} Pressed")
