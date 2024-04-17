@@ -30,7 +30,6 @@ def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds")
 
     data_aug = data_aug.assign(magnitude=np.linalg.norm(data_aug[["x_pos", "y_pos"]], axis=1))
 
-
     data_aug = data_aug.assign(distance=data_aug["magnitude"].diff())
 
     turn_count = 0
