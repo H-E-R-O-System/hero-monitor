@@ -12,6 +12,7 @@ from shapely import geometry
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
+from consultation.utils import take_screenshot
 
 hour_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
 minute_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
@@ -75,12 +76,13 @@ class ClockHand(pg.sprite.Sprite):
                               head_1 - unit_vec * self.hand_radius * (1 - 1 / 15 * np.cos(np.radians(40)))]
 
             pg.draw.lines(self.image, Colours.black.value, False, points, width=3)
+            # pg.draw.lines(self.image, Colours.blue.value, False, collide_points, width=1)
 
             # self.image = arrow_surf
             self.endpoint = pg.Vector2(int(direction_vec.x), int(direction_vec.y))
 
             line = geometry.LineString(collide_points)
-            self.collide_region = geometry.Polygon(line)
+            self.collide_region = geometry.Polygon(line).buffer(20)  # increase the buffer size for bigger bounding box
 
         else:
             flag = False
@@ -152,7 +154,7 @@ class ClockDraw:
         self.display_screen.state = 1
         self.display_screen.instruction = None
 
-        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(150, 150), (100, 100))
+        button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(300, 150), (250, 100))
         start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
         self.touch_screen.sprites = GameObjects([start_button])
 
@@ -170,9 +172,12 @@ class ClockDraw:
             rect=info_rect.scale_by(0.9, 0.9), text=info_text,
             center_vertical=True, font_size=40)
 
-
-        im_size = pg.Vector2(self.touch_screen.surface.get_size()) * 0.95
-        image_rect = pg.Rect((self.touch_screen.size - im_size) / 2, im_size)
+        text_rect = self.touch_screen.surface.get_rect()
+        text_rect.topleft += pg.Vector2(0, 20)
+        self.touch_screen.add_multiline_text("Example below - press start to continue",
+                                             text_rect, center_horizontal=True, font_size=40)
+        im_size = pg.Vector2(self.touch_screen.surface.get_size()) * 0.8
+        image_rect = pg.Rect((self.touch_screen.size - im_size) / 2 + pg.Vector2(0, 20), im_size)
         self.touch_screen.load_image("consultation/graphics/instructions/clock_example.png",
                                      pos=image_rect.topleft, size=image_rect.size)
 
@@ -197,9 +202,11 @@ class ClockDraw:
                         wait = False
 
                 elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    if event.key == pg.K_s:
                         if self.parent:
-                            self.parent.take_screenshot()
+                            take_screenshot(self.parent.window)
+                        else:
+                            take_screenshot(self.window, "clock")
 
         self.touch_screen.kill_sprites()
         self.touch_screen.refresh()
@@ -292,7 +299,10 @@ class ClockDraw:
                     if event.type == pg.KEYDOWN:
                         if event.key == pg.K_s:
                             if self.parent:
-                                self.parent.take_screenshot("clock")
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "clock")
+
                         elif event.key == pg.K_ESCAPE:
                             self.running = False
 
@@ -329,7 +339,7 @@ class ClockDraw:
 
 
 def update_time():
-    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250 * 0.7)
+    clock_hand = ClockHand("hour", clock_radius=250, hand_radius=250*0.7)
 
     test_count = 10000
     start_time = time.perf_counter()
@@ -348,6 +358,6 @@ if __name__ == "__main__":
 
     # Module Testing
     pg.init()
-    clock_draw = ClockDraw(auto_run=True)
+    clock_draw = ClockDraw(auto_run=False)
     clock_draw.loop()
     print("Module run successfully")

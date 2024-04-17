@@ -16,3 +16,8 @@ affective_computing/data/
 screenshots
 data
 !data/contents.txt
+
+models/*
+!models/linear_regression_model.joblib
+!models/contents.txt
+!models/face_landmarker_v2_with_blendshapes.task

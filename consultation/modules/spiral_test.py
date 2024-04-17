@@ -9,7 +9,6 @@ import joblib
 from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
-from consultation.spiral_data_analysis import DataAnalytics, FeatureEngineering
 
 from consultation.utils import take_screenshot
 
@@ -154,7 +153,7 @@ class SpiralTest:
         self.prev_pos = None
         self.turns = 0
 
-        self.prediction_model = joblib.load("data/linear_regression_model.joblib")
+        self.prediction_model = joblib.load("models/linear_regression_model.joblib")
 
         self.prediction, self.classification = None, None
         self.draw_trace = draw_trace
@@ -211,7 +210,7 @@ class SpiralTest:
 
         points += np.array([self.spiral_offset.x, self.spiral_offset.y])
 
-        pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=3)
+        pg.draw.lines(self.touch_screen.base_surface, Colours.black.value, False, points, width=5)
 
         # screen_rect = self.touch_screen.base_surface.get_rect()
         # pg.draw.lines(self.touch_screen.base_surface, Colours.red.value, closed=False,
@@ -231,6 +230,10 @@ class SpiralTest:
             print("speaking")
             self.parent.speak_text("Please trace the spiral, starting from the center", display_screen=self.display_screen, touch_screen=self.touch_screen)
 
+            if self.parent.pi:
+                pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_CROSSHAIR))
+                pg.mouse.set_visible(True)
+
     def exit_sequence(self):
         self.update_display()
         if self.parent:
@@ -249,6 +252,9 @@ class SpiralTest:
         self.prediction = prediction[0]
         self.classification = self.prediction > 0.5
 
+        if self.parent:
+            if self.parent.pi:
+                pg.mouse.set_visible(False)
 
     def process_input(self, pos):
         start = time.monotonic()
@@ -267,7 +273,7 @@ class SpiralTest:
                 for i in range(self.coord_idx, idx+1):
                     pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                                  self.target_coords[i, :],
-                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=3)
+                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=5)
 
                 self.coord_idx = idx
 
@@ -342,9 +348,11 @@ class SpiralTest:
                         self.mouse_down = False
 
                     elif event.type == pg.KEYDOWN:
-                        if event.key == pg.K_x:
+                        if event.key == pg.K_s:
                             if self.parent:
-                                self.parent.take_screenshot()
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "Spiral trace")
 
                     elif event.type == pg.QUIT:
                         self.running = False

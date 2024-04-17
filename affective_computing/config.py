@@ -15,5 +15,6 @@ CLASSES = ["Neutral", "Positive", "Negative"]
 BATCH_SIZE = 128
 # initialize the label encoder file path and the output directory to
 # where the extracted features (in CSV file format) will be stored
-LE_PATH = os.path.sep.join(["/Users/benhoskings/Documents/Pycharm/Hero_Monitor/affective_computing", "le.cpickle"])
-BASE_CSV_PATH = "/Users/benhoskings/Documents/Pycharm/Hero_Monitor/affective_computing"
+LE_PATH = os.path.sep.join(
+    ["/Users/benhoskings/Documents/Pycharm/Hero_Monitor/affective_computing", "label_encoding.cpickle"])
+BASE_CSV_PATH = "/Users/benhoskings/Documents/Pycharm/Hero_Monitor/affective_computing/training_data"

@@ -38,7 +38,6 @@ class GameObjects(pg.sprite.Group):
                     screen.add_text(obj.text, colour=Colours.white, location=BlitLocation.centre, pos=obj.rect.center,
                                     sprite=True)
                 if obj.label:
-
                     screen.add_text(obj.label, colour=Colours.darkGrey, location=BlitLocation.midBottom, pos=obj.rect.midtop,
                                     sprite=True)
 
