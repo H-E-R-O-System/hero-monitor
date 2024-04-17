@@ -99,7 +99,6 @@ class Buttons:
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
-                print(button_state)
 
                 if button_state and not self.states[name]:
                     print(f"{name} Pressed")
@@ -129,3 +128,4 @@ if __name__ == "__main__":
                 buttons.check_pressed()
         else:
             buttons.check_pressed()
+            print("checked")
