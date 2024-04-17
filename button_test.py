@@ -84,7 +84,7 @@ class Buttons:
 pg.init()
 pg.event.pump()
 
-pi = False
+pi = True
 buttons = Buttons(pi)
 while True:
     if pi:
