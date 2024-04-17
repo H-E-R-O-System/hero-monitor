@@ -123,7 +123,7 @@ if __name__ == "__main__":
     buttons = Buttons(pi=pi)
 
     while True:
-        if pi:
+        if not pi:
             for event in pg.event.get():
                 buttons.check_pressed()
         else:
