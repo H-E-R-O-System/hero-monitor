@@ -110,7 +110,7 @@ class ShapeSearcher:
         self.display_screen.refresh()
         self.display_screen.instruction = None
 
-        button_rect = pg.Rect((self.display_size - pg.Vector2(600, 400))/2, (600, 400))
+        button_rect = pg.Rect((self.display_size - pg.Vector2(300, 200))/2, (300, 200))
         start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
         self.touch_screen.sprites = GameObjects([start_button])
         info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
@@ -154,7 +154,7 @@ class ShapeSearcher:
                         wait = False
 
                 elif event.type == pg.KEYDOWN:
-                    if event.key == pg.K_w:
+                    if event.key == pg.K_s:
                         if self.parent:
                             take_screenshot(self.parent.window)
                         else:
@@ -186,7 +186,10 @@ class ShapeSearcher:
         self.display_screen.instruction = "Match the sets!"
         self.instruction_loop(question="perception")
 
-        self.perception_question()
+        # self.perception_question()
+
+        self.display_screen.refresh()
+        self.speed_question()
         self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
         self.update_display()
         self.running = True
@@ -318,13 +321,15 @@ class ShapeSearcher:
 
         self.touch_screen.sprites = GameObjects([circle])
         self.update_display()
+        # take_screenshot(self.window, "touch the dot")
 
     def exit_sequence(self):
         # post-loop completion section
-        ...
+        if self.auto_run:
+            self.answer_times = [random.gauss(mu=1, sigma=0.1) for _ in range(self.turns)]
 
     def process_selection(self, selection):
-        self.answer_times.append(self.start_time - time.monotonic())
+        self.answer_times.append(time.monotonic() - self.start_time)
 
         if selection == self.match:
             if self.question_types[self.turns] == "perception":
@@ -370,6 +375,7 @@ class ShapeSearcher:
         self.start_time = time.monotonic()
 
     def loop(self):
+
         self.entry_sequence()
         while self.running:
             if self.auto_run:
@@ -386,17 +392,19 @@ class ShapeSearcher:
                 selection = random.choices([0, 1], weights=weights, k=1)[0]
                 self.process_selection(selection)
 
-                # if self.turns == 9:
+                # if self.turns == 20:
                 #     self.auto_run = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
-                        if event.key == pg.K_w:
+                        if event.key == pg.K_s:
                             if self.parent:
-                                self.parent.take_screenshot(filename="shape_searcher")
-                                ...
-                            elif event.key == pg.K_ESCAPE:
-                                self.running = False
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "Shape_match")
+
+                        elif event.key == pg.K_ESCAPE:
+                            self.running = False
 
                     elif event.type == pg.MOUSEBUTTONDOWN:
                         # do something with mouse click
@@ -421,7 +429,7 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
     # Module Testing
-    shape_searcher = ShapeSearcher(auto_run=True)
+    shape_searcher = ShapeSearcher(auto_run=False)
     shape_searcher.loop()
     print(f"Score: {sum(shape_searcher.scores)}/{sum(shape_searcher.question_counts)}")
     print("Module run successfully")

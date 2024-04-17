@@ -24,5 +24,11 @@ sentencepiece
 protobuf
 
 ### Some useful comands while using git
+```commandline
 git fetch --all
 git reset --hard origin/main
+
+# force git push 
+git -c credential.helper= -c core.quotepath=false -c log.showSignature=false push --force
+```
+

@@ -9,6 +9,7 @@ from consultation.display_screen import DisplayScreen
 from consultation.questions import Question, pss_questions
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.utils import take_screenshot
+import numpy as np
 
 
 class PSS:
@@ -46,7 +47,7 @@ class PSS:
         for idx in range(count):
             width = (self.display_size.x - (count + 1) * gap) / count
             position = gap + idx * ((self.display_size.x - (count + 1) * gap) / count + gap)
-            button = GameButton(pg.Vector2(position, self.display_size.y/2), pg.Vector2(width, 50), idx, text=labels[idx],)
+            button = GameButton(pg.Vector2(position, (self.display_size.y - 150)/2), pg.Vector2(width, 150), idx, text=labels[idx],)
             self.likert_buttons.append(button)
 
         hints = ["" for _ in pss_questions]
@@ -56,6 +57,7 @@ class PSS:
         if preload_audio:
             self.preload_audio()
 
+        self.question_order = np.random.permutation(range(len(self.questions)))
         self.question_idx = 0
 
         self.answers = []
@@ -88,7 +90,7 @@ class PSS:
         if not text:
             self.touch_screen.sprites = GameObjects(self.likert_buttons)
 
-            question = self.questions[self.question_idx]
+            question = self.questions[self.question_order[self.question_idx]]
             self.display_screen.instruction = None
             self.display_screen.speech_text = question.text
         else:

@@ -3,6 +3,8 @@ import pygame.camera
 from consultation.touch_screen import TouchScreen, GameButton, GameObjects
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
+from consultation.utils import take_screenshot
+
 import os
 import cv2
 import time
@@ -29,7 +31,7 @@ class AffectiveModule:
 
         self.touch_screen = TouchScreen(self.display_size)
 
-        self.display_screen.speech_text = "Have you noticed anything this past week?"
+        self.display_screen.speech_text = "How have you been feeling in the past week?"
 
         button_size = pg.Vector2(self.display_size.x*0.9, self.display_size.y*0.15)
         self.main_button = GameButton(pg.Vector2(0.5*self.display_size.x, 0.85*self.display_size.y) - button_size / 2,
@@ -81,7 +83,10 @@ class AffectiveModule:
 
     def question_loop(self, ):
         self.listening = True
+        self.display_screen.refresh()
         self.update_display()
+
+        take_screenshot(self.window, "affective_nlp")
 
         chunk = 1024
 

@@ -174,11 +174,17 @@ class Consultation:
         text_index = text_index.replace("?", "").replace("!", "").replace("“", "").replace("”", "")
 
         text_index = text_index.replace(" ", "0 ").replace(".", "0 ").replace(",", "0 ")
-        rep_1 = {"th": "11 ", "sh": "9 ", "ch": "9 ", "ee": "3 "}
-        rep_2 = {"a": "1 ", "e": "1 ", "i": "1 ", "o": "2 ", "c": "4 ", "d": "4 ", "g": "4 ",
-                 "k": "4 ", "n": "4 ", "s": "4 ", "t": "3 ", "x": "4 ", "y": "4 ", "z": "4 ",
-                 "q": "5 ", "w": "5 ", "b": "6 ", "m": "6 ", "p": "6 ", "l": "7 ", "f": "8 ",
-                 "v": "8 ", "j": "9 ", "r": "10 ", "h": "", "u": "2 "}  # define desired replacements here
+        rep_1 = { "ee": "7 ", "th": "8 ", "sh": "9 ", "ch": "9 "}
+        rep_2 = {"a": "0 ", "e": "0 ", "i": "0 ",
+                 "o": "1 ",
+                 "c": "2 ", "d": "2 ", "n": "2 ", "s": "2 ", "t": "2 ", "x": "2 ", "y": "2 ", "z": "2 ",
+                 "g": "3 ", "k": "3 ",
+                 "l": "4 ",
+                 "b": "5 ", "m": "5 ", "p": "5 ",
+                 "f": "6 ", "v": "6 ",
+                 "j": "9 ",
+                 "u": "10 ",
+                 "q": "11 ", "w": "11 ", "h": "", }  # define desired replacements here
 
         # use these three lines to do the replacement
         rep_1 = dict((re.escape(k), v) for k, v in rep_1.items())
@@ -282,8 +288,9 @@ class Consultation:
 
         # Spiral Test Handling
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
-                       "value": self.modules["Spiral"].prediction,
-                       "tracking_data": self.modules["Spiral"].tracking_data}
+                       "value": self.modules["Spiral"].prediction,}
+
+        # "tracking_data": self.modules["Spiral"].tracking_data
 
         if self.user is None:
             user_id = None
@@ -324,7 +331,10 @@ class Consultation:
             else:
                 self.db_client: DBClient
                 self.db_client.upload_consult(self.output)
-                records.insert_one(self.output)
+
+                # db = client.get_database('hero_data')
+                # records = db.user_records
+                # records.insert_one(self.output)
 
         shutil.rmtree("consultation/question_audio_tmp")
 
@@ -388,6 +398,6 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        scale=0.7, pi=False, authenticate=True, seamless=True, auto_run=False, username="user k", password="pass", pss_questions=2
+        pi=False, authenticate=True, seamless=True, auto_run=True, username="user k", password="pass", pss_questions=2
     )
     consult.loop()
