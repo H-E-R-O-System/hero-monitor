@@ -22,4 +22,9 @@ models/*
 !models/contents.txt
 !models/face_landmarker_v2_with_blendshapes.task
 
+models/*
+!models/linear_regression_model.joblib
+!models/contents.txt
+!models/face_landmarker_v2_with_blendshapes.task
+
 spiral_analytics/hw_dataset

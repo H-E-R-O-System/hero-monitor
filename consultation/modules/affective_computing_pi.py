@@ -105,8 +105,6 @@ class AffectiveModulePi:
             self.pyaud = pyaudio.PyAudio()
             device_info = self.pyaud.get_default_input_device_info()
             self.audio_rate = int(device_info["defaultSampleRate"])
-            print(f"Audio rate {self.audio_rate}")
-            print(f"Photo period {self.audio_rate / (1024 * 16)}")
 
         except:
             print("Microphone error")
@@ -181,18 +179,19 @@ class AffectiveModulePi:
         frames = []
 
         iter_per_second = int((self.audio_rate / chunk_size))
-        for i in range(iter_per_second * max_time):
+        for i in range(0, iter_per_second * max_time):
             data = stream.read(chunk_size, exception_on_overflow=False)
             # data is a raw bytes object
             frames.append(data)
 
             if (i % 16) == 0:
                 if self.picam:
+                    # self.picam.capture_file(os.path.join(image_directory, f"im_{i}.png"))
+                    # frame =
                     frame = cv2.flip(self.picam.capture_array(), 0)
+
                 elif self.cv2_cam:
                     ret, frame = self.cv2_cam.read()
-                else:
-                    frame = None
 
                 if frame is not None:
                     img_face = self.crop_face(frame)

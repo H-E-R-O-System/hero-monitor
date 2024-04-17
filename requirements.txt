@@ -25,3 +25,5 @@ openpyxl
 pymongo
 whisper
 pickle-mixin
+whisper
+pickle-mixin
