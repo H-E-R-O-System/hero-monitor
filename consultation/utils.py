@@ -96,7 +96,6 @@ class Buttons:
             }
 
     def check_pressed(self):
-
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
@@ -119,8 +118,13 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    buttons = Buttons(pi=True)
+    pi = True
+
+    buttons = Buttons(pi=pi)
 
     while True:
-        for event in pg.event.get():
+        if pi:
+            for event in pg.event.get():
+                buttons.check_pressed()
+        else:
             buttons.check_pressed()
