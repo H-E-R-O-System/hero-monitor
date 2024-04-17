@@ -119,7 +119,7 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    buttons = Buttons(pi=False)
+    buttons = Buttons(pi=True)
 
     while True:
         for event in pg.event.get():
