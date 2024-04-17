@@ -1,4 +1,4 @@
-import gpiod
+# import gpiod
 
 # Define Raspberry Pi button pins
 # button_dict = {
@@ -24,6 +24,8 @@ import gpiod
 
 class Buttons:
     def __init__(self):
+
+        gpiod = __import__('gpiod')
 
         # Define Raspberry Pi button pins
         self.button_dict = {
