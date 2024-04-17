@@ -96,7 +96,7 @@ class Buttons:
             }
 
     def check_pressed(self):
-        print("Checking")
+        # print("Checking")
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
@@ -106,7 +106,7 @@ class Buttons:
 
                 self.states[name] = button_state
 
-            print("Check done")
+            # print("Check done")
 
         else:
             pressed = pg.key.get_pressed()
