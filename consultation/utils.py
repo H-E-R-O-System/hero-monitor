@@ -4,6 +4,9 @@ import pygame as pg
 import numpy as np
 import json
 from datetime import date, datetime
+from enum import Enum
+
+
 
 
 def sigmoid(x):
@@ -55,18 +58,26 @@ class NpEncoder(json.JSONEncoder):
         return super(NpEncoder, self).default(obj)
 
 
-class Buttons:
+class Buttons(Enum):
+    power = "Power"
+    Home = "Home"
+    vol_up = "Vol_Up"
+    vol_down = "Vol_Down"
+    info = "Info"
+
+
+class ButtonModule:
     def __init__(self, pi=True):
         self.pi = pi
-
-        if pi:
+        if self.pi:
             gpiod = __import__('gpiod')
+
             # Define Raspberry Pi button pins
             self.button_dict = {
                 4: "Power",  # Pin number 7
                 17: "Home",  # Pin number 11
-                23: "Vol Up",  # Pin number 16
-                27: "Vol Down",  # Pin number 13
+                23: "Vol_Up",  # Pin number 16
+                27: "Vol_Down",  # Pin number 13
                 22: "Info",  # Pin number 15
             }
             # LED_PIN = 17
@@ -77,55 +88,66 @@ class Buttons:
             # led_line.request(consumer="LED", type=gpiod.LINE_REQ_DIR_OUT)
             for (line, name) in self.button_lines:
                 line.request(consumer="Button", type=gpiod.LINE_REQ_DIR_IN)
-
         else:
+
             self.button_dict = {
                 pg.K_1: "Power",  # Pin number 7
                 pg.K_2: "Home",  # Pin number 11
-                pg.K_3: "Vol Up",  # Pin number 16
-                pg.K_4: "Vol Down",  # Pin number 13
+                pg.K_3: "Vol_Up",  # Pin number 16
+                pg.K_4: "Vol_Down",  # Pin number 13
                 pg.K_5: "Info",  # Pin number 15
             }
 
         self.states = {
-                "Power": 0,  # to track the current state (on/off)
-                "Home": 0,  # to track the current state (on/off)
-                "Vol Up": 0,  # to track the current state (on/off)
-                "Vol Down": 0,  # to track the current state (on/off)
-                "Info": 0,  # to track the current state (on/off)
-            }
+            "Power": 0,  # to track the current state (on/off)
+            "Home": 0,  # to track the current state (on/off)
+            "Vol_Up": 0,  # to track the current state (on/off)
+            "Vol_Down": 0,  # to track the current state (on/off)
+            "Info": 0,  # to track the current state (on/off)
+        }
+
+        self.buttons = Buttons
 
     def check_pressed(self):
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
 
+                self.states[name] = button_state
+
                 if button_state and not self.states[name]:
                     print(f"{name} Pressed")
-
-                self.states[name] = button_state
+                    return self.buttons(name)
 
         else:
             pressed = pg.key.get_pressed()
             for val, name in self.button_dict.items():
+
                 if pressed[val] and not self.states[name]:
-                    print(f"{name} Pressed")
+                    self.states[name] = pressed[val]
+                    return self.buttons(name)
 
                 self.states[name] = pressed[val]
+
+        return None
 
 
 if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    pi = True
+    pi = False
 
-    buttons = Buttons(pi=pi)
+    buttons = ButtonModule(pi=pi)
 
     while True:
         if not pi:
-            for event in pg.event.get():
-                buttons.check_pressed()
+            pg.event.pump()
+
+            pressed = buttons.check_pressed()
+            if pressed:
+                print(f"{pressed}!")
         else:
-            buttons.check_pressed()
-            print("checked")
+            pressed = buttons.check_pressed()
+            if pressed:
+                print(f"{pressed}!")

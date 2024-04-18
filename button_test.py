@@ -68,27 +68,36 @@ class Buttons:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
 
+                self.states[name] = button_state
+
                 if button_state and not self.states[name]:
                     print(f"{name} Pressed")
+                    return name
 
-                self.states[name] = button_state
         else:
-            # print("hmm")
             pressed = pg.key.get_pressed()
             for val, name in self.button_dict.items():
+
                 if pressed[val] and not self.states[name]:
-                    print(f"{name} Pressed")
+                    self.states[name] = pressed[val]
+                    return name
 
                 self.states[name] = pressed[val]
+
+        return None
+
 
 pg.init()
 pg.event.pump()
 
-pi = True
+pi = False
 buttons = Buttons(pi)
 while True:
     if pi:
         buttons.check_pressed()
     else:
-        for event in pg.event.get():
-            buttons.check_pressed()
+        pg.event.pump()
+
+        selected = buttons.check_pressed()
+        if selected:
+            print(f"{selected} pressed")

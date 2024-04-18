@@ -31,7 +31,7 @@ from consultation.modules.affective_computing import AffectiveModule
 from consultation.modules.affective_computing_pi import AffectiveModulePi
 
 # import graphics helpers
-from consultation.utils import take_screenshot, NpEncoder
+from consultation.utils import take_screenshot, NpEncoder, Buttons, ButtonModule
 from consultation.screen import Colours, Fonts
 from consultation.avatar import Avatar
 from consultation.display_screen import DisplayScreen
@@ -133,6 +133,8 @@ class Consultation:
             self.db_client = None
 
         self.pi = pi
+
+        self.button_module = ButtonModule(pi)
 
         # self.update_display()
         # pg.event.pump()
@@ -398,6 +400,7 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=True, seamless=True, auto_run=True, username="user k", password="pass", pss_questions=2
+        pi=False, authenticate=False, seamless=True, auto_run=False, username="user k", password="pass", pss_questions=2
     )
+
     consult.loop()

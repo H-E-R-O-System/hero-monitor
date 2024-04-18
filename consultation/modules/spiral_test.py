@@ -10,7 +10,7 @@ from consultation.touch_screen import TouchScreen, GameObjects
 from consultation.screen import Colours
 from consultation.display_screen import DisplayScreen
 
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, Buttons, ButtonModule
 
 
 def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds"):
@@ -256,6 +256,43 @@ class SpiralTest:
 
         # print(f"process time: {time.monotonic() - start}")
 
+    def button_actions(self, selected):
+
+        if selected == Buttons.info:
+            print("info")
+            self.load_info_screen()
+        else:
+            ...
+            print("Power")
+
+    def load_info_screen(self):
+        self.display_screen.state = 1
+        self.display_screen.instruction = None
+
+        # button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
+        # start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+        # self.touch_screen.sprites = GameObjects([start_button])
+
+        info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+        pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                     info_rect)
+
+        self.display_screen.add_multiline_text("Trace the spiral!", rect=info_rect.scale_by(0.9, 0.9),
+                                               font_size=50)
+        # info_text = ("In this game you must select the bottom card that you think matches the top card "
+        #              "You must work out how to match the cards from me telling you if you are correct or not. "
+        #              "The way in which cards match will change throughout the game, so you must adapt for this too! "
+        #              "An example of a match is shown below.")
+
+        info_text = ("In this game you must trace the spiral using the pen provided. Make sure that the red line follows "
+                     "your pen as you trace the spiral!")
+
+        self.display_screen.add_multiline_text(
+            rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+            center_vertical=True, font_size=40)
+
+        self.update_display(top=True)
+
     def loop(self):
         self.entry_sequence()
         while self.running:
@@ -324,6 +361,12 @@ class SpiralTest:
 
                     elif event.type == pg.QUIT:
                         self.running = False
+
+                if self.parent:
+                    # self.parent.button_module: ButtonModule
+                    selected = self.parent.button_module.check_pressed()
+                    if selected is not None:
+                        self.button_actions(selected)
 
         self.exit_sequence()
 
