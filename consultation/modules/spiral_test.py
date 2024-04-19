@@ -126,7 +126,7 @@ class SpiralTest:
         self.prediction, self.classification = None, None
         self.draw_trace = draw_trace
         self.auto_run = auto_run
-        self.ignore_turn = False
+        self.show_info = False
 
     def update_display(self, top=True):
         if top:
@@ -259,39 +259,45 @@ class SpiralTest:
     def button_actions(self, selected):
 
         if selected == Buttons.info:
-            print("info")
-            self.load_info_screen()
+            self.show_info = not self.show_info
+            self.toggle_info_screen()
         else:
             ...
             print("Power")
 
-    def load_info_screen(self):
-        self.display_screen.state = 1
-        self.display_screen.instruction = None
+    def toggle_info_screen(self):
+        if self.show_info:
+            self.display_screen.state = 1
+            self.display_screen.instruction = None
 
-        # button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
-        # start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
-        # self.touch_screen.sprites = GameObjects([start_button])
+            # button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
+            # start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+            # self.touch_screen.sprites = GameObjects([start_button])
 
-        info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
-        pg.draw.rect(self.display_screen.surface, Colours.white.value,
-                     info_rect)
+            info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+            pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                         info_rect)
 
-        self.display_screen.add_multiline_text("Trace the spiral!", rect=info_rect.scale_by(0.9, 0.9),
-                                               font_size=50)
-        # info_text = ("In this game you must select the bottom card that you think matches the top card "
-        #              "You must work out how to match the cards from me telling you if you are correct or not. "
-        #              "The way in which cards match will change throughout the game, so you must adapt for this too! "
-        #              "An example of a match is shown below.")
+            self.display_screen.add_multiline_text("Trace the spiral!", rect=info_rect.scale_by(0.9, 0.9),
+                                                   font_size=50)
+            # info_text = ("In this game you must select the bottom card that you think matches the top card "
+            #              "You must work out how to match the cards from me telling you if you are correct or not. "
+            #              "The way in which cards match will change throughout the game, so you must adapt for this too! "
+            #              "An example of a match is shown below.")
 
-        info_text = ("In this game you must trace the spiral using the pen provided. Make sure that the red line follows "
-                     "your pen as you trace the spiral!")
+            info_text = ("In this game you must trace the spiral using the pen provided. Make sure that the red line follows "
+                         "your pen as you trace the spiral!")
 
-        self.display_screen.add_multiline_text(
-            rect=info_rect.scale_by(0.9, 0.9), text=info_text,
-            center_vertical=True, font_size=40)
+            self.display_screen.add_multiline_text(
+                rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+                center_vertical=True, font_size=40)
 
-        self.update_display(top=True)
+            self.update_display(top=True)
+        else:
+            self.display_screen.refresh()
+            self.display_screen.state = 0
+            self.display_screen.instruction = "Start in the center"
+            self.update_display(top=True)
 
     def loop(self):
         self.entry_sequence()

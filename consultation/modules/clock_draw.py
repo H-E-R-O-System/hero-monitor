@@ -12,7 +12,7 @@ from shapely import geometry
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, Buttons, ButtonModule
 
 hour_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
 minute_hand = [(1, 0), (2, 1), (2, 8), (0, 8), (0, 1)]
@@ -105,6 +105,7 @@ class ClockDraw:
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+            self.button_module = parent.button_module
         else:
             self.display_size = pg.Vector2(size)
             self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
@@ -112,6 +113,7 @@ class ClockDraw:
             self.top_screen = self.window.subsurface(((0, 0), self.display_size))
             self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
+            self.button_module = ButtonModule(False)
 
         self.touch_screen = TouchScreen(self.display_size)
 
@@ -146,6 +148,8 @@ class ClockDraw:
         self.auto_run = auto_run
 
         self.angle_errors = None
+
+        self.show_info = False
 
     def instruction_loop(self):
         if self.auto_run:
@@ -283,6 +287,44 @@ class ClockDraw:
         else:
             print("Fail")
 
+    def button_actions(self, selected):
+        if selected == Buttons.info:
+            self.show_info = not self.show_info
+            self.toggle_info_screen()
+        else:
+            ...
+            print("Power")
+
+    def toggle_info_screen(self):
+        if self.show_info:
+            self.display_screen.state = 1
+            self.display_screen.instruction = None
+
+            info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+            pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                         info_rect)
+
+            self.display_screen.add_multiline_text("Set the Time!", rect=info_rect.scale_by(0.9, 0.9),
+                                                   font_size=50)
+            # info_text = ("In this game you must select the bottom card that you think matches the top card "
+            #              "You must work out how to match the cards from me telling you if you are correct or not. "
+            #              "The way in which cards match will change throughout the game, so you must adapt for this too! "
+            #              "An example of a match is shown below.")
+
+            info_text = (f"Please drag each clock hand to the position that you believe shows the correct positions "
+                         f"for the time {self.time.strftime('%-H:%M')}")
+
+            self.display_screen.add_multiline_text(
+                rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+                center_vertical=True, font_size=40)
+
+            self.update_display()
+        else:
+            self.display_screen.refresh()
+            self.display_screen.state = 0
+            self.display_screen.instruction = "Set the time"
+            self.update_display()
+
     def loop(self):
         self.entry_sequence()
         while self.running:
@@ -334,6 +376,12 @@ class ClockDraw:
                     elif event.type == pg.QUIT:
                         # break the running loop
                         self.running = False
+
+                # if self.parent:
+                # self.parent.button_module: ButtonModule
+                selected = self.button_module.check_pressed()
+                if selected is not None:
+                    self.button_actions(selected)
 
         self.exit_sequence()
 
