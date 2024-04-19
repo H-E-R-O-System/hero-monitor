@@ -118,6 +118,7 @@ class ButtonModule:
                 if button_state and not self.states[name]:
                     self.states[name] = button_state
                     print(f"{name} Pressed")
+
                     if self.buttons(name) == Buttons.vol_up:
                         self.volume = min([100, self.volume + 10])
                         proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True, stdout=subprocess.PIPE)
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    pi = False
+    pi = True
 
     buttons = ButtonModule(pi=pi)
 
