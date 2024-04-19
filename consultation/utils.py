@@ -126,7 +126,7 @@ class ButtonModule:
                         return None
 
                     elif self.buttons(name) == Buttons.vol_down:
-                        self.volume = min([0, self.volume - 10])
+                        self.volume = max([0, self.volume - 10])
                         proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True,
                                                 stdout=subprocess.PIPE)
                         proc.wait()
