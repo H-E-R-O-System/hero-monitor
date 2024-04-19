@@ -114,6 +114,7 @@ class ButtonModule:
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
+                print("checking")
 
                 if button_state and not self.states[name]:
                     self.states[name] = button_state
