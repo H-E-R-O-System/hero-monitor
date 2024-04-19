@@ -5,7 +5,7 @@ import numpy as np
 import json
 from datetime import date, datetime
 from enum import Enum
-
+import subprocess
 
 
 
@@ -108,6 +108,8 @@ class ButtonModule:
 
         self.buttons = Buttons
 
+        self.volume = 70
+
     def check_pressed(self):
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
@@ -124,7 +126,19 @@ class ButtonModule:
             for val, name in self.button_dict.items():
 
                 if pressed[val] and not self.states[name]:
-                    self.states[name] = pressed[val]
+                    self.states[name] = pressed[val]  # update the internal state
+
+                    if self.pi and self.buttons(name) == Buttons.vol_up:
+
+                        proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True, stdout=subprocess.PIPE)
+                        proc.wait()
+                        print("Volume up")
+                        return None
+
+                    elif self.pi and self.buttons(name) == Buttons.vol_up:
+                        print("Vol down")
+                        return None
+
                     return self.buttons(name)
 
                 self.states[name] = pressed[val]

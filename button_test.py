@@ -71,6 +71,8 @@ class Buttons:
                 self.states[name] = button_state
 
                 if button_state and not self.states[name]:
+
+
                     print(f"{name} Pressed")
                     return name
 

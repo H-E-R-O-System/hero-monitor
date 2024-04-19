@@ -213,6 +213,9 @@ class ClockDraw:
                             take_screenshot(self.window, "clock")
 
         self.touch_screen.kill_sprites()
+        self.display_screen.state = 0
+        self.display_screen.refresh()
+        self.display_screen.instruction = f"Set the time to {self.time.strftime('%H:%M')}"
         self.touch_screen.refresh()
 
     def update_display(self):
@@ -235,7 +238,7 @@ class ClockDraw:
 
         pg.draw.circle(self.touch_screen.base_surface, Colours.black.value, self.center_offset, self.clock_radius,
                        width=5)
-        self.touch_screen.add_multiline_text(self.time.strftime("%-H:%M"), pg.Rect((0, 10), self.display_size),
+        self.touch_screen.add_multiline_text(self.time.strftime("%H:%M"), pg.Rect((0, 10), self.display_size),
                                              center_horizontal=True, base=True)
 
         button_rect = pg.Rect(self.touch_screen.size - pg.Vector2(200, 150), (150, 100))
@@ -312,7 +315,7 @@ class ClockDraw:
             #              "An example of a match is shown below.")
 
             info_text = (f"Please drag each clock hand to the position that you believe shows the correct positions "
-                         f"for the time {self.time.strftime('%-H:%M')}")
+                         f"for the time {self.time.strftime('%H:%M')}. This time is given in 24 hour format.")
 
             self.display_screen.add_multiline_text(
                 rect=info_rect.scale_by(0.9, 0.9), text=info_text,
@@ -400,8 +403,8 @@ def update_time():
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     # update_time()
 
     # Module Testing
