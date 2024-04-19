@@ -114,11 +114,9 @@ class ButtonModule:
         if self.pi:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
-                # print("checking")
 
                 if button_state and not self.states[name]:
                     self.states[name] = button_state
-                    print(f"{name} Pressed")
 
                     if self.buttons(name) == Buttons.vol_up:
                         self.volume = min([100, self.volume + 10])
@@ -127,8 +125,8 @@ class ButtonModule:
                         print("Volume up")
                         return None
 
-                    elif self.buttons(name) == Buttons.vol_up:
-                        self.volume = min([100, self.volume + 10])
+                    elif self.buttons(name) == Buttons.vol_down:
+                        self.volume = min([0, self.volume - 10])
                         proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True,
                                                 stdout=subprocess.PIPE)
                         proc.wait()
