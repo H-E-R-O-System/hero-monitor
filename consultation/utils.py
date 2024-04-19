@@ -122,7 +122,7 @@ class ButtonModule:
                         self.volume = min([100, self.volume + 10])
                         proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True, stdout=subprocess.PIPE)
                         proc.wait()
-                        print("Volume up")
+                        print(f"Volume up: {self.volume}")
                         return None
 
                     elif self.buttons(name) == Buttons.vol_down:
@@ -130,7 +130,7 @@ class ButtonModule:
                         proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True,
                                                 stdout=subprocess.PIPE)
                         proc.wait()
-                        print("Vol down")
+                        print(f"Vol down: {self.volume}")
                         return None
 
                     return self.buttons(name)

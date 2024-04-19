@@ -95,6 +95,8 @@ class Consultation:
 
         self.pss_question_count = pss_questions
 
+        self.button_module = ButtonModule(pi)
+
         self.auto_run = auto_run
         self.modules = {
             "Shapes": ShapeSearcher(parent=self, auto_run=auto_run),
@@ -133,8 +135,6 @@ class Consultation:
             self.db_client = None
 
         self.pi = pi
-
-        self.button_module = ButtonModule(pi)
 
         # self.update_display()
         # pg.event.pump()
