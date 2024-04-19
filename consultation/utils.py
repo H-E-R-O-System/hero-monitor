@@ -115,11 +115,27 @@ class ButtonModule:
             for idx, (line, name) in enumerate(self.button_lines):
                 button_state = line.get_value()
 
-                self.states[name] = button_state
-
                 if button_state and not self.states[name]:
+                    self.states[name] = button_state
                     print(f"{name} Pressed")
+                    if self.buttons(name) == Buttons.vol_up:
+                        self.volume = min([100, self.volume + 10])
+                        proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True, stdout=subprocess.PIPE)
+                        proc.wait()
+                        print("Volume up")
+                        return None
+
+                    elif self.buttons(name) == Buttons.vol_up:
+                        self.volume = min([100, self.volume + 10])
+                        proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True,
+                                                stdout=subprocess.PIPE)
+                        proc.wait()
+                        print("Vol down")
+                        return None
+
                     return self.buttons(name)
+
+                self.states[name] = button_state
 
         else:
             pressed = pg.key.get_pressed()
@@ -127,17 +143,6 @@ class ButtonModule:
 
                 if pressed[val] and not self.states[name]:
                     self.states[name] = pressed[val]  # update the internal state
-
-                    if self.pi and self.buttons(name) == Buttons.vol_up:
-
-                        proc = subprocess.Popen(f'/usr/bin/amixer sset Master {self.volume}%', shell=True, stdout=subprocess.PIPE)
-                        proc.wait()
-                        print("Volume up")
-                        return None
-
-                    elif self.pi and self.buttons(name) == Buttons.vol_up:
-                        print("Vol down")
-                        return None
 
                     return self.buttons(name)
 
