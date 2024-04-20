@@ -74,11 +74,11 @@ class ButtonModule:
 
             # Define Raspberry Pi button pins
             self.button_dict = {
-                4: "Power",  # Pin number 7
-                17: "Home",  # Pin number 11
-                23: "Vol_Up",  # Pin number 16
-                27: "Vol_Down",  # Pin number 13
-                22: "Info",  # Pin number 15
+                4: "Home",  # Pin number 7
+                17: "Vol Down",  # Pin number 11
+                23: "Info",  # Pin number 16
+                27: "Power",  # Pin number 13
+                22: "Vol Up",  # Pin number 15
             }
             # LED_PIN = 17
 
