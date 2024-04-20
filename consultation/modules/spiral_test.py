@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import joblib
 
 from consultation.touch_screen import TouchScreen, GameObjects
-from consultation.screen import Colours
+from consultation.screen import Colours, BlitLocation
 from consultation.display_screen import DisplayScreen
 
 from consultation.utils import take_screenshot, Buttons, ButtonModule
@@ -26,7 +26,7 @@ def augment_data(input_data, spiral_radius, invert_y=False, time_unit="seconds")
         )
 
     if not time_unit == "seconds":
-        data_aug = data_aug.assign(time=(data_aug["time"]-min(data_aug["time"])) / 1000)
+        data_aug = data_aug.assign(time=(data_aug["time"] - min(data_aug["time"])) / 1000)
 
     data_aug = data_aug.assign(magnitude=np.linalg.norm(data_aug[["x_pos", "y_pos"]], axis=1))
 
@@ -85,6 +85,7 @@ class SpiralTest:
             self.top_screen = parent.top_screen
 
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+            self.button_module = parent.button_module
 
         else:
             self.display_size = pg.Vector2(size)
@@ -93,8 +94,9 @@ class SpiralTest:
             self.top_screen = self.window.subsurface(((0, 0), self.display_size))
             self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
+            self.button_module = ButtonModule(pi=False)
 
-        self.display_screen.instruction = "Start in the center"
+        self.display_screen.instruction = "Start in the center."
 
         self.spiral_size = pg.Vector2(spiral_size, spiral_size)
         self.touch_screen = TouchScreen(size, colour=Colours.white)
@@ -127,6 +129,7 @@ class SpiralTest:
         self.draw_trace = draw_trace
         self.auto_run = auto_run
         self.show_info = False
+        self.power_off = False
 
     def update_display(self, top=True):
         if top:
@@ -196,7 +199,8 @@ class SpiralTest:
         self.update_display()
         if self.parent:
             print("speaking")
-            self.parent.speak_text("Please trace the spiral, starting from the center", display_screen=self.display_screen, touch_screen=self.touch_screen)
+            self.parent.speak_text("Please trace the spiral, starting from the center",
+                                   display_screen=self.display_screen, touch_screen=self.touch_screen)
 
             if self.parent.pi:
                 pg.mouse.set_cursor(pg.cursors.Cursor(pg.SYSTEM_CURSOR_CROSSHAIR))
@@ -205,9 +209,10 @@ class SpiralTest:
     def exit_sequence(self):
         self.update_display()
         if self.parent:
-            self.parent.speak_text("Thank you for completing the spiral test", display_screen=self.display_screen, touch_screen=self.touch_screen)
+            self.parent.speak_text("Thank you for completing the spiral test", display_screen=self.display_screen,
+                                   touch_screen=self.touch_screen)
 
-        data_aug = augment_data(self.tracking_data, spiral_radius=self.spiral_size.x/2)
+        data_aug = augment_data(self.tracking_data, spiral_radius=self.spiral_size.x / 2)
         # print(data_aug.tail(20).to_string())
         # plt.scatter(data_aug["x_pos"], data_aug["y_pos"])
         # plt.show()
@@ -227,21 +232,22 @@ class SpiralTest:
     def process_input(self, pos):
         start = time.monotonic()
         idx, _, _ = self.get_closest_coord_2(np.array(pos))
-        self.tracking_data.loc[self.tracking_data.shape[0]] = [*(pos - self.spiral_offset), time.monotonic() - self.start_time]
+        self.tracking_data.loc[self.tracking_data.shape[0]] = [*(pos - self.spiral_offset),
+                                                               time.monotonic() - self.start_time]
 
         update_flag = False
         if self.draw_trace:
             # PLOT BLUE LINE HERE
             pg.draw.line(self.touch_screen.base_surface, Colours.blue.value,
-                         self.prev_pos+self.center_offset, pos, width=3)
+                         self.prev_pos + self.center_offset, pos, width=3)
             update_flag = True
 
         if idx - self.coord_idx < 10:
-            if (idx-self.coord_idx) > 0:
-                for i in range(self.coord_idx, idx+1):
+            if (idx - self.coord_idx) > 0:
+                for i in range(self.coord_idx, idx + 1):
                     pg.draw.line(self.touch_screen.base_surface, Colours.red.value,
                                  self.target_coords[i, :],
-                                 self.target_coords[min(self.target_coords.shape[0]-1, i+1), :], width=5)
+                                 self.target_coords[min(self.target_coords.shape[0] - 1, i + 1), :], width=5)
 
                 self.coord_idx = idx
 
@@ -258,14 +264,32 @@ class SpiralTest:
 
     def button_actions(self, selected):
 
-        if selected == Buttons.info:
+        if selected == Buttons.info and not self.power_off:
             self.show_info = not self.show_info
             self.toggle_info_screen()
         elif selected == Buttons.power:
-            self.display_screen.surface.fill(Colours.hero_blue)
-            self.display_screen.surface.fill(Colours.hero_blue)
+            self.power_off = not self.power_off
 
-            self.update_display()
+            if self.power_off:
+                self.display_screen.instruction = None
+                self.display_screen.surface.fill(Colours.white.value)
+                #
+                self.touch_screen.surface.fill(Colours.white.value)
+                self.display_screen.state = 2
+
+                self.display_screen.load_image("consultation/graphics/hero_text.png", scale=pg.Vector2(1, 1),
+                                               pos=self.touch_screen.size / 2, location=BlitLocation.centre)
+
+                self.touch_screen.load_image("consultation/graphics/logo.png", size=self.touch_screen.size.yy * 0.8,
+                                             pos=self.touch_screen.size / 2, location=BlitLocation.centre)
+
+                self.update_display(top=True)
+            else:
+                self.touch_screen.refresh()
+                self.display_screen.refresh()
+
+                self.toggle_info_screen()
+
         else:
             ...
             print("Power")
@@ -290,8 +314,9 @@ class SpiralTest:
             #              "The way in which cards match will change throughout the game, so you must adapt for this too! "
             #              "An example of a match is shown below.")
 
-            info_text = ("In this game you must trace the spiral using the pen provided. Make sure that the red line follows "
-                         "your pen as you trace the spiral!")
+            info_text = (
+                "In this game you must trace the spiral using the pen provided. Make sure that the red line follows "
+                "your pen as you trace the spiral!")
 
             self.display_screen.add_multiline_text(
                 rect=info_rect.scale_by(0.9, 0.9), text=info_text,
@@ -301,7 +326,7 @@ class SpiralTest:
         else:
             self.display_screen.refresh()
             self.display_screen.state = 0
-            self.display_screen.instruction = "Start in the center"
+            self.display_screen.instruction = "Start in the center."
             self.update_display(top=True)
 
     def loop(self):
@@ -315,7 +340,8 @@ class SpiralTest:
                 moving_error_x = moving_average(np.cumsum(np.random.normal(0, 0.8, self.target_coords.shape[0])), 5)
                 moving_error_y = moving_average(np.cumsum(np.random.normal(0, 0.8, self.target_coords.shape[0])), 5)
                 mu, sigma = 0.05, 0.001
-                sim_positions = self.target_coords + np.concatenate([moving_error_x.reshape(-1, 1), moving_error_y.reshape(-1, 1)], axis=1)
+                sim_positions = self.target_coords + np.concatenate(
+                    [moving_error_x.reshape(-1, 1), moving_error_y.reshape(-1, 1)], axis=1)
                 start_pos = sim_positions[0, :]
 
                 self.tracking_data.loc[self.tracking_data.shape[0]] = [
@@ -342,7 +368,6 @@ class SpiralTest:
                 for event in pg.event.get():
                     if event.type == pg.MOUSEBUTTONDOWN:
                         if not self.spiral_started:
-
                             pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
                             self.tracking_data.loc[self.tracking_data.shape[0]] = [
@@ -373,11 +398,9 @@ class SpiralTest:
                     elif event.type == pg.QUIT:
                         self.running = False
 
-                if self.parent:
-                    # self.parent.button_module: ButtonModule
-                    selected = self.parent.button_module.check_pressed()
-                    if selected is not None:
-                        self.button_actions(selected)
+                selected = self.button_module.check_pressed()
+                if selected is not None:
+                    self.button_actions(selected)
 
         self.exit_sequence()
 

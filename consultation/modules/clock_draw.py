@@ -403,8 +403,7 @@ def update_time():
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir("../..")
     # update_time()
 
     # Module Testing
