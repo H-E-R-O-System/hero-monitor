@@ -9,7 +9,7 @@ from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, Fonts
 from consultation.touch_screen import TouchScreen, GameObjects
 
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, Buttons, ButtonModule
 
 
 class AttentionCharacter(pg.sprite.Sprite):
@@ -47,6 +47,7 @@ class VisualAttentionTest:
             self.top_screen = parent.top_screen
 
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+            self.button_module = parent.button_module
 
         else:
             self.display_size = pg.Vector2(size)
@@ -55,6 +56,8 @@ class VisualAttentionTest:
             self.top_screen = self.window.subsurface(((0, 0), self.display_size))
             self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
+
+            self.button_module = ButtonModule(pi=False)
 
             self.fonts = Fonts()
 
@@ -98,6 +101,7 @@ class VisualAttentionTest:
         # initialise module
         self.running = True
         self.auto_run = auto_run
+        self.show_info = False
 
     def select_letters(self):
         letters_easy = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -207,6 +211,40 @@ class VisualAttentionTest:
             time.sleep(0.1)
             self.update_grid()
 
+    def button_actions(self, selected):
+
+        if selected == Buttons.info:
+            self.show_info = not self.show_info
+            self.toggle_info_screen()
+        else:
+            ...
+            print("Power")
+
+    def toggle_info_screen(self):
+        if self.show_info:
+            self.display_screen.state = 1
+            self.display_screen.instruction = None
+
+            info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+            pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                         info_rect)
+
+            self.display_screen.add_multiline_text("Find the odd letter!", rect=info_rect.scale_by(0.9, 0.9),
+                                                   font_size=50)
+
+            info_text = "There is one letter that is not the same as the rest! Find and click it as fast as you can!"
+
+            self.display_screen.add_multiline_text(
+                rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+                center_vertical=True, font_size=40)
+
+            self.update_display()
+        else:
+            self.display_screen.refresh()
+            self.display_screen.state = 0
+            self.display_screen.instruction = "Find the odd letter!"
+            self.update_display()
+
     def loop(self):
         self.entry_sequence()
         while self.running:
@@ -241,13 +279,18 @@ class VisualAttentionTest:
                         # break the running loop
                         self.running = False
 
+                selected = self.button_module.check_pressed()
+                if selected is not None:
+                    self.button_actions(selected)
+
         self.exit_sequence()
 
 
 if __name__ == "__main__":
     pg.init()
     pg.event.pump()
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+
+    os.chdir("../..")
     # Module Testing
 
     module_name = VisualAttentionTest(auto_run=False)

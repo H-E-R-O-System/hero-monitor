@@ -10,7 +10,7 @@ import numpy as np
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours, BlitLocation
 from consultation.touch_screen import GameObjects, TouchScreen, GameButton
-from consultation.utils import take_screenshot
+from consultation.utils import ButtonModule, Buttons, take_screenshot
 
 colours = ['red', 'blue', 'green', 'yellow']
 shapes = ['square', 'circle', 'triangle', 'diamond']
@@ -164,6 +164,7 @@ class CardGame:
             self.top_screen = parent.top_screen
 
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+            self.button_module = parent.button_module
         else:
             self.display_size = pg.Vector2(size)
             self.window = pg.display.set_mode((self.display_size.x, self.display_size.y * 2), pg.SRCALPHA)
@@ -171,6 +172,7 @@ class CardGame:
             self.top_screen = self.window.subsurface(((0, 0), self.display_size))
             self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
+            self.button_module = ButtonModule(pi=False)
 
         self.display_screen.instruction = "Match the card!"
         self.touch_screen = TouchScreen(self.display_size, colour=Colours.white.value)
@@ -192,6 +194,7 @@ class CardGame:
 
         self.max_turns = max_turns
         self.auto_run = auto_run
+        self.show_info = False
 
     def instruction_loop(self):
         self.display_screen.state = 1
@@ -297,8 +300,12 @@ class CardGame:
         time.sleep(0.5)
 
         self.display_screen.speech_text = None
-        self.display_screen.instruction = "Select the card you think matches"
+
         self.display_screen.refresh()
+        self.display_screen.instruction = "Match the card!"
+        self.toggle_info_screen()
+
+        # self.display_screen.refresh()
         # self.display_screen.state = 0
 
     def update_displays(self):
@@ -342,6 +349,39 @@ class CardGame:
         ...
         # return [self.engine.answers, self.engine.new_rule_ids]
 
+    def button_actions(self, selected):
+
+        if selected == Buttons.info:
+            self.show_info = not self.show_info
+            self.toggle_info_screen()
+        else:
+            ...
+
+    def toggle_info_screen(self):
+        if self.show_info:
+            self.display_screen.state = 1
+
+            info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+            pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                         info_rect)
+
+            self.display_screen.add_multiline_text("Find the odd letter!", rect=info_rect.scale_by(0.9, 0.9),
+                                                   font_size=50)
+
+            info_text = ("Please select one of the bottom three cards that you think matches the top card. "
+                         "Don't worry about getting questions wrong, you are not meant to get every question correct!")
+
+            self.display_screen.add_multiline_text(
+                rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+                center_vertical=True, font_size=40)
+
+            self.render_game()
+        else:
+            self.display_screen.refresh()
+            self.display_screen.state = 0
+            self.display_screen.instruction = "Match the card!"
+            self.render_game()
+
     def loop(self):
         self.entry_sequence()
         while self.running:
@@ -380,13 +420,18 @@ class CardGame:
 
                         pg.event.clear()
 
+                selected = self.button_module.check_pressed()
+                if selected is not None:
+                    self.button_actions(selected)
+
 
 
         self.exit_sequence()
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("../..")
+
     pg.init()
     pg.event.pump()
     card_game = CardGame(max_turns=20, auto_run=False)

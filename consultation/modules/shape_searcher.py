@@ -9,7 +9,7 @@ import pygame as pg
 from consultation.display_screen import DisplayScreen
 from consultation.screen import Colours
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
-from consultation.utils import take_screenshot
+from consultation.utils import take_screenshot, Buttons, ButtonModule
 
 rocket = [(4, 0), (8, 4), (5, 8), (4, 5), (3, 8), (0, 4)]
 lightning_1 = [(5, 0), (5, 3), (8, 3), (3, 8), (3, 5), (0, 5)]
@@ -60,6 +60,7 @@ class ShapeSearcher:
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+            self.button_module = parent.button_modulke
 
         else:
             self.display_size = pg.Vector2(size)
@@ -68,6 +69,7 @@ class ShapeSearcher:
             self.top_screen = self.window.subsurface(((0, 0), self.display_size))
             self.bottom_screen = self.window.subsurface((0, self.display_size.y), self.display_size)
             self.display_screen = DisplayScreen(self.display_size)
+            self.button_module = ButtonModule(pi=False)  # individual modules dont run buttons on pi
 
         self.display_screen.instruction = None
 
@@ -88,7 +90,7 @@ class ShapeSearcher:
 
         self.scores = [0, 0, 0]
 
-        self.question_counts = [10, 8, 8]
+        self.question_counts = [2, 8, 8]
 
         self.answer_times = []
         self.start_time = None
@@ -100,6 +102,8 @@ class ShapeSearcher:
         # initialise module
         self.running = False
         self.auto_run = auto_run
+
+        self.show_info = False
 
     def instruction_loop(self, question):
         if self.auto_run:
@@ -183,13 +187,14 @@ class ShapeSearcher:
         if self.parent:
             self.parent.speak_text("your next set of tasks will all involve matching sets of shapes",
                                    display_screen=self.display_screen, touch_screen=self.touch_screen)
+
         self.display_screen.instruction = "Match the sets!"
         self.instruction_loop(question="perception")
 
-        # self.perception_question()
+        self.perception_question()
 
         self.display_screen.refresh()
-        self.speed_question()
+        # self.speed_question()
         self.touch_screen.sprites = GameObjects([self.same_button, self.different_button])
         self.update_display()
         self.running = True
@@ -343,13 +348,13 @@ class ShapeSearcher:
         if self.turns == sum(self.question_counts):
             # stop test
             self.running = False
-        elif self.turns == self.question_counts[0] and self.scores[0] < 8:
+        elif self.turns == self.question_counts[0] and self.scores[0] < 0.8*self.question_counts[0]:
             # fail test
             print("Score too low to continue")
             self.running = False
         else:
             # Update for next question
-            if self.turns == 10:
+            if self.turns == self.question_counts[0]:
                 if self.parent:
                     self.display_screen.refresh()
                     self.touch_screen.kill_sprites()
@@ -374,6 +379,57 @@ class ShapeSearcher:
 
         self.start_time = time.monotonic()
 
+    def button_actions(self, selected):
+
+        if selected == Buttons.info:
+            self.show_info = not self.show_info
+            self.toggle_info_screen()
+        else:
+            ...
+            print("Power")
+
+    def toggle_info_screen(self):
+        if self.show_info:
+            self.display_screen.state = 1
+            self.display_screen.instruction = None
+
+            # button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
+            # start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
+            # self.touch_screen.sprites = GameObjects([start_button])
+
+            info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
+            pg.draw.rect(self.display_screen.surface, Colours.white.value,
+                         info_rect)
+
+            self.display_screen.add_multiline_text("Match the shapes!", rect=info_rect.scale_by(0.9, 0.9),
+                                                   font_size=50)
+
+            if self.turns < self.question_counts[0]:
+                info_text = (
+                        "Are the shapes above the black line the same as the ones below? " +
+                        "Each shape must be the same colour for sets to match.")
+
+                self.display_screen.add_multiline_text(
+                    rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+                    center_vertical=True, font_size=40)
+            else:
+                info_text = (
+                            "You will now have to try and remember a set of coloured shapes. You will be shown two or three " +
+                            "shapes, which will then disappear after a short amount of time. A second set of shapes will then appear, " +
+                            "and your task is to identify if the two sets are the same or different. Sets are considered the " +
+                            "same if each shape and colour matches.")
+
+                self.display_screen.add_multiline_text(
+                    rect=info_rect.scale_by(0.9, 0.9), text=info_text,
+                    center_vertical=True)
+
+            self.update_display()
+        else:
+            self.display_screen.refresh()
+            self.display_screen.state = 0
+            self.display_screen.instruction = "Do the sets match?"
+            self.update_display()
+
     def loop(self):
 
         self.entry_sequence()
@@ -392,8 +448,8 @@ class ShapeSearcher:
                 selection = random.choices([0, 1], weights=weights, k=1)[0]
                 self.process_selection(selection)
 
-                # if self.turns == 20:
-                #     self.auto_run = False
+                if self.turns == 10:
+                    self.auto_run = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN:
@@ -421,11 +477,16 @@ class ShapeSearcher:
                         # break the running loop
                         self.running = False
 
+                selected = self.button_module.check_pressed()
+                if selected is not None:
+                    self.button_actions(selected)
+
         self.exit_sequence()
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
     pg.init()
     pg.event.pump()
     # Module Testing

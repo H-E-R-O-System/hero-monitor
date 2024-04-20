@@ -261,6 +261,11 @@ class SpiralTest:
         if selected == Buttons.info:
             self.show_info = not self.show_info
             self.toggle_info_screen()
+        elif selected == Buttons.power:
+            self.display_screen.surface.fill(Colours.hero_blue)
+            self.display_screen.surface.fill(Colours.hero_blue)
+
+            self.update_display()
         else:
             ...
             print("Power")
@@ -378,11 +383,7 @@ class SpiralTest:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
-    # os.chdir('/Users/Thinkpad/Desktop/Warwick/hero-monitor')
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    # os.chdir("/home/pi/hero-monitor")
-    print(os.getcwd())
+    os.chdir("../..")
 
     pg.init()
     pg.event.pump()
