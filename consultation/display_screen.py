@@ -23,14 +23,14 @@ class DisplayScreen(Screen):
         self.load_image("consultation/graphics/logo.png", size=(38*3, 53*600/256), pos=(262*3, 52*600/256), base=True)
         pg.draw.rect(self.base_surface, Colours.hero_blue.value, self.info_textbox)
 
-        self.power_off_surface = pg.Surface((self.size.x, self.size.y), pg.SRCALPHA)
-        self.power_off_surface.blit(self.base_surface, (0, 0))
-
-
-        self.touch_screen.load_image("consultation/graphics/logo.png", size=self.touch_screen.size.yy * 0.8,
-                                     pos=self.touch_screen.size / 2, location=BlitLocation.centre)
-
-        self.update_display(top=True)
+        # self.power_off_surface = pg.Surface((self.size.x, self.size.y), pg.SRCALPHA)
+        # self.power_off_surface.blit(self.base_surface, (0, 0))
+        #
+        #
+        # self.touch_screen.load_image("consultation/graphics/logo.png", size=self.touch_screen.size.yy * 0.8,
+        #                              pos=self.touch_screen.size / 2, location=BlitLocation.centre)
+        #
+        # self.update_display(top=True)
 
         self.state = 0
 
