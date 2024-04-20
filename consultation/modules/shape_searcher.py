@@ -60,7 +60,7 @@ class ShapeSearcher:
             self.bottom_screen = parent.bottom_screen
             self.top_screen = parent.top_screen
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
-            self.button_module = parent.button_modulke
+            self.button_module = parent.button_module
 
         else:
             self.display_size = pg.Vector2(size)
