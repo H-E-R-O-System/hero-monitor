@@ -109,7 +109,7 @@ class Consultation:
             "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False)
         }
 
-        self.module_order = ["Affective"]
+        self.module_order = ["Affective", ]
         # self.module_order = ["Affective", ]
 
         self.module_idx = 0
