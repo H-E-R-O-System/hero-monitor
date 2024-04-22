@@ -266,6 +266,10 @@ class Consultation:
 
     def exit_sequence(self):
         self.speak_text("The consultation is now complete. Thank you for your time")
+        self.display_screen.power_off = True
+        self.touch_screen.power_off = True
+
+        self.update_display()
 
         self.modules["Affective"].exit_sequence()
 

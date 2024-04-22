@@ -313,7 +313,7 @@ class AffectiveModulePi:
                     # break the running loop
                     self.running = False
 
-        self.exit_sequence()
+        # self.exit_sequence()
 
 
 if __name__ == "__main__":
