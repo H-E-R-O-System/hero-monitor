@@ -273,7 +273,7 @@ class Consultation:
 
         disp_copy = self.display_screen.power_off_surface
 
-        self.display_screen.power_off_surface.blit((proc_suf, (self.display_size - proc_suf.get_size())/2 + pg.Vector2(0, 100)))
+        self.display_screen.power_off_surface.blit(proc_suf, (self.display_size - proc_suf.get_size())/2 + pg.Vector2(0, 100))
 
         self.update_display()
 
