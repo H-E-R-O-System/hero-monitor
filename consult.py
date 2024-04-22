@@ -279,6 +279,9 @@ class Consultation:
 
         self.modules["Affective"].exit_sequence()
 
+        self.display_screen.power_off_surface = disp_copy
+        self.update_display()
+
         # PSS consult_record handling
         pss_answers = np.array(self.modules["PSS"].answers)
         if pss_answers.size > 0:
@@ -352,8 +355,8 @@ class Consultation:
 
         print(f"successfully completed consult {self.id}")
 
-        self.display_screen.power_off_surface = disp_copy
-        self.update_display()
+        # self.display_screen.power_off_surface = disp_copy
+        # self.update_display()
 
     def loop(self, infinite=False):
         self.entry_sequence()
