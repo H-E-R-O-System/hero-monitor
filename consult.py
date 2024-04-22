@@ -269,7 +269,7 @@ class Consultation:
         self.display_screen.power_off = True
         self.touch_screen.power_off = True
 
-        proc_suf = self.fonts.normal.render("Processing")
+        proc_suf = self.fonts.normal.render("Processing", True, Colours.hero_blue.value)
 
         disp_copy = self.display_screen.power_off_surface
 
