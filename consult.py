@@ -269,6 +269,12 @@ class Consultation:
         self.display_screen.power_off = True
         self.touch_screen.power_off = True
 
+        proc_suf = self.fonts.normal.render("Processing")
+
+        disp_copy = self.display_screen.power_off_surface
+
+        self.display_screen.power_off_surface.blit((proc_suf, (self.display_size - proc_suf.get_size())/2 + pg.Vector2(0, 100)))
+
         self.update_display()
 
         self.modules["Affective"].exit_sequence()
@@ -345,6 +351,9 @@ class Consultation:
         shutil.rmtree("consultation/question_audio_tmp")
 
         print(f"successfully completed consult {self.id}")
+
+        self.display_screen.power_off_surface = disp_copy
+        self.update_display()
 
     def loop(self, infinite=False):
         self.entry_sequence()
