@@ -42,6 +42,8 @@ class LoginScreen:
             else:
                 self.all_user_data = None
 
+            self.button_module = ButtonModule(pi=False)
+
         self.info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
         pg.draw.rect(self.display_screen.base_surface, Colours.white.value, self.info_rect)
 
@@ -111,6 +113,8 @@ class LoginScreen:
             self.pass_string = []
 
         self.auto_run = auto_run
+
+        self.power_off = False
 
     def update_display(self):
         self.display_screen.refresh()
@@ -257,6 +261,10 @@ class LoginScreen:
                 elif event.type == pg.QUIT:
                     # break the running loop
                     self.running = False
+
+            selected = self.button_module.check_pressed()
+            if selected is not None:
+                self.button_actions(selected)
 
         output = self.exit_sequence()
         return output

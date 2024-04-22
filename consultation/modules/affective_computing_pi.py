@@ -226,6 +226,7 @@ class AffectiveModulePi:
         self.question_idx += 1
         if self.question_idx == 2:
             self.running = False
+            print("quitting")
 
     def exit_sequence(self):
         # post-loop completion section
