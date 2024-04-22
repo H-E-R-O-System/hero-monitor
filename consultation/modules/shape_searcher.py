@@ -104,6 +104,7 @@ class ShapeSearcher:
         self.auto_run = auto_run
 
         self.show_info = False
+        self.power_off = False
 
     def instruction_loop(self, question):
         if self.auto_run:
@@ -384,6 +385,19 @@ class ShapeSearcher:
         if selected == Buttons.info:
             self.show_info = not self.show_info
             self.toggle_info_screen()
+
+        elif selected == Buttons.power:
+            self.power_off = not self.power_off
+
+            self.display_screen.power_off = self.power_off
+            self.touch_screen.power_off = self.power_off
+
+            if self.power_off:
+                self.display_screen.instruction = None
+
+                self.update_display()
+            else:
+                self.toggle_info_screen()
         else:
             ...
             print("Power")
@@ -392,10 +406,6 @@ class ShapeSearcher:
         if self.show_info:
             self.display_screen.state = 1
             self.display_screen.instruction = None
-
-            # button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
-            # start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
-            # self.touch_screen.sprites = GameObjects([start_button])
 
             info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
             pg.draw.rect(self.display_screen.surface, Colours.white.value,
@@ -452,7 +462,7 @@ class ShapeSearcher:
                     self.auto_run = False
             else:
                 for event in pg.event.get():
-                    if event.type == pg.KEYDOWN:
+                    if event.type == pg.KEYDOWN and not self.power_off:
                         if event.key == pg.K_s:
                             if self.parent:
                                 take_screenshot(self.parent.window)
@@ -462,7 +472,7 @@ class ShapeSearcher:
                         elif event.key == pg.K_ESCAPE:
                             self.running = False
 
-                    elif event.type == pg.MOUSEBUTTONDOWN:
+                    elif event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                         # do something with mouse click
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 

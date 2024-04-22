@@ -195,6 +195,7 @@ class CardGame:
         self.max_turns = max_turns
         self.auto_run = auto_run
         self.show_info = False
+        self.power_off = False
 
     def instruction_loop(self):
         self.display_screen.state = 1
@@ -266,6 +267,10 @@ class CardGame:
                             take_screenshot(self.parent.window)
                         else:
                             take_screenshot(self.window, "wisconsin_card_test")
+
+            selected = self.button_module.check_pressed()
+            if selected is not None:
+                self.button_actions(selected)
 
     def render_game(self):
         # clear game screens
@@ -354,6 +359,20 @@ class CardGame:
         if selected == Buttons.info:
             self.show_info = not self.show_info
             self.toggle_info_screen()
+
+        elif selected == Buttons.power:
+            self.power_off = not self.power_off
+
+            self.display_screen.power_off = self.power_off
+            self.touch_screen.power_off = self.power_off
+
+            if self.power_off:
+                self.display_screen.instruction = None
+
+                self.render_game()
+            else:
+                # self.touch_screen.refresh()
+                self.toggle_info_screen()
         else:
             ...
 
@@ -376,6 +395,8 @@ class CardGame:
                 center_vertical=True, font_size=40)
 
             self.render_game()
+
+
         else:
             self.display_screen.refresh()
             self.display_screen.state = 0
@@ -396,14 +417,14 @@ class CardGame:
                     if event.type == pg.QUIT:
                         self.running = False
 
-                    elif event.type == pg.KEYDOWN:
+                    elif event.type == pg.KEYDOWN and not self.power_off:
                         if event.key == pg.K_s:
                             if self.parent:
                                 take_screenshot(self.parent.window)
                             else:
                                 take_screenshot(self.window, "wisconsin_card_test")
 
-                    elif event.type == pg.MOUSEBUTTONDOWN:
+                    elif event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                         if self.parent:
                             pos = self.parent.get_relative_mose_pos()
                         else:

@@ -270,24 +270,15 @@ class SpiralTest:
         elif selected == Buttons.power:
             self.power_off = not self.power_off
 
+            self.display_screen.power_off = self.power_off
+            self.touch_screen.power_off = self.power_off
+
             if self.power_off:
                 self.display_screen.instruction = None
-                self.display_screen.surface.fill(Colours.white.value)
-                #
-                self.touch_screen.surface.fill(Colours.white.value)
-                self.display_screen.state = 2
-
-                self.display_screen.load_image("consultation/graphics/hero_text.png", scale=pg.Vector2(1, 1),
-                                               pos=self.touch_screen.size / 2, location=BlitLocation.centre)
-
-                self.touch_screen.load_image("consultation/graphics/logo.png", size=self.touch_screen.size.yy * 0.8,
-                                             pos=self.touch_screen.size / 2, location=BlitLocation.centre)
 
                 self.update_display(top=True)
             else:
                 self.touch_screen.refresh()
-                self.display_screen.refresh()
-
                 self.toggle_info_screen()
 
         else:
@@ -298,10 +289,6 @@ class SpiralTest:
         if self.show_info:
             self.display_screen.state = 1
             self.display_screen.instruction = None
-
-            # button_rect = pg.Rect(self.display_size.x / 2 - 50, self.display_size.y - 120, 100, 100)
-            # start_button = GameButton(position=button_rect.topleft, size=button_rect.size, text="START", id=1)
-            # self.touch_screen.sprites = GameObjects([start_button])
 
             info_rect = pg.Rect(0.3 * self.display_size.x, 0, 0.7 * self.display_size.x, 0.8 * self.display_size.y)
             pg.draw.rect(self.display_screen.surface, Colours.white.value,
@@ -366,7 +353,7 @@ class SpiralTest:
                 self.running = False
             else:
                 for event in pg.event.get():
-                    if event.type == pg.MOUSEBUTTONDOWN:
+                    if event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                         if not self.spiral_started:
                             pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
@@ -380,15 +367,15 @@ class SpiralTest:
 
                         self.mouse_down = True
 
-                    elif event.type == pg.MOUSEMOTION and self.mouse_down:
+                    elif event.type == pg.MOUSEMOTION and self.mouse_down and not self.power_off:
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
                         self.process_input(pos)
                         self.prev_pos = pos - self.center_offset
 
-                    elif event.type == pg.MOUSEBUTTONUP:
+                    elif event.type == pg.MOUSEBUTTONUP and not self.power_off:
                         self.mouse_down = False
 
-                    elif event.type == pg.KEYDOWN:
+                    elif event.type == pg.KEYDOWN and not self.power_off:
                         if event.key == pg.K_s:
                             if self.parent:
                                 take_screenshot(self.parent.window)

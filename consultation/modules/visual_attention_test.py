@@ -102,6 +102,7 @@ class VisualAttentionTest:
         self.running = True
         self.auto_run = auto_run
         self.show_info = False
+        self.power_off = False
 
     def select_letters(self):
         letters_easy = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -216,6 +217,19 @@ class VisualAttentionTest:
         if selected == Buttons.info:
             self.show_info = not self.show_info
             self.toggle_info_screen()
+
+        elif selected == Buttons.power:
+            self.power_off = not self.power_off
+
+            self.display_screen.power_off = self.power_off
+            self.touch_screen.power_off = self.power_off
+
+            if self.power_off:
+                self.display_screen.instruction = None
+
+                self.update_display()
+            else:
+                self.toggle_info_screen()
         else:
             ...
             print("Power")
@@ -254,7 +268,7 @@ class VisualAttentionTest:
                 self.process_selection(selection)
             else:
                 for event in pg.event.get():
-                    if event.type == pg.KEYDOWN:
+                    if event.type == pg.KEYDOWN and not self.power_off:
                         if event.key == pg.K_s:
                             # do something with key press
                             if self.parent:
@@ -265,7 +279,7 @@ class VisualAttentionTest:
                         elif event.key == pg.K_ESCAPE:
                             self.running = False
 
-                    elif event.type == pg.MOUSEBUTTONDOWN:
+                    elif event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                         # do something with mouse click
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 

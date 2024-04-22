@@ -150,6 +150,7 @@ class ClockDraw:
         self.angle_errors = None
 
         self.show_info = False
+        self.power_off = False
 
     def instruction_loop(self):
         if self.auto_run:
@@ -199,18 +200,22 @@ class ClockDraw:
         wait = True
         while wait:
             for event in pg.event.get():
-                if event.type == pg.MOUSEBUTTONDOWN:
+                if event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                     pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
                     selection = self.touch_screen.click_test(pos)
                     if selection is not None:
                         wait = False
 
-                elif event.type == pg.KEYDOWN:
+                elif event.type == pg.KEYDOWN and not self.power_off:
                     if event.key == pg.K_s:
                         if self.parent:
                             take_screenshot(self.parent.window)
                         else:
                             take_screenshot(self.window, "clock")
+
+            selected = self.button_module.check_pressed()
+            if selected is not None:
+                self.button_actions(selected)
 
         self.touch_screen.kill_sprites()
         self.display_screen.state = 0
@@ -294,6 +299,20 @@ class ClockDraw:
         if selected == Buttons.info:
             self.show_info = not self.show_info
             self.toggle_info_screen()
+
+        elif selected == Buttons.power:
+            self.power_off = not self.power_off
+
+            self.display_screen.power_off = self.power_off
+            self.touch_screen.power_off = self.power_off
+
+            if self.power_off:
+                self.display_screen.instruction = None
+
+                self.update_display()
+            else:
+                self.touch_screen.refresh()
+                self.toggle_info_screen()
         else:
             ...
             print("Power")
@@ -341,7 +360,7 @@ class ClockDraw:
 
             else:
                 for event in pg.event.get():
-                    if event.type == pg.KEYDOWN:
+                    if event.type == pg.KEYDOWN and not self.power_off:
                         if event.key == pg.K_s:
                             if self.parent:
                                 take_screenshot(self.parent.window)
@@ -351,7 +370,7 @@ class ClockDraw:
                         elif event.key == pg.K_ESCAPE:
                             self.running = False
 
-                    elif event.type == pg.MOUSEBUTTONDOWN:
+                    elif event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                         # do something with mouse click
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
                         if self.touch_screen.click_test(pos):
@@ -362,7 +381,7 @@ class ClockDraw:
                             if selection is not None:
                                 self.hand_clicked = selection
 
-                    elif event.type == pg.MOUSEMOTION and self.hand_clicked is not None:
+                    elif event.type == pg.MOUSEMOTION and self.hand_clicked is not None and not self.power_off:
                         pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
                         if self.hand_clicked == "hour":
@@ -373,15 +392,13 @@ class ClockDraw:
                         if update_flag:
                             self.update_display()
 
-                    elif event.type == pg.MOUSEBUTTONUP:
+                    elif event.type == pg.MOUSEBUTTONUP and not self.power_off:
                         self.hand_clicked = None
 
                     elif event.type == pg.QUIT:
                         # break the running loop
                         self.running = False
 
-                # if self.parent:
-                # self.parent.button_module: ButtonModule
                 selected = self.button_module.check_pressed()
                 if selected is not None:
                     self.button_actions(selected)

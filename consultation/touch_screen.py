@@ -52,6 +52,24 @@ class TouchScreen(Screen):
     def __init__(self, size, colour=Colours.white):
         super().__init__(size, colour=colour)
         self.sprites = GameObjects([])
+        self.power_off = False
+
+        self.power_off_surface = pg.Surface((self.size.x, self.size.y), pg.SRCALPHA)
+        self.power_off_surface.fill(Colours.white.value)
+
+        # self.touch_screen.surface.fill(Colours.white.value)
+        # self.display_screen.state = 2
+        #
+        # self.touch_screen.load_image("consultation/graphics/logo.png", size=self.touch_screen.size.yy * 0.8,
+        #                              pos=self.touch_screen.size / 2, location=BlitLocation.centre)
+        image = pg.image.load("consultation/graphics/logo.png")
+        image = pg.transform.scale(image, size=self.size.yy * 0.8)
+        pos = self.size / 2
+
+        imageRect = pg.Rect(pos, image.get_size())
+        imageRect.topleft = pg.Vector2(imageRect.topleft) - pg.Vector2(imageRect.size) / 2
+
+        self.power_off_surface.blit(image, imageRect)
 
     def click_test(self, pos):
         if self.sprites:
@@ -65,6 +83,9 @@ class TouchScreen(Screen):
         self.sprites.empty()
 
     def get_surface(self):
+        if self.power_off:
+            return self.power_off_surface
+
         self.sprites.draw(self)
         display_surf = self.base_surface.copy()
         display_surf.blit(self.surface, (0, 0))
