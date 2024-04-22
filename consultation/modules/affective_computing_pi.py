@@ -58,7 +58,7 @@ class AffectiveModulePi:
 
         self.touch_screen = TouchScreen(self.display_size)
 
-        self.display_screen.speech_text = "Have you noticed anything this past week?"
+        self.display_screen.speech_text = "How have you been feeling in the past week?"
 
         button_size = pg.Vector2(self.display_size.x*0.9, self.display_size.y*0.15)
         self.main_button = GameButton(pg.Vector2(0.5*self.display_size.x, 0.85*self.display_size.y) - button_size / 2,

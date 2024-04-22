@@ -90,7 +90,7 @@ class ShapeSearcher:
 
         self.scores = [0, 0, 0]
 
-        self.question_counts = [2, 8, 8]
+        self.question_counts = [10, 8, 8]
 
         self.answer_times = []
         self.start_time = None

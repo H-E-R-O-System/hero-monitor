@@ -1,7 +1,7 @@
 import time
 
 import pygame as pg
-from consultation.utils import take_screenshot
+from consultation.utils import Buttons, ButtonModule, take_screenshot
 from consultation.screen import Screen, Fonts, Colours
 from consultation.display_screen import DisplayScreen
 from consultation.touch_screen import TouchScreen, GameObjects, GameButton
@@ -26,6 +26,7 @@ class LoginScreen:
             self.top_screen = parent.top_screen
             self.all_user_data = parent.all_user_data
             self.display_screen = DisplayScreen(self.display_size, avatar=parent.avatar)
+            self.button_module = parent.button_module
 
         else:
             self.display_size = pg.Vector2(size)
