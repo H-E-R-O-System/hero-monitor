@@ -73,8 +73,9 @@ class AffectiveModulePi:
         self.running = False
         self.pi = pi
 
-        self.question_count = 2
+        self.question_count = 1
         self.question_idx = 0
+
 
         if pi:
             picamera = __import__('picamera2')

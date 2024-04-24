@@ -109,8 +109,8 @@ class Consultation:
             "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False, auto_run=auto_run)
         }
 
-        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", "Login", "Affective"]
-        # self.module_order = ["PSS"]
+        # self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", "Login", "Affective"]
+        self.module_order = ["Affective"]
 
         self.module_idx = 0
 
