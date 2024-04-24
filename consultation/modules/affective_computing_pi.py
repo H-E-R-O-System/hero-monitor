@@ -308,8 +308,8 @@ class AffectiveModulePi:
 
             self.label_data = label_data
 
-            # with open("data/affective_predictions.json", "w") as write_file:
-            #     json.dump(label_data, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
+            with open("data/affective_predictions.json", "w") as write_file:
+                json.dump(label_data, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
 
         if self.cleanse_files:
             print("cleansing files")
