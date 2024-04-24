@@ -11,6 +11,8 @@ from consultation.touch_screen import TouchScreen, GameObjects, GameButton
 from consultation.utils import Buttons, ButtonModule, take_screenshot
 import numpy as np
 
+import random
+
 
 class PSS:
     def __init__(self, size=pg.Vector2(1024, 600), parent=None, question_count=10, auto_run=False, preload_audio=False,
@@ -105,8 +107,8 @@ class PSS:
 
         self.update_display()
 
-        if self.parent:
-            self.parent.speak_text(self.questions[self.question_idx].text.replace("In the last month", ""), visual=True,
+        if self.parent and question:
+            self.parent.speak_text(question.text.replace("In the last month", ""), visual=True,
                                    display_screen=self.display_screen,
                                    touch_screen=self.touch_screen)
 
@@ -145,6 +147,8 @@ class PSS:
     def loop(self, infinite=False):
         self.entry_sequence()
 
+        mood = random.choice(range(5))
+
         while self.running:
             if not self.awaiting_response:
                 self.ask_question()
@@ -153,8 +157,15 @@ class PSS:
 
             elif self.awaiting_response and self.auto_run:
                 # select random button within button range
-                button_idx = randint(0, len(self.touch_screen.sprites)-1)
-                button_id = self.touch_screen.sprites.sprites()[button_idx].id
+                mood_weights = [1, 1, 1, 1, 1]
+                # print(mood)
+                if self.question_idx in [3, 4, 6, 7]:
+                    mood_weights[4-mood] = 5
+                else:
+                    mood_weights[mood] = 5
+
+                button_idx = random.choices(range(len(self.touch_screen.sprites)), weights=mood_weights, k=1)
+                button_id = self.touch_screen.sprites.sprites()[button_idx[0]].id
 
                 self.answers.append(int(button_id))
 
@@ -212,7 +223,15 @@ class PSS:
 if __name__ == "__main__":
     pg.init()
     pg.event.pump()
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
+    os.chdir("../..")
 
-    pss = PSS()
+    pss = PSS(auto_run=True, question_count=10)
     pss.loop()
+
+    answers = pss.answers
+    answers = np.array(answers)
+    pss_reverse_idx = np.array([3, 4, 6, 7])
+    pss_reverse_idx = pss_reverse_idx[pss_reverse_idx < pss.question_idx]
+    answers[pss_reverse_idx] = 4 - answers[pss_reverse_idx]
+
+    print(answers)

@@ -151,19 +151,33 @@ class ShapeSearcher:
         wait = True
         while wait:
             for event in pg.event.get():
-                if event.type == pg.MOUSEBUTTONDOWN:
+                if event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                     pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
 
                     selection = self.touch_screen.click_test(pos)
                     if selection is not None:
                         wait = False
 
-                elif event.type == pg.KEYDOWN:
+                elif event.type == pg.KEYDOWN and not self.power_off:
                     if event.key == pg.K_s:
                         if self.parent:
                             take_screenshot(self.parent.window)
                         else:
                             take_screenshot(self.window, "Shape_match")
+
+            selected = self.button_module.check_pressed()
+            if selected == Buttons.power:
+                self.power_off = not self.power_off
+
+                self.display_screen.power_off = self.power_off
+                self.touch_screen.power_off = self.power_off
+
+                if self.power_off:
+                    self.display_screen.instruction = None
+
+                self.update_display()
+                # else:
+                    # self.toggle_info_screen()
 
         self.touch_screen.kill_sprites()
         self.display_screen.state = 0
@@ -382,7 +396,7 @@ class ShapeSearcher:
 
     def button_actions(self, selected):
 
-        if selected == Buttons.info:
+        if selected == Buttons.info and not self.power_off:
             self.show_info = not self.show_info
             self.toggle_info_screen()
 
@@ -458,8 +472,8 @@ class ShapeSearcher:
                 selection = random.choices([0, 1], weights=weights, k=1)[0]
                 self.process_selection(selection)
 
-                if self.turns == 10:
-                    self.auto_run = False
+                # if self.turns == 10:
+                #     self.auto_run = False
             else:
                 for event in pg.event.get():
                     if event.type == pg.KEYDOWN and not self.power_off:
@@ -495,8 +509,7 @@ class ShapeSearcher:
 
 
 if __name__ == "__main__":
-    # os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    os.chdir("/Users/benhoskings/Documents/Projects/hero-monitor")
+    os.chdir("../..")
     pg.init()
     pg.event.pump()
     # Module Testing

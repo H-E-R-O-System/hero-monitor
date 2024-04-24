@@ -193,11 +193,20 @@ class LoginScreen:
         user_data = self.all_user_data.loc[username]
         return User(name=user_data["FirstName"], age=21, id=user_data["UserID"])
 
+    def button_actions(self, selected):
+        if selected == Buttons.power:
+            self.power_off = not self.power_off
+
+            self.display_screen.power_off = self.power_off
+            self.touch_screen.power_off = self.power_off
+
+            self.update_display()
+
     def loop(self):
         self.entry_sequence()
         while self.running:
             for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
+                if event.type == pg.KEYDOWN and not self.power_off:
                     if event.key == pg.K_s:
                         # do something with key press
                         if self.parent:
@@ -208,7 +217,7 @@ class LoginScreen:
                     elif event.key == pg.K_ESCAPE:
                         self.running = False
 
-                elif event.type == pg.MOUSEBUTTONDOWN:
+                elif event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                     # do something with mouse click
                     mouse_pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
                     button_id = self.touch_screen.click_test(mouse_pos)

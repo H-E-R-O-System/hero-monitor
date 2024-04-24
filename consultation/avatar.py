@@ -9,14 +9,18 @@ from consultation.screen import Screen, Colours
 
 
 class Avatar:
-    def __init__(self, size=pg.Vector2(420, 420)):
+    def __init__(self, size=pg.Vector2(420, 420), skin_tone=None):
         avatar_base_path = "consultation/graphics/avatars"
         avatar_paths = [os.path.join(avatar_base_path, avatar_file) for avatar_file in
                         os.listdir(avatar_base_path) if (".png" in avatar_file)]
 
         # gender =
         # self.image = pg.image.load(f"consultation/graphics/sprites/avatar_{gender}.png")
-        self.image = pg.image.load(random.choice(avatar_paths))
+
+        if skin_tone:
+            self.image = pg.image.load(random.choice(avatar_paths))
+        else:
+            self.image = pg.image.load(random.choice(avatar_paths))
 
         if size:
             self.size = pg.Vector2(size)

@@ -207,6 +207,11 @@ class SpiralTest:
                 pg.mouse.set_visible(True)
 
     def exit_sequence(self):
+        if self.auto_run:
+            self.prediction = np.random.normal(-0.5, 1.5)
+            self.classification = self.prediction > 0.5
+            return
+
         self.update_display()
         if self.parent:
             self.parent.speak_text("Thank you for completing the spiral test", display_screen=self.display_screen,
@@ -398,7 +403,7 @@ if __name__ == "__main__":
     pg.init()
     pg.event.pump()
 
-    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=False, spiral_size=600)
+    spiral_test = SpiralTest(turns=3, draw_trace=True, auto_run=True, spiral_size=600)
 
     spiral_test.loop()  # optionally extract data from here as array
     print(spiral_test.classification, spiral_test.prediction)

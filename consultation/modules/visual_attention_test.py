@@ -214,7 +214,7 @@ class VisualAttentionTest:
 
     def button_actions(self, selected):
 
-        if selected == Buttons.info:
+        if selected == Buttons.info and not self.power_off:
             self.show_info = not self.show_info
             self.toggle_info_screen()
 

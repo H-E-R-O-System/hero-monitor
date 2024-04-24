@@ -106,11 +106,11 @@ class Consultation:
             "PSS": PSS(parent=self, question_count=self.pss_question_count, auto_run=auto_run, preload_audio=False),
             "Clock": ClockDraw(parent=self, auto_run=self.auto_run),
             "Login": LoginScreen(parent=self, username=username, password=password, auto_run=auto_run),
-            "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False)
+            "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False, auto_run=auto_run)
         }
 
-        self.module_order = ["Affective", ]
-        # self.module_order = ["Affective", ]
+        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", "Login", "Affective"]
+        # self.module_order = ["PSS"]
 
         self.module_idx = 0
 
@@ -269,7 +269,7 @@ class Consultation:
         self.display_screen.power_off = True
         self.touch_screen.power_off = True
 
-        proc_suf = self.fonts.normal.render("Processing", True, Colours.hero_blue.value)
+        proc_suf = self.fonts.normal.render("Processing...", True, Colours.hero_blue.value)
 
         disp_copy = self.display_screen.power_off_surface
 
@@ -305,6 +305,8 @@ class Consultation:
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
                        "value": self.modules["Spiral"].prediction,}
 
+        affective_data = self.modules["Affective"].label_data
+
         # "tracking_data": self.modules["Spiral"].tracking_data
 
         if self.user is None:
@@ -322,7 +324,8 @@ class Consultation:
                 "vat": vat_answers,
                 "clock": clock_data,
                 "shape": shape_data,
-                "spiral": spiral_data
+                "spiral": spiral_data,
+                "affective": affective_data,
             }
         }
 
@@ -416,7 +419,8 @@ if __name__ == "__main__":
     records = db.user_records
 
     consult = Consultation(
-        pi=False, authenticate=False, seamless=True, auto_run=False, username="user k", password="pass", pss_questions=2
+        pi=False, authenticate=True, seamless=True, auto_run=True, username="user k", password="pass", pss_questions=2,
+        local=False
     )
 
     consult.loop()

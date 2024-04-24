@@ -251,7 +251,7 @@ class CardGame:
         wait = True
         while wait:
             for event in pg.event.get():
-                if event.type == pg.MOUSEBUTTONDOWN:
+                if event.type == pg.MOUSEBUTTONDOWN and not self.power_off:
                     if self.parent:
                         pos = self.parent.get_relative_mose_pos()
                     else:
@@ -261,7 +261,7 @@ class CardGame:
                     if selection is not None:
                         wait = False
 
-                elif event.type == pg.KEYDOWN:
+                elif event.type == pg.KEYDOWN and not self.power_off:
                     if event.key == pg.K_s:
                         if self.parent:
                             take_screenshot(self.parent.window)
@@ -269,8 +269,13 @@ class CardGame:
                             take_screenshot(self.window, "wisconsin_card_test")
 
             selected = self.button_module.check_pressed()
-            if selected is not None:
-                self.button_actions(selected)
+            if selected == Buttons.power:
+                self.power_off = not self.power_off
+
+                self.display_screen.power_off = self.power_off
+                self.touch_screen.power_off = self.power_off
+
+                self.update_displays()
 
     def render_game(self):
         # clear game screens
@@ -356,7 +361,7 @@ class CardGame:
 
     def button_actions(self, selected):
 
-        if selected == Buttons.info:
+        if selected == Buttons.info and not self.power_off:
             self.show_info = not self.show_info
             self.toggle_info_screen()
 

@@ -12,8 +12,10 @@ import pyaudio
 import os
 import keras
 from scipy.special import softmax
+import random
 import shutil
 import json
+import time
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -39,7 +41,7 @@ def segment_face(landmarks, img_array):
 
 
 class AffectiveModulePi:
-    def __init__(self, size=(1024, 600), parent=None, pi=True, cleanse_files=True, classify=True):
+    def __init__(self, size=(1024, 600), parent=None, pi=True, cleanse_files=True, classify=True, auto_run=False):
 
         self.parent = parent
         if parent is not None:
@@ -71,6 +73,7 @@ class AffectiveModulePi:
         self.running = False
         self.pi = pi
 
+        self.question_count = 2
         self.question_idx = 0
 
         if pi:
@@ -119,6 +122,9 @@ class AffectiveModulePi:
 
         self.detector = vision.FaceLandmarker.create_from_options(options)
 
+        self.auto_run = auto_run
+        self.label_data = None
+
     def update_display(self):
         self.display_screen.refresh()
         self.touch_screen.refresh()
@@ -152,9 +158,14 @@ class AffectiveModulePi:
             return None
 
     def question_loop(self, max_time=10):
+
         self.display_screen.instruction = "Press the button to stop"
         self.main_button.text = "I'm finished"
         self.update_display()
+
+        if self.auto_run:
+            time.sleep(0.5)
+            return
 
         question_path = f"data/affective_images/question_{self.question_idx}"
         if not os.path.isdir(question_path):
@@ -223,17 +234,37 @@ class AffectiveModulePi:
         self.listening = False
         self.update_display()
 
-        self.question_idx += 1
-        if self.question_idx == 2:
-            self.running = False
-            print("quitting")
-
     def exit_sequence(self):
         # post-loop completion section
         # maybe add short thank you for completing the section?
 
         # only OPTIONAL and can leave blank
         if self.classify:
+            fer_class_labels = ["Negative", "Neutral", "Positive"]
+            if self.auto_run:
+                label_data = {}
+                mood = random.choices([0, 1, 2], weights=(2, 1, 2), k=1)
+
+                for q_idx in range(self.question_count):
+
+                    predictions = np.random.normal(1, 5, (100, 3))  # random set of predictions
+                    predictions[:, mood] *= 10  # specify mood to highlight
+
+                    fer_labels = np.argmax(predictions, axis=1)
+                    # affective_data["predictions"] = 100 * softmax(predictions, axis=1)
+
+                    unique, counts = np.unique(fer_labels, return_counts=True)
+                    label = "Test label"
+
+                    label_data[f"question_{q_idx}"] = {
+                        "affective_data": dict(zip(fer_class_labels, counts.tolist())),
+                        "nlp_label": label
+                    }
+
+                self.label_data = label_data
+
+                return
+
             if self.pi:
                 base_path = "/home/pi/hero-monitor"
             else:
@@ -263,14 +294,19 @@ class AffectiveModulePi:
                 print("found the images")
 
                 predictions = affective_model.predict(image_ds)
-                affective_data["labels"] = np.argmax(predictions, axis=1)
-                affective_data["predictions"] = 100 * softmax(predictions, axis=1)
+                fer_labels = np.argmax(predictions, axis=1)
+                # affective_data["predictions"] = 100 * softmax(predictions, axis=1)
+
+                unique, counts = np.unique(fer_labels, return_counts=True)
+                affective_data["label_counts"] = dict(zip(unique, counts))
 
                 label = nlp_model.classify_audio(audio_path)
 
                 label_data[f"question_{q_idx}"] = {"affective_data": affective_data, "nlp_label": label}
                 # except:
                 #     label_data[f"question_{q_idx}"] = None
+
+            self.label_data = label_data
 
             with open("data/affective_predictions.json", "w") as write_file:
                 json.dump(label_data, write_file, cls=NpEncoder, indent=4)  # encode dict into JSON
@@ -284,44 +320,54 @@ class AffectiveModulePi:
     def loop(self):
         self.entry_sequence()
         while self.running:
-            for event in pg.event.get():
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_s:
-                        if self.parent:
-                            take_screenshot(self.parent.window)
-                        else:
-                            take_screenshot(self.window, "affective_module")
+            if self.auto_run:
+                self.running = False
 
-                    elif event.key == pg.K_ESCAPE:
+            else:
+                for event in pg.event.get():
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_s:
+                            if self.parent:
+                                take_screenshot(self.parent.window)
+                            else:
+                                take_screenshot(self.window, "affective_module")
+
+                        elif event.key == pg.K_ESCAPE:
+                            self.running = False
+
+                    elif event.type == pg.MOUSEBUTTONDOWN:
+                        # do something with mouse click
+                        if self.parent:
+                            pos = self.parent.get_relative_mose_pos()
+                        else:
+                            pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
+
+                        button_id = self.touch_screen.click_test(pos)
+                        if button_id is not None:
+                            if button_id:
+                                self.question_loop()
+
+                                self.question_idx += 1
+                                if self.question_idx == self.question_count:
+                                    self.running = False
+                                    print("quitting")
+
+                            # self.update_display()
+
+                    elif event.type == pg.QUIT:
+                        # break the running loop
                         self.running = False
 
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    # do something with mouse click
-                    if self.parent:
-                        pos = self.parent.get_relative_mose_pos()
-                    else:
-                        pos = pg.Vector2(pg.mouse.get_pos()) - pg.Vector2(0, self.display_size.y)
-
-                    button_id = self.touch_screen.click_test(pos)
-                    if button_id is not None:
-                        if button_id:
-                            self.question_loop()
-
-                        # self.update_display()
-
-                elif event.type == pg.QUIT:
-                    # break the running loop
-                    self.running = False
-
-        # self.exit_sequence()
+        self.exit_sequence()
 
 
 if __name__ == "__main__":
-    os.chdir("/Users/benhoskings/Documents/Pycharm/Hero_Monitor")
-    # os.chdir("/home/pi/hero-monitor")
-    print(os.getcwd())
+    os.chdir("../..")
     pg.init()
     # Module Testing
-    module_name = AffectiveModulePi(pi=False, cleanse_files=False)
+    module_name = AffectiveModulePi(pi=False, cleanse_files=False, auto_run=True)
     module_name.loop()
+
+    print(module_name.label_data)
+
     print("Module run successfully")
