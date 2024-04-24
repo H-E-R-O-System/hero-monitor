@@ -305,7 +305,7 @@ class Consultation:
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
                        "value": self.modules["Spiral"].prediction,}
 
-        affective_data = self.modules["Affective"].label_data
+        affective_data = {}
 
         # "tracking_data": self.modules["Spiral"].tracking_data
 
