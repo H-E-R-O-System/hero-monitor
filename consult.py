@@ -109,8 +109,8 @@ class Consultation:
             "Affective": AffectiveModulePi(parent=self, pi=pi, cleanse_files=False, auto_run=auto_run)
         }
 
-        self.module_order = ["Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS", "Login", "Affective"]
-        # self.module_order = ["PSS"]
+        self.module_order = ["Login", "Spiral", "Clock", "Shapes", "VAT", "WCT", "PSS"]
+        # self.module_order = ["Affective"]
 
         self.module_idx = 0
 
@@ -305,7 +305,8 @@ class Consultation:
         spiral_data = {"classification": int(self.modules["Spiral"].classification),
                        "value": self.modules["Spiral"].prediction,}
 
-        affective_data = self.modules["Affective"].label_data
+        # affective_data = self.modules["Affective"].label_data
+        affective_data = {}
 
         # "tracking_data": self.modules["Spiral"].tracking_data
 
